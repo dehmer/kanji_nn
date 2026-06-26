@@ -1,0 +1,5 @@
+.DS_Store
+models/
+images/
+strokes/
+__pycache__
