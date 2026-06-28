@@ -38,8 +38,8 @@ def read(filename, n_point):
 
             list_3d = ast.literal_eval(parts[3])
             array_list = list_to_array_list_3d(list_3d)
-            normalized_array_list = normalize_array_list(array_list)
-            features = vstack_array_list_with_feature(normalized_array_list)
+            # array_list = normalize_array_list(array_list)
+            features = vstack_array_list_with_feature(array_list)
 
             # points = vg.resample_strokes_to_fixed(strokes, n_point)
 

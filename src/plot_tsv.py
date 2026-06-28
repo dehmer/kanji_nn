@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 
+import os
 import kanji_nn.tsv as tsv
 import kanji_nn.plot as plot
 
 MAX_POINTS = 80
-TSV_FILE = "/Users/dehmer/Public/Data/kanken_439.tsv"
+SET_NAME = "hiragana_48"
+TSV_FILE = f"/Users/dehmer/Public/Data/kanji_nn/tsv/{SET_NAME}.tsv"
 test_set = tsv.read(TSV_FILE, MAX_POINTS)
 
-for i, literal in enumerate(test_set['literals']):
-  if literal != '太': continue
-  label = test_set['labels'][i]
-  strokes = test_set['strokes'][i]
+if __name__ == '__main__':
+    for i, literal in enumerate(test_set['literals']):
+        label = test_set['labels'][i]
+        strokes = test_set['strokes'][i]
 
-  plot.save(f'images/{label}', strokes)
-  # plot.save(f'images/{label}-clean', cleanStrokes)
+        output_dir = f'images/{SET_NAME}'
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+        # plot.show(strokes, (5, 5))
+        plot.save(f'{output_dir}/{label}', strokes, (5, 5))

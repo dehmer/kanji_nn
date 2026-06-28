@@ -1,7 +1,6 @@
 import numpy as np
 import xml.etree.ElementTree as ET
 from svg.path import Path, parse_path
-from shapely.geometry import LineString
 
 def clamp(n, n_min, n_max):
     return max(n_min, min(n, n_max))
