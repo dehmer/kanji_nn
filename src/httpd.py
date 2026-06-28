@@ -31,7 +31,7 @@ class JSONRequestHandler(BaseHTTPRequestHandler):
                 literal = json_data['literal']
                 xs_array = np.array(json_data['xs'], dtype=np.float32)
                 ys_array = np.array(json_data['ys'], dtype=np.float32)
-                fs_array = np.array(json_data['fs'], dtype=np.float32)
+                fs_array = np.array(json_data['fs'], dtype=np.float32) # status feature
                 ts_array = np.array(json_data['ts'], dtype=np.float32)
                 ps_array = np.array(json_data['ps'], dtype=np.float32)
 
@@ -40,7 +40,7 @@ class JSONRequestHandler(BaseHTTPRequestHandler):
                 plot.save(f'images/{code_point}.png', strokes, (6, 6))
                 # plot.show(strokes, (10, 10))
 
-                blob = np.vstack([xs_array, ys_array, fs_array, ts_array]).T
+                blob = np.vstack([ts_array, xs_array, ys_array, ps_array, fs_array]).T
                 np.save(f'strokes/{code_point}.npy', blob)
 
             except (ValueError, TypeError) as error:

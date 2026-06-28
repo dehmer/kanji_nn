@@ -119,7 +119,9 @@ def plot_dynamics(data):
             marker="o",
             markersize=4,
             color=color,
-            label=f"Stroke {idx+1}",
+
+            # Include label in legend:
+            # label=f"Stroke {idx+1}",
         )
 
         # --- Plot Kinematics (Right) ---
@@ -167,7 +169,7 @@ def plot_dynamics(data):
             in_pen_up = False
 
     # 7. Final Canvas Styling & Text Overlay
-    ax_path.set_title("2D Handwriting Path (な)", fontsize=14, pad=10)
+    ax_path.set_title("Handwriting Mechanics", fontsize=14, pad=10)
     ax_path.set_xlabel("X Coordinate")
     ax_path.set_ylabel("Y Coordinate")
     ax_path.invert_yaxis()
@@ -191,6 +193,7 @@ def plot_dynamics(data):
         Line2D([0], [0], color="gray", linewidth=2.0, linestyle="--"),
         Line2D([0], [0], color="lightgray", alpha=0.5, linewidth=8),
     ]
+
     ax_metrics.legend(
         custom_lines,
         ["Velocity (Solid)", "Angle Change (Dashed)", "Pen Up Lift"],
@@ -200,15 +203,17 @@ def plot_dynamics(data):
     # Append total time to text block and display it in the corner of the path plot
     duration_text.append(f"Total Active: {total_writing_time:.2f}s")
     text_block = "\n".join(duration_text)
-    ax_path.text(
-        0.05,
-        0.95,
-        text_block,
-        transform=ax_path.transAxes,
-        fontsize=10,
-        verticalalignment="top",
-        bbox=dict(boxstyle="round", facecolor="white", alpha=0.8, edgecolor="gray"),
-    )
+
+    # Stroke durations:
+    # ax_path.text(
+    #     0.05,
+    #     0.95,
+    #     text_block,
+    #     transform=ax_path.transAxes,
+    #     fontsize=10,
+    #     verticalalignment="top",
+    #     bbox=dict(boxstyle="round", facecolor="white", alpha=0.8, edgecolor="gray"),
+    # )
 
     plt.tight_layout()
     plt.show()
