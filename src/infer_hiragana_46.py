@@ -35,6 +35,7 @@ def run_analysis(
 
     print(f"Loading model '{model_path}'...")
     checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
+    print(checkpoint.keys())
     labels = checkpoint['labels']
     max_len = checkpoint.get('max_seq_len', 64)
     inverse_labels = {v: k for k, v in labels.items()}

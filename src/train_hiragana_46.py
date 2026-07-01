@@ -10,7 +10,7 @@ from torch.utils.data import random_split, DataLoader
 
 from kanji_nn.KanjiVGDataset import *
 from kanji_nn.KanjiVGModel import *
-from kanji_nn.filters import *
+from kanji_nn.filters import hiragana_46
 from kanji_nn.plot import save
 
 
@@ -39,7 +39,6 @@ if __name__ == "__main__":
     print("Preparing dataset (HIRAGANA_46)...")
     print()
 
-    filter = lambda literal, _: literal == 'ア'
     dataset = KanjiVGDataset(ZIP_PATH, hiragana_46, MAX_POINTS, MULTIPLIER)
     training_size = int(0.90 * len(dataset))
     training_set, validation_set = torch.utils.data.random_split(
@@ -80,11 +79,6 @@ if __name__ == "__main__":
     print()
 
     model = KanjiVGModel(input_size=3, hidden_size=256, num_classes=num_classes).to(device)
-
-    # Graphen-Kompilierung für maximale Hardware-Auslastung (PyTorch 2.x Feature)
-    # if hasattr(torch, 'compile'):
-    #     print("Kompiliere Modell mit torch.compile...")
-    #     model = torch.compile(model, mode="max-autotune")
 
     criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
     optimizer = optim.AdamW(model.parameters(), lr=0.001, weight_decay=1e-4)
@@ -162,8 +156,3 @@ if __name__ == "__main__":
     print(f"Time for dataset preparation:   {(training_start_time - start_time):5.2f}s")
     print(f"Time for training ({EPOCHS} epochs):  {(now - training_start_time):5.2f}s")
     print(f"Time total:                     {(now - start_time):5.2f}s")
-
-    # for i in range(0, len(dataset)):
-    #     strokes, label = dataset[i]
-    #     idx = i // MULTIPLIER
-    #     save(f"images/{dataset.labels[idx]}-{i:04}.png", strokes)

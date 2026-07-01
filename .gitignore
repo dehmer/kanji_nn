@@ -1,5 +1,6 @@
 .DS_Store
 models/
 images/
+data/
 strokes/
 __pycache__

@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 def plot_stroke(strokes, figsize):
+    column_count = strokes.shape[1]
+    strokes = strokes if column_count == 3 else strokes[:,[1, 2, 4]]
 
     # For n strokes lookup n-1 split indices.
     # Split happens at index, so add 1 to each index.
@@ -11,11 +13,11 @@ def plot_stroke(strokes, figsize):
 
     figure = plt.figure(figsize=figsize)
     for i, stroke in enumerate(lines):
-        line = np.array(stroke)
-        plt.plot(line[:, 0], line[:, 1], color='black', zorder=1)
-        plt.scatter(line[:, 0], line[:, 1], marker='o', color='red', zorder=2, alpha=.3)
-        plt.scatter(line[0, 0], line[0, 1], marker='o', color='green', zorder=3)
-        plt.scatter(line[-1, 0], line[-1, 1], marker='o', color='blue', zorder=3)
+        stroke = np.array(stroke)
+        plt.plot(stroke[:, 0], stroke[:, 1], color='black', zorder=1)
+        plt.scatter(stroke[:, 0],  stroke[:, 1], marker='o', color='red', zorder=2, alpha=.3)
+        plt.scatter(stroke[0, 0],  stroke[0, 1], marker='o', color='green', zorder=3)
+        plt.scatter(stroke[-1, 0], stroke[-1, 1], marker='o', color='blue', zorder=3)
 
     # Kanji coordinate systems usually start at the top-left (invert Y-axis)
     ax = plt.gca()
@@ -26,13 +28,13 @@ def plot_stroke(strokes, figsize):
 
     return figure
 
-def save(filename, strokes, figsize):
+def save(filename, strokes, figsize=(6, 6)):
     figure = plot_stroke(strokes, figsize)
     plt.savefig(filename)
     plt.close(figure)
 
 
-def show(strokes, figsize):
+def show(strokes, figsize=(6, 6)):
     figure = plot_stroke(strokes, figsize)
     plt.show()
 

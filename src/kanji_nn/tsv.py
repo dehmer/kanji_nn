@@ -18,7 +18,7 @@ def vstack_array_list_with_feature(array_list):
 
     return np.vstack(features)
 
-def read(filename, n_point):
+def read(filename):
     literals = []
     labels = []
     all_strokes = []
@@ -38,12 +38,7 @@ def read(filename, n_point):
 
             list_3d = ast.literal_eval(parts[3])
             array_list = list_to_array_list_3d(list_3d)
-            # array_list = normalize_array_list(array_list)
             features = vstack_array_list_with_feature(array_list)
-
-            # points = vg.resample_strokes_to_fixed(strokes, n_point)
-
-            # normalized to [0, 1] with pen-down/-up column:
             all_strokes.append(features)
 
     return {

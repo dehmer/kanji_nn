@@ -13,6 +13,7 @@ def extract_code_point(filename):
         raise Exception(f'cp: invalid format in {filename}')
     return match.group(1)
 
+
 def cp_to_chr(cp):
     return chr(int(cp[2:], 16))
 

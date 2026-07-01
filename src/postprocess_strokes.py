@@ -1,72 +1,83 @@
 #!/usr/bin/env python3
 
 from os import walk
+import re
 import numpy as np
-import kanji_nn.plot as plot
-import kanji_nn.plot_telemetry as plot_telemetry
-
-def split_into_strokes(raw):
-    # drop pen status and split into strokes
-    split_indices = np.where(raw[:, 4] == 0)[0] + 1
-    raw = raw[:, :-1]
-    return np.split(raw, split_indices[:-1])
+from kanji_nn.plot import plot_interactive_kanji
 
 
-def compose_from_strokes(strokes):
-    chunks = []
-    for stroke in strokes:
-        # pen status: 111....110
-        status = np.ones((len(stroke), 1), dtype=np.float32)
-        status[-1] = 0
-
-        # insert status
-        chunk = np.insert(stroke, [2], status, axis=1)
-        chunks.append(chunk)
-    return np.vstack(chunks)
+def extract_code_point(filename):
+    match = re.search('.*(U\\+[0-9A-F]{4,5})', filename)
+    if not match:
+        raise Exception(f'cp: invalid format in {filename}')
+    return match.group(1)
 
 
-def normalize_array(arr):
-    """Normalizes a numpy array to the range [0-1], safely handling NaNs."""
-    min_val = np.nanmin(arr)
-    max_val = np.nanmax(arr)
-    if max_val == min_val:
-        return np.zeros_like(arr)
-    return (arr - min_val) / (max_val - min_val)
+def cp_to_chr(cp):
+    return chr(int(cp[2:], 16))
 
 
-def calc_telemetry(strokes):
-    TIME_STAMP, DX, DY, PRESSURE, FEATURE = 0, 1, 2, 3, 4
-    diffs = np.diff(strokes, axis=0)
-    dt, dx, dy = diffs[:, TIME_STAMP], diffs[:, DX], diffs[:, DY]
+def literal_to_hex(literal):
+    return f'{ord(literal):x}'.upper()
 
+
+def infer_file_names(literals):
+    return [f'U+{literal_to_hex(literal)}.npy' for literal in literals]
+
+
+def calc_deltas_and_distance(raw):
+    """
+    Parameters:
+    raw (np.ndarray with shape (*, 5)):
+    """
+
+    # Calculate and prepend diffs with np.nan row (shift 1 to right).
+    diffs = np.diff(raw, axis=0)
+    nans = np.full((1, diffs.shape[1]), np.nan, dtype=np.float32)
+    diffs = np.vstack((nans, diffs))
+
+    # First point indices for strokes (excluding stroke 0):
+    firsts = np.where(raw[:, 4] == 0)[0][:-1] + 1
+
+    dt, dx, dy = diffs[:, 0], diffs[:, 1], diffs[:, 2]
+    headings = np.arctan2(dy, dx)
     distances = np.sqrt(dx**2 + dy**2)
-    vectors = np.column_stack((dx, dy))
-    magnitudes = np.linalg.norm(vectors, axis=1, keepdims=True)
-    magnitudes = np.where(magnitudes == 0, 1.0, magnitudes)
-    unit_vectors = vectors / magnitudes
-    dot_products = np.sum(unit_vectors[:-1] * unit_vectors[1:], axis=1)
-    dot_products = np.clip(dot_products, -1.0, 1.0)
-    velocities = distances / dt
-    angles = np.degrees(np.arccos(dot_products))
-
-    # padding
-    velocities = velocities * 1000
-    velocities = np.pad(velocities, (1, 0), mode='constant', constant_values=np.nan)
-    angles = np.pad(angles, (1, 1), mode='constant', constant_values=np.nan)
-    return np.vstack((strokes[:, TIME_STAMP], strokes[:, PRESSURE], velocities, angles)).T
+    distances[firsts] = 0.0
 
 
-def process(filename):
-    # [timestamp[0]:x[1]:y[2]:pressure[3]:feature[4]]
-    raw = np.load(f'strokes/{filename}')
-    telemetry = calc_telemetry(raw)
-    plot_telemetry(telemetry)
+    return np.vstack((dt, dx, dy, distances, headings)).T
+
+
+def process(dirpath, filename):
+    code_point = extract_code_point(filename)
+    literal = cp_to_chr(code_point)
+    print(f'{code_point} {literal}')
+
+
+    # 0: timestamp, 1: x, 2: y, 3: pressure, 4: feature
+    raw = np.load(f'{dirpath}/{filename}')
+    # 5: timestamp delta (dt), 6: dx, 7: dy, 8: distances, 9: headings
+    deltas = calc_deltas_and_distance(raw)
+    raw = np.hstack((raw, deltas))
+    plot_interactive_kanji(raw)
+
+    print(raw.shape)
     exit()
 
 
+
 if __name__ == "__main__":
-    for (dirpath, dirnames, filenames) in walk('strokes'):
+    np.set_printoptions(edgeitems=30, linewidth=240,  formatter=dict(float=lambda x: "%.3g" % x))
+    np.set_printoptions(edgeitems=30, linewidth=240)
+    DIR_NAME = 'data/katakana_49/strokes'
+
+    white_list = []
+    white_list = infer_file_names(['ナ'])
+    white_list = infer_file_names(['ネ'])
+
+    for (dirpath, dirnames, filenames) in walk(DIR_NAME):
         for filename in filenames:
             if not filename.endswith('npy'): continue
-            if not filename == 'U+3075.npy': continue
-            process(filename)
+            if len(white_list) and not filename in white_list: continue
+
+            process(dirpath, filename)

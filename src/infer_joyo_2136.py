@@ -23,6 +23,7 @@ def hex_to_char(hex_str):
 # ---------------------------------------------------------
 def run_analysis(tsv_path, model_path, n_points):
 
+    # supply
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model file '{model_path}' not found.")
     if not os.path.exists(tsv_path):
@@ -34,6 +35,7 @@ def run_analysis(tsv_path, model_path, n_points):
     max_len = checkpoint.get('max_seq_len', n_points)
     inverse_labels = {v: k for k, v in labels.items()}
 
+    # Supply device
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     model = KanjiVGModel(input_size=3, hidden_size=256, num_classes=len(labels)).to(device)
 
