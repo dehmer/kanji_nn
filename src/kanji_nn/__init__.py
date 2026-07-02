@@ -4,5 +4,3 @@ from .vg import *
 from .filters import *
 from .plot import *
 from .tsv import *
-from .plot_kinematics import *
-from .strokes import *

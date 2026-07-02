@@ -6,7 +6,7 @@ import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from functools import partial
 import numpy as np
-import kanji_nn.plot as plot
+import kanji_nn.plot.character as character
 
 class JSONRequestHandler(BaseHTTPRequestHandler):
     def __init__(self, output_dir, *args, **kwargs):
@@ -51,8 +51,8 @@ class JSONRequestHandler(BaseHTTPRequestHandler):
                     os.mkdir(dir)
 
                 np.save(f'data/{output_dir}/strokes/{code_point}.npy', raw)
-                plot.save(f'data/{output_dir}/images/{code_point}.png', raw, (6, 6))
-                # plot.show(clean, (10, 10))
+                character.save(f'data/{output_dir}/images/{code_point}.png', raw, (6, 6))
+                # character.show(clean, (10, 10))
 
             except (ValueError, TypeError) as error:
                 msg = "error handling request"
