@@ -1,6 +1,6 @@
 import numpy as np
 
-def smooth_gaussian(stroke):
+def smooth_gaussian(stroke, xy_cols=(0, 1)):
     """
     Applies a 1D Gaussian filter (window=3) to the X and Y coordinates
     of a individual stroke. Timestamps are left completely unaltered.
@@ -18,7 +18,7 @@ def smooth_gaussian(stroke):
 
 
     column_count = stroke.shape[1]
-    X, Y = (0, 1) if column_count == 3 else (1, 2)
+    X, Y = xy_cols
 
     # If the stroke is too short to smooth, keep it as is
     if stroke.shape[0] < 3:

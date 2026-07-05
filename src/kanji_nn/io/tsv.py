@@ -1,7 +1,7 @@
 import ast
 
 import numpy as np
-from . import vg
+from .. import vg
 
 def list_to_array_list_3d(list):
     return [np.asarray(item) for item in list]

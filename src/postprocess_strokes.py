@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from os import walk
+import os
 import re
-from functools import reduce
+from functools import reduce, partial
 import numpy as np
-from kanji_nn.plot import Kinematics
-from kanji_nn.math import calc_kinematic
+from kanji_nn.plot import Kinematics, literal, plot_stroke_geometry
+import kanji_nn.math as math
 from kanji_nn.conditioning import *
 
 def extract_code_point(filename):
@@ -48,56 +48,60 @@ def join_strokes(strokes):
         chunks.append(chunk)
     return np.vstack(chunks)
 
+def cut_hooks(stroke):
+    geometry = math.geometry(stroke)
+    start, end = detect_hooks(geometry)
+    # plot_stroke_geometry([geometry])
+    return stroke[start:end]
 
-def process(dirpath, filename):
+process_stroke = compose(
+    partial(simplify_rdp, epsilon=0.005),
+    partial(smooth_chaikin, refinements=1),
+    cut_hooks,
+    # lambda strokes: strokes[:, [1, 2]],
+    partial(simplify_rdp, xy_cols=(1, 2), epsilon=0.0005),
+    partial(smooth_gaussian, xy_cols=(1, 2)),
+)
+
+process_character = compose(
+    join_strokes,
+    lambda strokes: [process_stroke(stroke) for stroke in strokes],
+    split_strokes
+)
+
+def process(output_dir, dirpath, filename):
     code_point = extract_code_point(filename)
     literal = cp_to_chr(code_point)
     print(f'{code_point} {literal}')
 
     # 0: timestamp, 1: x, 2: y, 3: pressure, 4: feature
     raw = np.load(f'{dirpath}/{filename}')
-
-    process_stroke = compose(
-        # simplify_rdp,
-        dehook,
-        smooth_gaussian
-    )
-
-    process_character = compose(
-        join_strokes,
-        # lambda strokes: simplify_rdp(strokes, epsilon=rdp_epsilon),
-        # lambda strokes: chaikin_smooth(strokes, refinements=chaikin_refinements),
-        # lambda strokes: resample_kanji_spline(strokes, n_points=32),
-        lambda strokes: [process_stroke(stroke) for stroke in strokes],
-        split_strokes
-    )
-
-    raw = process_character(raw)
-
-    configs = [
-        dict(color="tab:gray", label="Pressure", data=lambda blocks: blocks['raw'][:, 3], linestyle="-."),
-        dict(color="tab:blue", label="Velocity", data=lambda blocks: blocks['velocity']),
-        dict(color="tab:red", label="Angle", data=lambda blocks: blocks['angle']),
-    ]
-
-    kinematics = Kinematics(raw, configs, figsize=(18, 12))
-    kinematics.show()
-
-    # blocks = {'raw': raw}
-    # blocks = blocks | calc_kinematic(blocks)
-    # interactive_kanji(blocks, configs, figsize=(18, 12))
-    exit()
+    # character.show(raw)
+    strokes = process_character(raw)
+    # character.show(strokes)
+    literal.save(f'data/{output_dir}/png-post/{code_point}', strokes)
 
 if __name__ == "__main__":
     np.set_printoptions(edgeitems=30, linewidth=240,  formatter=dict(float=lambda x: "%.3g" % x))
     np.set_printoptions(edgeitems=30, linewidth=240)
-    DIR_NAME = 'data/katakana_49/strokes'
+    input_dir = 'data/npy.(5)-raw/kanken-10_80'
+    output_dir = 'kanken-10_80'
+
+    dirs = [
+        f'data/{output_dir}',
+        f'data/{output_dir}/npy.(5)-post',
+        f'data/{output_dir}/png-post'
+    ]
+
+    for dir in dirs:
+        if os.path.exists(dir): continue
+        os.mkdir(dir)
 
     white_list = []
-    white_list = infer_file_names(['イ'])
+    # white_list = infer_file_names(['目'])
 
-    for (dirpath, dirnames, filenames) in walk(DIR_NAME):
+    for (dirpath, dirnames, filenames) in os.walk(input_dir):
         for filename in filenames:
             if not filename.endswith('npy'): continue
             if len(white_list) and not filename in white_list: continue
-            process(dirpath, filename)
+            process(output_dir, dirpath, filename)

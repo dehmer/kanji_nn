@@ -1,11 +1,10 @@
 import numpy as np
 from functools import cached_property, partial
 import matplotlib.pyplot as plt
-from ..math import calc_kinematic
 
 class Kinematics:
-    def __init__(self, raw, configs, figsize=(14, 10)):
-        self.raw = raw
+    def __init__(self, data, configs, figsize=(14, 10)):
+        self.data = data
         self.configs = configs
 
         fig, (ax_top, ax_bottom) = plt.subplots(2, 1, figsize=figsize)
@@ -15,27 +14,25 @@ class Kinematics:
         self.ax_top = ax_top
         self.ax_bottom = ax_bottom
 
-        self.blocks = calc_kinematic({'raw': raw})
-
     @cached_property
     def timestamp(self):
-        return self.blocks['raw'][:, 0]
+        return self.data['timestamp']
 
     @cached_property
     def x(self):
-        return self.blocks['raw'][:, 1]
+        return self.data['x']
 
     @cached_property
     def y(self):
-        return self.blocks['raw'][:, 2]
+        return self.data['y']
 
     @cached_property
     def pressure(self):
-        return self.blocks['raw'][:, 3]
+        return self.data['pressure']
 
     @cached_property
     def pen(self):
-        return self.blocks['raw'][:, 4]
+        return self.data['pen']
 
     def _plot_character(self):
         pen = self.pen
@@ -111,7 +108,7 @@ class Kinematics:
             ax = axes[i]
             color = config['color']
             label = config['label']
-            data = config['data'](self.blocks)
+            data = config['data'](self.data)
             masked = np.where(invalid_mask, np.nan, data)
             linestyle = config.get('linestyle', None)
 
@@ -148,7 +145,7 @@ class Kinematics:
         texts = [f"Time: {current_timestamp:.0f} ms"]
         for i, config in enumerate(self.configs):
             label = config['label']
-            data = config['data'](self.blocks)
+            data = config['data'](self.data)
             current_data = data[idx]
             text = f"{label}: {current_data:.4f}" if not np.isnan(current_data) else "NaN"
             texts.append(text)
@@ -175,7 +172,7 @@ class Kinematics:
 
 
     def _on_top_event(self, event):
-        blocks, configs = self.blocks, self.configs
+        blocks, configs = self.data, self.configs
         timestamp = self.timestamp
         x, y = self.x, self.y
 

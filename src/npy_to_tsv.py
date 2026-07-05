@@ -17,16 +17,19 @@ def extract_code_point(filename):
 def cp_to_chr(cp):
     return chr(int(cp[2:], 16))
 
+
 def split_strokes(raw):
     # drop pen status and split into strokes
     split_indices = np.where(raw[:, 4] == 0)[0] + 1
     raw = raw[:, :-1]
     return np.split(raw, split_indices[:-1])
 
+
 def format_line(cp, literal, stroke_count, strokes):
     strokes = [np.array2string(stroke[:,[1,2]], separator=', ') for stroke in strokes]
     strokes = ', '.join(strokes).replace('\n', '')
     return f"{literal}\t{cp}\t{stroke_count}\t[{strokes}]"
+
 
 def process(filename):
 

@@ -1,7 +1,8 @@
+import math as math
 import numpy as np
-from scipy.interpolate import CubicSpline
+from scipy.interpolate import CubicSpline, interp1d
 
-def resample_cubic_spline(stroke, n_points=32):
+def resample_cubic_spline(stroke, max_points=18):
     """
     Resample a stroke using cubic splines and arc-length parameterization.
 
@@ -30,28 +31,15 @@ def resample_cubic_spline(stroke, n_points=32):
     s = np.concatenate([[0], np.cumsum(d)])
 
     total_length = s[-1]
+    n_points = max(2, min(max_points, round(total_length / math.sqrt(2) * max_points)))
 
     if total_length == 0:
         return np.repeat(stroke[:1], n_points, axis=0)
 
-    # Remove duplicate arc-length values
-    keep = np.concatenate([[True], np.diff(s) > 1e-12])
-    s = s[keep]
-    pts = stroke[keep]
-
-    # If too few distinct points remain
-    if len(pts) == 1:
-        return np.repeat(pts, n_points, axis=0)
-
-    # Choose spline order
-    bc = "natural"
-
-    sx = CubicSpline(s, pts[:, 0], bc_type=bc)
-    sy = CubicSpline(s, pts[:, 1], bc_type=bc)
-
-    s_new = np.linspace(0, total_length, n_points)
-
-    out = np.column_stack([sx(s_new), sy(s_new)])
+    sx = CubicSpline(s, stroke[:, 0], bc_type="natural")
+    sy = CubicSpline(s, stroke[:, 1], bc_type="natural")
+    s = np.linspace(0, total_length, n_points)
+    out = np.column_stack([sx(s), sy(s)])
 
     # Cubic splines can overshoot slightly
     return np.clip(out, 0.0, 1.0)
