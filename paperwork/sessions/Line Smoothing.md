@@ -1,5 +1,5 @@
 Topic: Ramer-Douglas-Peucker
-Bot: Gimini
+Bot: Gemini
 Date: 26 06 26
 
 > What are possible line smoothing algorithms for digitally written kanji?

@@ -43,6 +43,8 @@ def parse_archive(filename, filter):
 
         # There are 88 unique variant types for a total of 4,958 entries.
         variant = match.group(3) if len(match.groups(3)) else None
+        if variant:
+            continue
 
         groups = code_point.groups(literal)
 

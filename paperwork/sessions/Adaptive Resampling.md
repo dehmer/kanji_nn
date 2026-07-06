@@ -19,13 +19,14 @@ To classify strokes effectively before re-sampling, your feature vector should c
 ## Adaptive Re-Sampling Strategies Based on Classification
 Once a stroke (or sub-stroke segment) is classified, you can apply targeted re-sampling densities:
 
+```
 [Raw Stroke Data] ──> [Feature Extraction] ──> [Geometry-Based Classification]
                                                         │
          ┌───────────────────────┬──────────────────────┴──────────────────────┐
          ▼                       ▼                                             ▼
   [Sharp Curves/Hooks]    [Straight Lines]                              [Complex Glyphs]
 (High-density sampling)  (Low-density/Endpoint)                      (Curvature-proportional)
-
+```
 
 * Critical Point Retention (Hooks and Corners): For segments classified as corners (qu-zhe) or hooks (hane), increase sampling density dynamically using an angular threshold. If $\Delta\theta$ between consecutive points exceeds a specific limit, inject interpolated points to preserve the sharp geometry.
 * Douglas-Peucker (DP) Optimization for Straight Segments: For segments classified as straight or low-curvature lines, apply the Douglas-Peucker algorithm. This reduces data points to just the essential vertices, saving memory without losing visual fidelity.

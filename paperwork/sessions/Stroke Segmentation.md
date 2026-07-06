@@ -1,5 +1,5 @@
 Topic: Stroke Segmentation
-Bot: Gimini
+Bot: Gemini
 Date: 26 07 03
 
 > Do you know an algorithm which splits a 2D linestring into curvy and straight segments?

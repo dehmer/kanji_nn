@@ -12,14 +12,14 @@ def load_wkb(base_name):
     - dict: {'index': int, 'label': str, 'strokes': [np.array, np.array, ...]}
     """
 
-    csv_path = f"{base_name}.csv"
-    bin_path = f"{base_name}.wkb"
+    csv_path = f"data/wkb/{base_name}.csv"
+    bin_path = f"data/wkb/{base_name}.wkb"
 
     with open(csv_path, mode='r', encoding='utf-8') as csv_file, open(bin_path, mode='rb') as bin_file:
         csv_reader = csv.reader(csv_file)
 
-        # Skip the header row
-        header = next(csv_reader, None)
+        # # Skip the header row
+        # header = next(csv_reader, None)
 
         for row in csv_reader:
             if not row:

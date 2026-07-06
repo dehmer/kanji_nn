@@ -1,5 +1,5 @@
 Topic: Hook Detection
-Bot: Gimini
+Bot: Gemini
 Date: 26 06 30
 
 > Welche Möglichkeiten gibt es bei einem Linienzug "enge" Kurven zu detektieren (mind. Anfang). Der Linienzug besteht aus n Punkten mit jeweils Zeitstempel, x und y Koordinate. 

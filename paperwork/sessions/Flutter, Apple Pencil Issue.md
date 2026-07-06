@@ -1,5 +1,5 @@
 Topic: Flutter, Apple Pencil Issue
-Bot: Gimini
+Bot: Gemini
 Date: 26 06 25
 
 > I have written an application in Flutter running on iPad Pro 12.9 inches. In this application I draw japanese kanji and/or kana characters. I use Listener API to collect the points for all strokes as PointerEvent entries.

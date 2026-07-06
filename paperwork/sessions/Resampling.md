@@ -1,5 +1,5 @@
 Topic: Resampling
-Bot: Gimini
+Bot: Gemini
 Date: 26 06 30
 
 > In the context of LSTM training, what are possible resample strategies for 2D stroke data?

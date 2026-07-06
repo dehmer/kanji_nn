@@ -1,5 +1,5 @@
 Topic: Ramer-Douglas-Peucker
-Bot: Gimini
+Bot: Gemini
 Date: 26 06 26
 
 > A digitally written Japanese Kanji or Kana character is
@@ -384,23 +384,23 @@ def rdp_simplify_stroke(stroke, epsilon):
     Parameters:
     stroke (numpy.ndarray): Shape (m, 3) -> [x, y, timestamp]
     epsilon (float): Maximum perpendicular distance allowed for a point to be discarded.
-    
+
     Returns:
     numpy.ndarray: Simplified stroke.
     """
     if stroke.shape[0] <= 2:
         return stroke.copy()
-    
+
     # Isolate X and Y coordinates for geometric distance calculations
     points = stroke[:, :2]
     start = points[0]
     end = points[-1]
-    
+
     # Calculate perpendicular distances from all points to the line segment (start -> end)
     # Line vector
     line_vec = end - start
     line_len_sq = np.sum(line_vec**2)
-    
+
     if line_len_sq == 0:
         # Start and end points are identical, compute distance to the start point
         distances = np.linalg.norm(points - start, axis=1)
@@ -408,17 +408,17 @@ def rdp_simplify_stroke(stroke, epsilon):
         # Standard perpendicular distance calculation
         cross_product = np.cross(line_vec, start - points)
         distances = np.abs(cross_product) / np.sqrt(line_len_sq)
-    
+
     # Find the point with the maximum distance
     max_idx = np.argmax(distances)
     max_dist = distances[max_idx]
-    
+
     # If the max distance is greater than epsilon, recursively split and simplify
     if max_dist > epsilon:
         # Simplify the two halves recursively
         left_half = rdp_simplify_stroke(stroke[:max_idx + 1], epsilon)
         right_half = rdp_simplify_stroke(stroke[max_idx:], epsilon)
-    
+
         # Concatenate the halves, avoiding duplicating the edge point
         return np.vstack((left_half[:-1], right_half))
     else:

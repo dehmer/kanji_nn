@@ -1,5 +1,5 @@
 Topic: mathplotlib
-Bot: Gimini
+Bot: Gemini
 Date: 26 07 01
 
 > Given is a Japenese Kanji character as a 2D NumPy array of strokes which contains

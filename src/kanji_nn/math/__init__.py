@@ -1,2 +1,5 @@
 from .kinematic import kinematic
 from .geometry import geometry
+from .get_geometric_features import get_geometric_features
+from .sample_segment_adaptively import sample_segment_adaptively
+from .sample_kanji_to_array import sample_kanji_to_array

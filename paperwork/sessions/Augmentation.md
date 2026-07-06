@@ -1,5 +1,5 @@
 Topic: Augmentation
-Bot: Gimini
+Bot: Gemini
 Date: 26 06 29
 
 > Say I want to train a LSTM or Transformer modell of Kanji, Hiragana and Katakana vector data. Would a sophisticated data augmentation on 1 sample per label be suffice to replace actual samples with artificially created samples?
@@ -166,53 +166,53 @@ def enrich_kanjivg_features(data_array):
 
     Input-Format (data_array):
         Shape: (N, 3) -> Spalten: [X, Y, Pen_State] (Pen_State: 0=Up, 1=Down)
-    
+
     Output-Format:
         Shape: (N, 7) -> Spalten: [X, Y, Pen_State, dX, dY, Distance, Heading]
     """
     n_points = data_array.shape[0]
-    
+
     # 1. Arrays für neue Features initialisieren
     deltas = np.zeros((n_points, 2))      # [dX, dY]
     distances = np.zeros((n_points, 1))   # [Distance]
     headings = np.zeros((n_points, 1))    # [Heading in Radiant]
-    
+
     if n_points < 2:
         # Falls das Array leer ist oder nur 1 Punkt existiert
         return np.hstack((data_array, deltas, distances, headings))
-    
+
     # 2. Koordinaten isolieren
     xy = data_array[:, :2]
-    
+
     # 3. Deltas berechnen: P(n) - P(n-1)
     # Verwende Slicing für vektorisierte Subtraktion
     deltas[1:] = xy[1:] - xy[:-1]
-    
+
     # 4. Euklidische Distanz berechnen: sqrt(dX^2 + dY^2)
     distances[1:, 0] = np.linalg.norm(deltas[1:], axis=1)
-    
+
     # 5. Heading (Winkel) berechnen via arctan2(dY, dX)
     # Liefert Werte im Bogenmaß (Radiant) zwischen -pi und +pi
     headings[1:, 0] = np.arctan2(deltas[1:, 1], deltas[1:, 0])
-    
+
     # 6. Kontinuitäts-Korrektur (Optional aber empfohlen):
     # Wenn der VORGÄNGER-Punkt ein "Pen-Up" (0) war, beginnt ein neuer Strich.
     # Der aktuelle Punkt hat somit keine echte physikalische Kontinuität zum Vorgänger.
     pen_states = data_array[:, 2]
-    
+
     # Finde Indizes, bei denen der vorherige Zustand 0 (Pen-Up) war
     # Da wir P(n) mit P(n-1) vergleichen, verschieben wir die Maske um 1 nach rechts
     after_penup_mask = np.zeros(n_points, dtype=bool)
     after_penup_mask[1:] = (pen_states[:-1] == 0)
-    
+
     # Setze Features an diesen "Schnittstellen" auf 0 zurück
     deltas[after_penup_mask] = 0.0
     distances[after_penup_mask, 0] = 0.0
     headings[after_penup_mask, 0] = 0.0
-    
+
     # 7. Alle Features horizontal zusammenfügen
     enriched_array = np.hstack((data_array, deltas, distances, headings))
-    
+
     return enriched_array
 # --- Minimales Test-Szenario ---if __name__ == "__main__":
     # Beispiel-Daten: Ein Strich von (0,0) nach (3,4) [Pen-Down],
@@ -223,9 +223,9 @@ def enrich_kanjivg_features(data_array):
         [3.0,  4.0, 0.0],  # Punkt 2 Ende -> Stift hochgehoben (Up)
         [10.0, 10.0, 1.0]  # Start Punkt 3 -> Nach Pen-Up (Werte sollten 0 sein)
     ])
-    
+
     result = enrich_kanjivg_features(test_data)
-    
+
     print("Format: [X, Y, Pen, dX, dY, Dist, Heading]")
     print(np.round(result, 2))
 
@@ -274,33 +274,33 @@ class TrajectoryAugmentation(object):
         # 1. Ursprüngliche Kern-Features isolieren
         xy = sample[:, :2].copy()
         pen_state = sample[:, 2].copy()
-    
+
         # --- AUGMENTATION 1: Time Warping (Zeitliche Verzerrung) ---
         # Bestimme den neuen zeitlichen Streckungsfaktor
         warp_factor = np.random.uniform(self.time_warp_range[0], self.time_warp_range[1])
         old_n = len(sample)
         new_n = int(old_n * warp_factor)
-    
+
         if new_n > 2:
             # Erzeuge alte und neue Zeitachsen
             old_ticks = np.linspace(0, 1, old_n)
             new_ticks = np.linspace(0, 1, new_n)
-    
+
             # Interpolation der Koordinaten (X, Y) auf die neue Zeitachse
             xy_warped = np.zeros((new_n, 2))
             xy_warped[:, 0] = np.interp(new_ticks, old_ticks, xy[:, 0])
             xy_warped[:, 1] = np.interp(new_ticks, old_ticks, xy[:, 1])
-    
+
             # Interpolation des Pen-States (Nächster-Nachbar-Verfahren, um 0 oder 1 zu halten)
             pen_warped = np.interp(new_ticks, old_ticks, pen_state)
             pen_state = np.round(pen_warped) # Zurück auf harte 0.0 oder 1.0 bringen
             xy = xy_warped
-    
+
         # --- AUGMENTATION 2: Gaußsches Rauschen (Koordinaten-Zittern) ---
         if self.noise_std > 0:
             noise = np.random.normal(0, self.noise_std, xy.shape)
             xy += noise
-    
+
         # --- RE-BERECHNUNG DER DYNAMISCHEN FEATURES ---
         # Da sich Abstände und Winkel durch Verlangsamung/Rauschen geändert haben,
         # müssen die Spalten 3 bis 6 für das LSTM/Transformer zwingend neu berechnet werden!
@@ -308,24 +308,24 @@ class TrajectoryAugmentation(object):
         deltas = np.zeros((actual_n, 2))
         distances = np.zeros((actual_n, 1))
         headings = np.zeros((actual_n, 1))
-    
+
         # Deltas & Distanz berechnen
         deltas[1:] = xy[1:] - xy[:-1]
         distances[1:, 0] = np.linalg.norm(deltas[1:], axis=1)
         headings[1:, 0] = np.arctan2(deltas[1:, 1], deltas[1:, 0])
-    
+
         # Pen-Up Maskierung (Keine Berechnungen über Luftbewegungen hinweg)
         after_penup_mask = np.zeros(actual_n, dtype=bool)
         after_penup_mask[1:] = (pen_state[:-1] == 0)
-    
+
         deltas[after_penup_mask] = 0.0
         distances[after_penup_mask, 0] = 0.0
         headings[after_penup_mask, 0] = 0.0
-    
+
         # Heading-Normalisierung für bessere Gradienten-Konvergenz im Deep Learning
         if self.normalize_heading:
             headings = headings / np.pi
-    
+
         # 3. Zusammenfügen zum finalen augmentierten Array
         augmented_sample = np.hstack((
             xy,
@@ -334,7 +334,7 @@ class TrajectoryAugmentation(object):
             distances,
             headings
         ))
-    
+
         # Als PyTorch FloatTensor zurückgeben
         return torch.tensor(augmented_sample, dtype=torch.float32)
 # --- Integration in ein PyTorch Dataset ---class KanjiDataset(torch.utils.data.Dataset):
@@ -344,10 +344,10 @@ class TrajectoryAugmentation(object):
         """
         self.samples = raw_samples
         self.transform = transform
-    
+
     def __len__(self):
         return len(self.samples)
-    
+
     def __getitem__(self, idx):
         sample = self.samples[idx]
         if self.transform:
@@ -363,7 +363,7 @@ Möchten Sie wissen, wie Sie eine passende collate_fn für den PyTorch DataLoade
 
 > Ja, generiere mit eine passende collate_fn Funktion. Kann man dabei, oder besser vorher, darauf achten die maximale Sequenzlänge von beispielsweise 80 Punkten nicht zu überschreiten. Padding ist OK, aber Informationen zu verlieren nicht.
 
-Um sicherzustellen, dass Ihr Transformer oder LSTM stabil trainiert, müssen zwei Probleme gleichzeitig gelöst werden: Variable Sequenzlängen durch die Augmentation abzufangen (**Padding**) und die maximale Länge von **80 Punkten strikt einzuhalten, ohne Daten zu verlieren**. [1] 
+Um sicherzustellen, dass Ihr Transformer oder LSTM stabil trainiert, müssen zwei Probleme gleichzeitig gelöst werden: Variable Sequenzlängen durch die Augmentation abzufangen (**Padding**) und die maximale Länge von **80 Punkten strikt einzuhalten, ohne Daten zu verlieren**. [1]
 
 Da Sie keine Informationen verlieren dürfen (kein Abschneiden/Truncation), nutzen wir das mathematische Prinzip des **Downsamplings**. Wenn die Augmentation eine Trajektorie über 80 Punkte streckt, komprimieren wir die Zeitachse exakt so, dass das Zeichen geometrisch identisch bleibt, aber exakt in das 80-Punkte-Raster passt.
 
@@ -387,24 +387,24 @@ class TrajectoryAugmentationWithLimit(object):
     def __call__(self, sample):
         xy = sample[:, :2].copy()
         pen_state = sample[:, 2].copy()
-        
+
         # 1. Reguläres Time Warping
         warp_factor = np.random.uniform(self.time_warp_range[0], self.time_warp_range[1])
         old_n = len(sample)
         new_n = int(old_n * warp_factor)
-        
+
         # --- CRITICAL GUARD: Erzwinge maximal 80 Punkte OHNE Informationsverlust ---
         if new_n > self.max_length:
             new_n = self.max_length  # Deckelung auf das Maximum
-            
+
         if new_n > 2:
             old_ticks = np.linspace(0, 1, old_n)
             new_ticks = np.linspace(0, 1, new_n)
-            
+
             xy_warped = np.zeros((new_n, 2))
             xy_warped[:, 0] = np.interp(new_ticks, old_ticks, xy[:, 0])
             xy_warped[:, 1] = np.interp(new_ticks, old_ticks, xy[:, 1])
-            
+
             pen_warped = np.interp(new_ticks, old_ticks, pen_state)
             pen_state = np.round(pen_warped)
             xy = xy_warped
@@ -418,18 +418,18 @@ class TrajectoryAugmentationWithLimit(object):
         deltas = np.zeros((actual_n, 2))
         distances = np.zeros((actual_n, 1))
         headings = np.zeros((actual_n, 1))
-        
+
         deltas[1:] = xy[1:] - xy[:-1]
         distances[1:, 0] = np.linalg.norm(deltas[1:], axis=1)
         headings[1:, 0] = np.arctan2(deltas[1:, 1], deltas[1:, 0]) / np.pi # Direkt normiert
-        
+
         after_penup_mask = np.zeros(actual_n, dtype=bool)
         after_penup_mask[1:] = (pen_state[:-1] == 0)
-        
+
         deltas[after_penup_mask] = 0.0
         distances[after_penup_mask, 0] = 0.0
         headings[after_penup_mask, 0] = 0.0
-        
+
         augmented_sample = np.hstack((xy, pen_state.reshape(-1, 1), deltas, distances, headings))
         return torch.tensor(augmented_sample, dtype=torch.float32)
 ```
@@ -446,10 +446,10 @@ Zusätzlich erzeugen wir eine **Padding-Maske** (wichtig für Transformer-Attent
 def pad_trajectory_collate_fn(batch):
     """
     Sorgt für das automatische Padding innerhalb eines Batches im DataLoader.
-    
+
     Args:
         batch: Liste von Tensoren, die aus dem Dataset kommen (jeweils Shape: [N, 7])
-        
+
     Returns:
         padded_samples: Tensor der Shape (Batch_Size, Max_Length_In_Batch, 7)
         lengths: Tensor der echten Sequenzlängen (Shape: [Batch_Size])
@@ -458,23 +458,23 @@ def pad_trajectory_collate_fn(batch):
     """
     # 1. Sortiere den Batch nach Länge absteigend (Zwingend erforderlich für LSTM pack_padded_sequence)
     batch.sort(key=lambda x: len(x), reverse=True)
-    
+
     # 2. Extrahiere die echten Längen der einzelnen Zeichen im Batch
     lengths = torch.tensor([len(sample) for sample in batch], dtype=torch.long)
-    
+
     # 3. Führe das Padding durch (füllt kürzere Sequenzen am Ende mit 0 auf)
     # batch_first=True erzeugt das Format (Batch, Zeitachse, Features)
     padded_samples = pad_sequence(batch, batch_first=True, padding_value=0.0)
-    
+
     # 4. Erstelle die Attention-Maske für Transformer-Modelle
     # Initialisiere eine Matrix aus Nullen mit derselben Batch- und Sequenzgröße
     batch_size, max_len, feature_dim = padded_samples.shape
     attention_mask = torch.zeros((batch_size, max_len), dtype=torch.bool)
-    
+
     # Setze True für alle Indizes, die echte Daten enthalten
     for i, length in enumerate(lengths):
         attention_mask[i, :length] = True
-        
+
     return padded_samples, lengths, attention_mask
 ```
 
@@ -494,9 +494,9 @@ dataset = KanjiDataset(raw_kanjivg_data, transform=transform_pipeline)
 
 # DataLoader mit der benutzerdefinierten collate_fn starten
 data_loader = torch.utils.data.DataLoader(
-    dataset, 
-    batch_size=2, 
-    shuffle=True, 
+    dataset,
+    batch_size=2,
+    shuffle=True,
     collate_fn=pad_trajectory_collate_fn  # <-- Hier einklinken
 )
 
