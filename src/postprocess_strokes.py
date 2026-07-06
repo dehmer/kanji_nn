@@ -4,7 +4,7 @@ import os
 import re
 from functools import reduce, partial
 import numpy as np
-from kanji_nn.plot import Kinematics, literal, plot_stroke_geometry
+from kanji_nn.plot import Kinematics, plot_stroke_geometry, character
 import kanji_nn.math as math
 from kanji_nn.conditioning import *
 
@@ -79,7 +79,7 @@ def process(output_dir, dirpath, filename):
     # character.show(raw)
     strokes = process_character(raw)
     # character.show(strokes)
-    literal.save(f'data/{output_dir}/png-post/{code_point}', strokes)
+    character.save(f'data/{output_dir}/png-post/{code_point}', strokes)
 
 if __name__ == "__main__":
     np.set_printoptions(edgeitems=30, linewidth=240,  formatter=dict(float=lambda x: "%.3g" % x))
