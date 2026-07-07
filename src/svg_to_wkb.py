@@ -72,6 +72,8 @@ if __name__ == '__main__':
 
     with open(csv_path, mode='w', newline='', encoding='utf-8') as csv_file, open(bin_path, mode='wb') as bin_file:
         csv_writer = csv.writer(csv_file)
+        csv_writer.writerow(["index", "label", "offset", "length"])
+
         filter = literal_filter('一日鼻')
         filter = kanken_filter
         filter = filters.hiragana_46
