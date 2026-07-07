@@ -3,7 +3,7 @@ Bot: ChatGPT
 Date: 26 07 04
 
 > Let's assume I want to train a LSTM model with Japanese Kanji and Kana stroke vector data
-from open-source project KanjiVG. What would be an optional processing pipeline to resample
+from open-source project KanjiVG. What would be an optimal processing pipeline to resample
 SVG path data (including Bezier curves). Input tensors can have varying length but a maximum
 sequence number, e.g. 128 points for all strokes. Model input size will be 4 (four) columns:
 Δx, Δy, normalized arc distance of point and pen-down/-up feature. The last point of each

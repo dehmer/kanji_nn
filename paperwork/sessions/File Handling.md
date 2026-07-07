@@ -15,7 +15,11 @@ This approach reduces code duplication by centralizing file handling. It keeps t
 ## The Implementation (Gemini)
 Here is a clean, robust pattern using standard Python libraries:
 
-import csvimport osfrom typing import Generator, Tuple
+```python
+import csv
+import os
+from typing import Generator, Tuple
+
 class BinaryDataReader:
     def __init__(self, index_csv_path: str, binary_data_path: str):
         self.index_csv_path = index_csv_path
@@ -72,6 +76,7 @@ class BinaryDataReader:
         # Avoid manual loops; reuse the random access logic safely
         for idx in range(len(self)):
             yield self.get_item(idx)
+```
 
 ## How to Use It
 
