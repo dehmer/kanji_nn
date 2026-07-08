@@ -5,7 +5,7 @@ import numpy as np
 from functools import reduce, partial
 import torch
 from kanji_nn.io import WKBReader
-from kanji_nn.data import KanjiVGDataset, transform_absolute
+from kanji_nn.data import KanjiVGDataset, transform_absolute, s_weighted_random_walk_noise
 from kanji_nn.plot import character
 from kanji_nn.conditioning import rdp_to_budget_flat
 
@@ -32,13 +32,17 @@ def absolute_of(sequence, point_zero):
 
 # shape strokes to tensor sequence
 def shape_tensor_sequence(strokes):
+    """
+
+    """
     rows = []
     for stroke in strokes:
 
         # calculate s(t) - normalized cumulative arc length:
         length = np.linalg.norm(np.diff(stroke, axis=0), axis=1)
         s = np.concatenate([[0.0], np.cumsum(length)])
-        s /= s[-1]
+        total = s[-1]
+        s = s / total if total > 0 else np.zeros_like(s)
 
         # clamp (optional) and make hstack-friendly:
         s = np.clip(s, 0, 1).reshape(-1, 1)
@@ -95,21 +99,24 @@ if __name__ == "__main__":
     MAX_SEQUENCE_LENGTH = 256
     np.set_printoptions(precision=5, suppress=True)
 
+    filter = filter_literals("攣")
     reader = WKBReader(DIR, "kanken_6355")
+    # reader = WKBReader(DIR, "kanken_6355", filter=filter)
     sample_count = len(reader)
     encode_label, lookup_label = prepare_label_encoding(reader)
 
     # label transform:
     target_transform = compose(
         lambda idx: torch.tensor(idx, dtype=torch.long),
-        lambda idx: encode_label(idx % sample_count)
+        lambda idx: encode_label(idx)
     )
 
     # strokes transform:
     transform = compose(
         torch.from_numpy,
+        partial(s_weighted_random_walk_noise, sigma_base=0.03, k=1.0, rho=0.85),
         shape_tensor_sequence,
-        transform_absolute,
+        # transform_absolute,
         partial(downsample, max_budget=MAX_SEQUENCE_LENGTH),
         lambda idx: reader[idx][1]
     )
@@ -121,12 +128,13 @@ if __name__ == "__main__":
         strokes = reader[idx][1]
         point_zero = strokes[0][0]
         label = lookup_label(idx)
+        print(literal(label))
 
         transformed = transform(idx)
         strokes = absolute_of(transformed, point_zero)
         filename = f'data/transform/kanken_6355/png/{label}-{uuid.uuid4()}'
         character.save(filename, strokes) # save plot
-        # character.show(strokes) # plot strokes
+        character.show(strokes) # plot strokes
         return transformed
 
     # Initialize dataset:

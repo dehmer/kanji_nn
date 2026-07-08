@@ -6,7 +6,7 @@ import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from functools import partial
 import numpy as np
-import kanji_nn.plot.literal as literal
+import kanji_nn.plot.character as character
 
 class JSONRequestHandler(BaseHTTPRequestHandler):
     def __init__(self, output_dir, *args, **kwargs):
