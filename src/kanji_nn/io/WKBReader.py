@@ -20,7 +20,7 @@ class WKBReader:
 
         # Load index to memory and close file immediately.
         with self.index_path.open(newline="") as f:
-            self.index = [
+            self.meta = [
                 # Note: We are dropping reduncant index column.
                 IndexEntry(row["label"], int(row["offset"]), int(row["length"]))
                 for row in csv.DictReader(f)
@@ -36,10 +36,10 @@ class WKBReader:
             self.wkb = None
 
     def __len__(self):
-        return len(self.index)
+        return len(self.meta)
 
     def __getitem__(self, idx):
-        entry = self.index[idx]
+        entry = self.meta[idx]
         self.wkb.seek(entry.offset)
         buffer = self.wkb.read(entry.length)
 
