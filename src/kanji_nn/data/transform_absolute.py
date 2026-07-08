@@ -75,13 +75,17 @@ def apply_affine(strokes, matrix):
     return transformed
 
 
+# TODO: refactor
+ROTATION = 10
+SCALE = 0.15
+SHEAR = 0.10
 def transform_absolute(
     strokes,
     rng=None,
-    rotation_range_deg=(-15.0, 15.0),
-    scale_x_range=(0.85, 1.15),
-    scale_y_range=(0.85, 1.15),
-    shear_range=(-0.15, 0.15),
+    rotation_range_deg=(-ROTATION, ROTATION),
+    scale_x_range=(1.0 - SCALE, 1.0 + SCALE),
+    scale_y_range=(1.0 - SCALE, 1.0 + SCALE),
+    shear_range=(-SHEAR, SHEAR),
 ):
     """
     Apply ONE randomly-sampled whole-character affine transform to all
