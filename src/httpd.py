@@ -32,17 +32,19 @@ class JSONRequestHandler(BaseHTTPRequestHandler):
                 literal = json_data['literal']
                 code_point = f"U+{format(ord(literal), 'X')}"
 
-                timestamp = np.array(json_data['ts'], dtype=np.float32)
-                xs = np.array(json_data['xs'], dtype=np.float32)
-                ys = np.array(json_data['ys'], dtype=np.float32)
-                feature = np.array(json_data['fs'], dtype=np.float32) # status feature
-                pressure = np.array(json_data['ps'], dtype=np.float32)
+                timestamp = np.array(json_data['timestamp'], dtype=np.float32)
+                dx = np.array(json_data['dx'], dtype=np.float32)
+                dy = np.array(json_data['dy'], dtype=np.float32)
+                pressure = np.array(json_data['pressure'], dtype=np.float32)
+                orientation = np.array(json_data['orientation'], dtype=np.float32)
+                tilt = np.array(json_data['tilt'], dtype=np.float32)
+                down = np.array(json_data['down'], dtype=np.float32)
 
-                raw = np.vstack([timestamp, xs, ys, pressure, feature]).T
+                raw = np.vstack([timestamp, dx, dy, pressure, orientation, tilt, down]).T
 
                 dirs = [
                     f'data/{output_dir}',
-                    f'data/{output_dir}/npy.(5)-raw',
+                    f'data/{output_dir}/npy.7-raw',
                     f'data/{output_dir}/png-raw'
                 ]
 
@@ -50,9 +52,9 @@ class JSONRequestHandler(BaseHTTPRequestHandler):
                     if os.path.exists(dir): continue
                     os.mkdir(dir)
 
-                np.save(f'data/{output_dir}/npy.(5)-raw/{code_point}.npy', raw)
-                literal.save(f'data/{output_dir}/png-raw/{code_point}.png', raw, (6, 6))
-                # character.show(clean, (10, 10))
+                np.save(f'data/{output_dir}/npy.7-raw/{code_point}.npy', raw)
+                character.save(f'data/{output_dir}/png-raw/{code_point}', raw)
+                # character.show(raw)
 
             except (ValueError, TypeError) as error:
                 msg = "error handling request"
