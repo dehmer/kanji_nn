@@ -210,7 +210,7 @@ def process_file(filename):
 
 if __name__ == "__main__":
     dataset = 'katakana_49'
-    dataset = 'hiragana-48'
+    dataset = 'hiragana_48'
     in_dir = f'data/dataset/{dataset}/npy-raw'
 
     def literal_to_hex(literal):

@@ -1,0 +1,36 @@
+Here's a summary to carry into the next conversation:
+
+---
+
+**Project: Kanji classification with LSTM — handwritten stroke data (iPad/Apple Pencil), trained on KanjiVG**
+
+**Background:** New to ML/deep learning, but a seasoned (35+ yr) software engineer with a Haskell/Scheme/functional leaning — strong preference for pure functions and composition over OOP/object state. PyTorch, macOS M2 Pro/32GB, MPS backend, `num_workers=0`. LSTM architecture choice was somewhat arbitrary (borrowed blueprint from a friend); transformer possible later. Overarching goal, clarified this session: the classifier is meant to help **students learning to write kanji/kana in standard form**, not to classify diverse native handwriting styles — this is now an explicit calibration principle for how aggressive any augmentation (Layer 1 or 2) should be.
+
+**Data formats:** unchanged from before — WKB source + CSV index; target tensor is `Δx, Δy, s(t) (per-stroke normalized), pen`; first point of character has `Δx=Δy=0`; each stroke's last point is duplicated (pen=1 then pen=0, second copy `Δx=Δy=0`), giving correct cross-stroke jump vectors "for free" via how the delta diff is computed across the whole duplicated array.
+
+**Pipeline refactor (completed this session):**
+- Moved from passing `WKBReader`/`Dataset` objects around to a composed pipeline of pure functions (`compose(f, g, h)`, right-to-left), discovered this naturally converges with PyTorch's own `transform`/`target_transform` convention on `Dataset`.
+- `KanjiVGDataset` is now a thin wrapper: `sample_count` + `transform` + `target_transform`, delegating in `__getitem__`.
+- Confirmed and fixed a real bug: `s(t)` normalization divided by zero on degenerate (zero-length/single-point) strokes, silently producing NaN. Guarded (`s/s[-1] if s[-1] > 0 else zeros`). Confirmed the current Kanji Kentei subset doesn't contain such strokes, but the guard stays in.
+- Decided (not yet implemented) that if a future "multiplier" (K augmented views per sample per epoch) is added, the `idx % sample_count` resolution should live in one shared place, not duplicated inline in `transform` and `target_transform` separately. Currently removed/parked, not blocking anything.
+- Confirmed via testing that `shape_tensor_sequence`'s duplicate-EOS mechanism correctly produces jump vectors from the last *real* point as a side effect of diffing already-duplicated absolute coordinates — not a coincidence, a deliberate and correct piece of design.
+- Layer 2 (delta-space) transforms are applied to the tensor **after** `shape_tensor_sequence` (not on the pre-tensor stroke-list, as was briefly considered) — keeps the tricky jump-vector/EOS logic in one already-tested place. Tradeoff: Layer 2 functions needing stroke boundaries must scan the `pen` column; a shared boundary-detection helper is now in place for this (`stroke_start_indices`, `structural_zero_mask`).
+
+**Layer 2 augmentation — status:**
+- Delta-space affine (direct analog of Layer 1): discussed and set aside as **redundant** — composes into a single effective affine with Layer 1, no added expressive power. Not building it.
+- **Random-walk delta noise**: built, tested, and visually confirmed working. AR(1)/OU-style noise on `(Δx, Δy)`, reset at every stroke start, never applied to structural-zero rows (row 0, EOS-duplicate rows).
+- **`s(t)`-weighted version** (`s_weighted_random_walk_noise`) built as the current working version: noise amplitude scaled by local pacing (`diff(s)` within a stroke — deliberately *not* raw delta magnitude, since `diff(s)` factors out per-stroke length and isolates true local pacing). Rationale for weighting direction (favor noise on fast/straight segments) was informed by real pen-and-paper handwriting observation this session, not just intuition.
+- Parameters and current working baseline, tuned this session against a real character (万) after initial results produced unnatural loops:
+  - `k` (pace-weighting exponent, direction/contrast of where noise concentrates): **`k = 1.0`** confirmed reasonable; **negative `k` caused severe degeneration** — traced to negative `k` pushing the noise ceiling into dense/high-point-count curve regions, which combined with high `rho` gave sustained correlated drift more points to compound over (asymmetry between + and − `k` is structural, not just stylistic).
+  - `rho` (AR(1) correlation/momentum): **originally 0.85 → caused unnatural full loops** (long same-direction runs integrate into loops via cumsum, not tremor); **dropping to ~0.3 resolved this**, confirmed the main structural fix.
+  - `sigma_base` (base noise amplitude, before pace weighting): **~0.02** currently tames residual aggressiveness on top of the `rho` fix.
+  - `weight_range` (hard clamp on the pace-based sigma multiplier): implemented as a safety rail, not yet independently tuned — worth revisiting if extreme regions still misbehave once `k`/`rho`/`sigma_base` are locked.
+  - Current read: still looks a bit unnatural but plausible as a **regularizer against overfitting**, even if not a fully faithful hand-tremor model. Explicitly flagged that "human-plausible" and "good regularizer" may not require the same parameter values — no need to force convergence unless a future goal (e.g. synthesizing realistic learner-mistake data) specifically needs the former.
+- Not yet touched: `s(t)` jitter (pacing perturbation itself, distinct from noise scaling by pacing), isotropic delta scaling (parked as a redundant subset of the affine idea), generic feature dropout/noise.
+- Open, unresolved question from earlier: whether the KanjiVG curvature→speed inference (dense Bezier-sampled points = slow/careful writing) is even the right model — flagged as an assumption chain, not measured ground truth, worth keeping in mind if future observations disagree.
+
+**Also raised and parked, not yet acted on:**
+- Layer 1 rotation range flagged (again, independently, across two sessions) as possibly too aggressive for the "careful learner" use case — deferred until there's an actual trained LSTM to experiment against.
+- Bounding-box-based x/y normalization (vs. current implicit canvas-relative [0,1] scaling) — discussed conceptually as likely beneficial (removes "how sparse is this glyph on the fixed canvas" as a confound), isotropic (not per-axis) recommended to preserve genuine aspect-ratio signal, would be a deterministic normalization step slotted right after `transform_absolute`, distinct from the random Layer 2 transforms. Not implemented yet.
+
+**Decision at end of this session:** Before going deeper on either (1) building a baseline LSTM or (2) tuning augmentation further, the person concluded that **iPad/Apple Pencil input needs a separate clean-up pass first** — real captured strokes show pen-down/up hook artifacts and micro-jitter (likely digitizer contact-transition and sensor noise, not features of the person's actual handwriting) that need addressing at the acquisition stage, separately from the KanjiVG-based synthetic pipeline. This is the intended starting point for the next conversation.
