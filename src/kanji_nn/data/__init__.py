@@ -1,4 +1,6 @@
+from .character import Character
 from .compose import compose
+from .identity import identity
 from .KanjiVGDataset import KanjiVGDataset
 from .local_pace import local_pace
 from .paced_sigma import paced_sigma
@@ -7,5 +9,6 @@ from .random_walk_delta_noise import random_walk_delta_noise
 from .s_weighted_random_walk_noise import s_weighted_random_walk_noise
 from .shape_tensor_sequence import shape_tensor_sequence
 from .stroke_start_indices import stroke_start_indices
+from .stroke import Stroke
 from .structural_zero_mask import structural_zero_mask
 from .transform_absolute import transform_absolute

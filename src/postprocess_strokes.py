@@ -1,134 +1,16 @@
 #!/usr/bin/env python3
 
 import os
-import re
 from functools import partial
-from dataclasses import dataclass, field, replace
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter1d
 
 from kanji_nn.plot import multi_channel_plot, strokes_plot
 from kanji_nn.conditioning import split_strokes
-from kanji_nn.data import compose
-
-identity = lambda x: x
-
-@dataclass(frozen=True)
-class Stroke:
-    stroke_index: int
-    raw: np.ndarray # [t, x, y, pressure]
-    code_point: str
-    literal: str
-    features: dict[str, np.ndarray] = field(default_factory=dict)
-    props: dict[str, Any] = field(default_factory=dict)
-
-    @property
-    def n_points(self) -> int:
-        return self.raw.shape[0]
-
-    @property
-    def t(self): return self.raw[:, 0]
-
-    @property
-    def duration(self): return self.t[-1] - self.t[0]
-
-    @property
-    def start(self): return self.xy[0]
-
-    @property
-    def end(self): return self.xy[-1]
-
-    @property
-    def x(self): return self.raw[:, 1]
-
-    @property
-    def y(self): return self.raw[:, 2]
-
-    @property
-    def xy(self): return self.raw[:, (1, 2)]
-
-    @property
-    def pressure(self): return self.raw[:, 3]
-
-    def clone(self, features = None, props = None, force = False):
-        # Default to empty dictionaries if None is passed
-        features = features or {}
-        props = props or {}
-
-        # Check for duplicate feature keys
-        if not force:
-            duplicate_fkeys = set(self.features) & set(features)
-            if duplicate_fkeys:
-                raise ValueError(f"[Stroke.clone()] duplicate feature key(s): {duplicate_fkeys}")
-
-            duplicate_pkeys = set(self.props) & set(props)
-            if duplicate_pkeys:
-                raise ValueError(f"[Stroke.clone()] duplicate property key(s): {duplicate_pkeys}")
-
-        # Verify feature shape alignment
-        expected_rows = self.n_points
-        for key, arr in features.items():
-            # Ensure it is a numpy array
-            if not isinstance(arr, np.ndarray):
-                raise TypeError(f"[Stroke.clone()] Feature '{key}' must be a numpy ndarray.")
-
-            # Ensure row count (n) matches n_point
-            if arr.shape[0] != expected_rows:
-                raise ValueError(
-                    f"[Stroke.clone()] Feature '{key}' row mismatch. "
-                    f"Expected {expected_rows} rows, got {arr.shape[0]}."
-                )
-
-        # Merge and return the new object
-        return replace(
-            self,
-            features=self.features | features,
-            props=self.props | props
-        )
+from kanji_nn.data import compose, identity, Character, Stroke
 
 
-def extract_code_point(filename):
-    match = re.search(r"(U\+[0-9A-F]{4,5})", filename)
-    if not match:
-        raise ValueError(f'cp: invalid format in {filename}')
-    return match.group(1)
-
-
-class Character:
-    def __init__(self, code_point, raw):
-        """
-        Fixed five column layout for raw (for now):
-        0: timestamp (t)
-        1: x coordinates
-        2: y coordinates
-        3: pressure
-        4: pen-down/-up
-        """
-        self.code_point = code_point
-        self.raw = raw
-        self.literal = chr(int(code_point[2:], 16))
-
-    @classmethod
-    def of_npy(cls, filename):
-        code_point = extract_code_point(filename)
-        raw = np.load(filename)
-
-        # Silently drop orientation and tile:
-        if raw.shape[1] == 7:
-            raw = raw[:, (0, 1, 2, 3, 6)]
-
-        return cls(code_point, raw)
-
-    # Stick either to raw xy or smoothened xy (not both).
-    def strokes(self, smooth_fn = identity):
-        strokes = split_strokes(self.raw)
-
-        def smooth(raw):
-            xy = smooth_fn(raw[:, 1:3])
-            return np.column_stack((raw[:, 0], xy, raw[:, 3:]))
-
-        return [Stroke(i, smooth(raw), self.code_point, self.literal) for i, raw in enumerate(strokes)]
 
 # def metric_arc_length(stroke):
 #     """
