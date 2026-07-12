@@ -25,7 +25,7 @@ def shape_tensor_sequence(strokes):
         # prepare pen status: (n - 1) x '1' || '0'
         pen = np.ones((len(stroke), 1), dtype=np.float32)
         pen[-1] = 0 # pen-up
-        rows.append(np.hstack((stroke, s, pen)))
+        rows.append(np.column_stack((stroke, s, pen)))
 
     # stich stroke points together:
     strokes = np.vstack(rows, dtype=np.float32)
