@@ -1,0 +1,7 @@
+> I want to create a composite plot with mathplotlib. The plot has two general areas. On the left a single kanji stroke is plotted with an overlaying scatter plot of the individual point. Stroke data is given as a 2d NumPy array (x and y coordinates). The right side should vertically stack a variable number of channels which are derived from the stroke's curve. The data for the channels are supplied in a 2D NumPy array and corresponding labels as a string list 'labels'. The stacked plots share the same x-axis 'timestamp', which is provided along the the channel data. Stroke and data arrays are equal in length (number of rows.) Can we do something in that direction?
+
+> Can you flip y axis in stroke plot and fix x and y axis values to the range of [0, 1]?
+
+> No markers necessary, but also reduce the line width in the stroke plot by 50%. Can you add interactivity? Moving the mouse cursor in any of the stacked plots to the right should display and update a slightly transparent red marker in the stroke plot. In all stacked plots a dotted vertical line should be displayed for the current timestamp value (or x value.) Alternativel a single vertical line over all plots would suffice. Conversely, is it possible to update the vertical lines in the stacked plots when mouse cursor moves over the stroke plot (also for the current timestamp.)
+
+> Might be a big ask, but is it possible to add a line to the stroke plot at the marker positions which shows the tangent for this point? The line can have a fixed length.
