@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-def _strokes(strokes, figsize):
+def _strokes(strokes, title, figsize):
     figure = plt.figure(figsize=figsize)
     for i, stroke in enumerate(strokes):
         xy = stroke.xy
@@ -18,15 +18,18 @@ def _strokes(strokes, figsize):
     ax.set_ylim([1, 0]) # assume fixed y values [0, 1]
     ax.set_axis_off()
 
+    if title:
+        ax.set_title(title)
+
     return figure
 
 
-def save(filename, strokes, figsize=(6, 6)):
-    figure = _strokes(strokes, figsize)
+def save(filename, strokes, title=None, figsize=(6, 6)):
+    figure = _strokes(strokes, title, figsize)
     plt.savefig(filename)
     plt.close(figure)
 
 
-def show(strokes, figsize=(6, 6)):
-    figure = _strokes(strokes, figsize)
+def show(strokes, title=None, figsize=(6, 6)):
+    figure = _strokes(strokes, title, figsize)
     plt.show()

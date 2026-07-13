@@ -60,6 +60,8 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
     t = stroke.t
     t -= t[0]
 
+    edges = stroke.props['edges']
+
     for i in range(num_channels):
         sharex = ax_channels[0] if i > 0 else None
         ax = fig.add_subplot(gs_channels[i, 0], sharex=sharex)
@@ -68,8 +70,16 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
         channel_data = stroke.features[channels[i]]
         ax.plot(t, channel_data, color=colors[i % len(colors)], linewidth=1)
         ax.set_ylabel(channels[i], fontsize=10, fontweight='bold')
-        ax.grid(True, linestyle='--', alpha=0.5)
+        ax.grid(False)
+        # ax.grid(True, linestyle='--', alpha=0.5)
 
+        for edge in edges:
+            edge_color = 'gray' if edge[0] == 'rising' else 'pink'
+            linestyle = ':' if edge[0] == 'rising' else '-.'
+            ax.axvline(edge[1], color=edge_color, linestyle=linestyle, linewidth=2, alpha=0.6)
+
+        # median
+        ax.axvline(t[t.size // 2], color='black', linewidth=1.5, alpha=1)
         vline = ax.axvline(x=np.nan, color='red', linestyle=':', linewidth=1.5, alpha=0.8)
         vlines.append(vline)
 
@@ -130,7 +140,8 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
 
             # Update HUD text with right-aligned formatting
             info_text = f"--- METRICS ---\n"
-            info_text += f"Time:  {current_time:.3f} s\n"
+            info_text += f"Time:  {current_time:.3f}\n"
+            info_text += f"Index: {target_idx}\n"
             info_text += f"Pos X: {px:.3f}\n"
             info_text += f"Pos Y: {py:.3f}\n"
             info_text += f"---------------\n"

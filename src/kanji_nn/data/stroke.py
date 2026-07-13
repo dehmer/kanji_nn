@@ -38,6 +38,28 @@ class Stroke:
     @property
     def pressure(self): return self.raw[:, 3]
 
+    def trim(self, head_cut = None, tail_cut = None):
+        """
+        head_cut, tail_cut: 0-based timestamp offsets
+        """
+        start_idx, end_idx = 0, self.n_points # incl./excl.
+        t = self.t - self.t[0]
+
+        if head_cut:
+            mask = (t == head_cut)
+            start_idx = np.argmax(mask) if mask.any() else 0
+
+        if tail_cut:
+            mask = (t == tail_cut)
+            end_idx = np.argmax(mask) if mask.any() else self.n_points
+
+        raw = self.raw[start_idx:end_idx, :]
+
+        return replace(
+            self,
+            raw=raw
+        )
+
     def clone(self, features = None, props = None, force = False):
         # Default to empty dictionaries if None is passed
         features = features or {}

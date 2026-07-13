@@ -1,7 +1,7 @@
 import re
 import numpy as np
 from .identity import identity
-from ..conditioning import split_strokes
+from ..conditioning import split_strokes, join_strokes
 from .stroke import Stroke
 
 
@@ -35,6 +35,13 @@ class Character:
         if raw.shape[1] == 7:
             raw = raw[:, (0, 1, 2, 3, 6)]
 
+        return cls(code_point, raw)
+
+    @classmethod
+    def of_strokes(cls, strokes):
+        code_point = strokes[0].code_point
+        strokes = [stroke.raw for stroke in strokes]
+        raw = join_strokes(strokes)
         return cls(code_point, raw)
 
     # Stick either to raw xy or smoothened xy (not both).
