@@ -76,7 +76,7 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
         for edge in edges:
             edge_color = 'gray' if edge[0] == 'rising' else 'pink'
             linestyle = ':' if edge[0] == 'rising' else '-.'
-            ax.axvline(edge[1], color=edge_color, linestyle=linestyle, linewidth=2, alpha=0.6)
+            ax.axvline(t[edge[1]], color=edge_color, linestyle=linestyle, linewidth=2, alpha=0.6)
 
         # median
         ax.axvline(t[t.size // 2], color='black', linewidth=1.5, alpha=1)

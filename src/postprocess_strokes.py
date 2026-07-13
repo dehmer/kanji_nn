@@ -31,6 +31,7 @@ def combined_straightness(stroke):
 
 threshold=0.2
 composed_metrics = compose(
+    metrics.consolidate_edges,
     partial(metrics.detect_edges, signal_key='local_straightness', threshold=threshold),
     partial(metrics.detect_edges, signal_key='straightness', threshold=threshold),
     metrics.local_straightness,
@@ -57,14 +58,9 @@ def process_file(filename):
         stroke = stroke.clone(features={"pressure": stroke.pressure})
         stroke = composed_metrics(stroke)
 
-        edges = stroke.props['edges']
-        falling, rising = partition(lambda edge: edge[0] == 'falling', edges)
-        if len(edges) % 2:
-          print(stroke.literal, stroke.stroke_index, 'edges', len(edges), 'falling', len(list(falling)), 'rising', len(list(rising)))
-
         # channels = ["pressure", "straightness", "central_speed", "θ", "dθ/ds", "K",]
         # channels = ["pressure", "dP/dt", "straightness", "local_straightness", "central_speed", "at", "axy"]
-        channels = ["pressure", "straightness", "local_straightness", "central_speed"]
+        channels = ["pressure", "dP/dt", "straightness", "local_straightness", "central_speed"]
         multi_channel_plot(stroke, channels, figsize=(18, 8))
         # plt.savefig("kinematics")
         plt.show()
