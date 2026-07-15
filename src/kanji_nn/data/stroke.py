@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field, replace
 import numpy as np
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Stroke:
     dataset: str
     stroke_index: int

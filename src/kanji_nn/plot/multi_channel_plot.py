@@ -39,7 +39,13 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
     stroke_marker, = ax_stroke.plot([], [], 'ro', markersize=6, alpha=0.7, zorder=5)
     tangent_line, = ax_stroke.plot([], [], color='red', linestyle='-', linewidth=2.0, alpha=0.9, zorder=4)
 
-    title = f'Kanji Stroke Spatial Trajectory: {stroke.literal} - {stroke.code_point}, Stroke: {stroke.stroke_index}'
+    title_lines = [
+        "Kanji Stroke Spatial Trajectory",
+        f"{stroke.literal} - {stroke.code_point}, Stroke: {stroke.stroke_index}",
+        f"type: {stroke.stroke_type[1]}, {stroke.stroke_type[2]}"
+    ]
+
+    title = "\n".join(title_lines)
     ax_stroke.set_title(title, fontsize=12, fontweight='bold', pad=10)
     ax_stroke.set_xlabel('X Coordinate')
     ax_stroke.set_ylabel('Y Coordinate')

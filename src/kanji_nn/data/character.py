@@ -88,7 +88,14 @@ class Character:
             xy = smooth_fn(raw[:, 1:3])
             return np.column_stack((raw[:, 0], xy, raw[:, 3:]))
 
-        return [Stroke(self.dataset, i, smooth(raw), self.code_point, self.literal, types[i]) for i, raw in enumerate(strokes)]
+        return [Stroke(
+            dataset = self.dataset,
+            stroke_index = i,
+            raw = smooth(raw),
+            code_point = self.code_point,
+            literal = self.literal,
+            stroke_type = types[i]
+        ) for i, raw in enumerate(strokes)]
 
     def stroke_types(self):
         """

@@ -37,6 +37,38 @@ def plot(stroke):
 default_detector = lambda stroke: stroke.clone(props = {"cuts": (0, stroke.n_points)})
 
 def CJK_STROKE_H(stroke):
+    r"""
+    Legend:
+        abc(i/j[f]) = rising edge on abc between i,j.
+        abc(i\j[f]) = falling edge.
+        f = '*' both endpoints viable,
+        f = <idx> only that endpoint viable.
+
+    Note: all boundaries/indices are strictly inclusive: [a, b].
+
+    左/0 - general:
+    ds, central_speed:
+        Unimodal, symmetric, platykurtic, bracketing entire clean region,
+        roughly 1/3 rise -> 1/3 plateau -> 1/3 decline,
+        similar positive and negative slopes.
+    pressure_norm:
+        Steady climb in dirty region 23% - shy of 87%,
+        then in clean region after initial hump,
+        prolonged plateau until decline,
+        declines only way after clean region (+66ms).
+    local_sharpness:
+        Oscillating heavily (1-0-1) at dirty head and
+        one negative spike at dirty tail,
+        inner spikes frame clean region well.
+
+    左/0 - head:
+    candidates 4 [15:18]: seemingly the same point
+        pressure_norm(15:18) = (0.75 - 0.91)
+        dP/dt(15:18) > 0
+        ds(17/18[*])
+        local_straightness(15\16[*])
+        local_straightness(16/17[*])
+    """
     # TODO: should be fun to work on this first.
     return default_detector(stroke)
 
@@ -72,16 +104,24 @@ def assess(df, row):
     code_point = row['code_point']
     stroke_idx = int(row['stroke_idx'])
     filename = f"data/dataset/{dataset}/npy-raw/{code_point}.npy"
+
+
+    TARGET_STROKE = 0
+    if not stroke_idx == TARGET_STROKE:
+        return df
+
+
     character = Character.of_npy(dataset, filename)
 
     hce = int(row['head_cut'])
     tce = int(row['tail_cut'])
     rle = tce - hce
 
-    SIGMA = 1.0
-    smooth_fn = lambda xy: gaussian_filter1d(xy, SIGMA, axis=0, mode='nearest') # reflect, nearest, mirror
-    stroke = composed_metrics(character.strokes()[stroke_idx])
+    strokes = character.strokes()
+    stroke = strokes[stroke_idx]
     print(stroke.literal, stroke.stroke_index, stroke.stroke_type)
+    stroke = composed_metrics(stroke)
+
     hca, tca = stroke.props['cuts']
     rla = tca - hca
 
