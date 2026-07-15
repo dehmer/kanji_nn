@@ -8,25 +8,9 @@ from scipy.ndimage import gaussian_filter1d
 from more_itertools import partition
 
 from kanji_nn.plot import multi_channel_plot, strokes_plot
-from kanji_nn.conditioning import split_strokes
+from kanji_nn.conditioning import join_strokes
 from kanji_nn.data import compose, identity, Character, Stroke
 import kanji_nn.metrics as metrics
-
-def combined_straightness(stroke):
-    # 1. Initialize output signal with all 1.0
-    a = stroke.features['straightness']
-    b = stroke.features['local_straightness']
-    c = np.ones_like(a)
-
-    # 2. Create masks for where either signal hits 0.0 or 1.0
-    mask_min = (a == 0.0) | (b == 0.0)
-    mask_max = (a == 1.0) | (b == 1.0)
-
-    # 3. Apply the values directly to the output signal
-    c[mask_min] = 0.0
-    c[mask_max] = 1.0
-
-    return stroke.clone(features={'combined_straightness': c})
 
 
 threshold=0.2
@@ -45,26 +29,36 @@ composed_metrics = compose(
     metrics.arc_length
 )
 
-def process_file(filename):
+def process_file(dataset, filename):
     SIGMA = 1.0
     smooth_fn = lambda xy: gaussian_filter1d(xy, SIGMA, axis=0, mode='nearest') # reflect, nearest, mirror
     char = Character.of_npy(filename)
 
     strokes = char.strokes(smooth_fn=identity)
     # strokes = char.strokes(smooth_fn=smooth_fn)
+
+    trimmed_strokes = []
     for stroke in strokes:
 
         # add pressure as explicit feature for plot:
         stroke = stroke.clone(features={"pressure": stroke.pressure})
-        stroke = composed_metrics(stroke)
+        trimmed_stroke = composed_metrics(stroke)
+        trimmed_strokes.append(trimmed_stroke)
 
         # channels = ["pressure", "straightness", "central_speed", "θ", "dθ/ds", "K",]
         # channels = ["pressure", "dP/dt", "straightness", "local_straightness", "central_speed", "at", "axy"]
         channels = ["pressure", "dP/dt", "straightness", "local_straightness", "central_speed"]
-        multi_channel_plot(stroke, channels, figsize=(18, 8))
-        # plt.savefig("kinematics")
-        plt.show()
 
+        if not trimmed_stroke.isbare:
+            multi_channel_plot(trimmed_stroke, channels, figsize=(18, 8))
+            plt.show()
+
+    trimmed_strokes = [stroke.raw[:, 1:] for stroke in trimmed_strokes]
+    # print(trimmed_strokes)
+    # exit()
+    filename = f'data/dataset/{dataset}/png-post/{char.code_point}'
+    # strokes_plot.show(trimmed_strokes)
+    strokes_plot.save(filename, trimmed_strokes)
 
 if __name__ == "__main__":
     dataset = 'katakana_49'
@@ -79,11 +73,11 @@ if __name__ == "__main__":
         return [f'U+{literal_to_hex(literal)}.npy' for literal in literals]
 
     white_list = []
-    # white_list = infer_file_names('学')
-    white_list = infer_file_names('字学左文村校森玉空貝赤足音')
+    white_list = infer_file_names('字')
+    # white_list = infer_file_names('字学左文村校森玉空貝赤足音')
 
     for (dirpath, dirnames, filenames) in os.walk(in_dir):
         for filename in filenames:
             if not filename.endswith('npy'): continue
             if len(white_list) and not filename in white_list: continue
-            process_file(f'{dirpath}/{filename}')
+            process_file(dataset, f'{dirpath}/{filename}')

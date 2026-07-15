@@ -1,8 +1,41 @@
 import re
 import numpy as np
+import psycopg
+import unicodedata
+import os
+
 from .identity import identity
 from ..conditioning import split_strokes, join_strokes
 from .stroke import Stroke
+
+_conninfo = 'postgresql://localhost/kanji_nn'
+_connection = None
+
+def get_connection():
+    global _connection
+    if _connection is None:
+        _connection = psycopg.connect(_conninfo)
+    return _connection
+
+def stroke_type_name(type_cp):
+    """type_cp like 'U+31D6' -> 'CJK STROKE HG'"""
+    ch = chr(int(type_cp[2:], 16))
+    return unicodedata.name(ch)
+
+def fetch_stroke_types(literal):
+    """
+    Returns {stroke_idx: (type_literal, type_cp)} for the given character
+    literal. Empty dict if nothing is found (e.g. hiragana/katakana, which
+    KanjiVG does not annotate with stroke types).
+    """
+    conn = get_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT stroke_idx, type_literal, type_cp "
+            "FROM kvg_type WHERE literal = %s",
+            (literal,)
+        )
+        return {row[0]: (row[1], row[2], stroke_type_name(row[2])) for row in cur.fetchall()}
 
 
 def extract_code_point(filename):
@@ -13,7 +46,7 @@ def extract_code_point(filename):
 
 
 class Character:
-    def __init__(self, code_point, raw):
+    def __init__(self, dataset, code_point, raw):
         """
         Fixed five column layout for raw (for now):
         0: timestamp (t)
@@ -22,12 +55,13 @@ class Character:
         3: pressure
         4: pen-down/-up
         """
+        self.dataset = dataset
         self.code_point = code_point
         self.raw = raw
         self.literal = chr(int(code_point[2:], 16))
 
     @classmethod
-    def of_npy(cls, filename):
+    def of_npy(cls, dataset, filename):
         code_point = extract_code_point(filename)
         raw = np.load(filename)
 
@@ -35,21 +69,32 @@ class Character:
         if raw.shape[1] == 7:
             raw = raw[:, (0, 1, 2, 3, 6)]
 
-        return cls(code_point, raw)
+        return cls(dataset, code_point, raw)
 
     @classmethod
-    def of_strokes(cls, strokes):
+    def of_strokes(cls, dataset, strokes):
         code_point = strokes[0].code_point
         strokes = [stroke.raw for stroke in strokes]
         raw = join_strokes(strokes)
-        return cls(code_point, raw)
+        return cls(dataset, code_point, raw)
 
     # Stick either to raw xy or smoothened xy (not both).
     def strokes(self, smooth_fn = identity):
         strokes = split_strokes(self.raw)
+        types = self.stroke_types()
+        assert len(strokes) == len(types), "stroke/type count mismatch"
 
         def smooth(raw):
             xy = smooth_fn(raw[:, 1:3])
             return np.column_stack((raw[:, 0], xy, raw[:, 3:]))
 
-        return [Stroke(i, smooth(raw), self.code_point, self.literal) for i, raw in enumerate(strokes)]
+        return [Stroke(self.dataset, i, smooth(raw), self.code_point, self.literal, types[i]) for i, raw in enumerate(strokes)]
+
+    def stroke_types(self):
+        """
+        Lazily fetches kvg:type info for this character's strokes.
+        Returns {stroke_idx: (type_literal, type_cp)}.
+        """
+        if getattr(self, "_stroke_types", None) is None:
+            self._stroke_types = fetch_stroke_types(self.literal)
+        return self._stroke_types

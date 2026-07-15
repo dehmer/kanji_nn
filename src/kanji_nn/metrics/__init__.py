@@ -6,6 +6,7 @@ from .curvature import curvature
 from .detect_edges import detect_edges
 from .forward_speed import forward_speed
 from .local_straightness import local_straightness
+from .pressure import pressure
 from .pressure_derivative import pressure_derivative
 from .straightness import straightness
 from .tangent import tangent

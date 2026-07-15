@@ -5,7 +5,7 @@ import matplotlib.gridspec as gridspec
 def _strokes(strokes, title, figsize):
     figure = plt.figure(figsize=figsize)
     for i, stroke in enumerate(strokes):
-        xy = stroke.xy
+        xy = stroke[:, (0, 1)]
         plt.plot(xy[:, 0], xy[:, 1], color='black', zorder=1)
         plt.scatter(xy[:, 0],  xy[:, 1], marker='o', color='red', zorder=2, alpha=.3)
         plt.scatter(xy[0, 0],  xy[0, 1], marker='o', color='green', zorder=3)

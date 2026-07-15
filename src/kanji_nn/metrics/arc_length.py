@@ -17,5 +17,6 @@ def arc_length(stroke):
 
     return stroke.clone(features={
         "s": s,
-        "s_norm": s_norm
+        "s_norm": s_norm,
+        "ds": ds
     })
