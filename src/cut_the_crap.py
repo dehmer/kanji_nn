@@ -25,8 +25,8 @@ def tap(fn):
 
 
 def plot(stroke):
-    channels = ["central_speed", "pressure_norm", "dP/dt", "ds", "local_straightness"]
-    # channels = ["pressure_norm", "ds"]
+    channels = ["c_speed", "P_norm", "dP/dt", "ds", "loc_stness"]
+    # channels = ["P_norm", "ds"]
 
     figure = multi_channel_plot(stroke, channels, figsize=(18, 8))
     # filename = f"data/dataset/{stroke.dataset}/mcp/{stroke.literal}-{stroke.stroke_index}"
@@ -47,16 +47,16 @@ def CJK_STROKE_H(stroke):
     Note: all boundaries/indices are strictly inclusive: [a, b].
 
     左/0 - general:
-    ds, central_speed:
+    ds, c_speed:
         Unimodal, symmetric, platykurtic, bracketing entire clean region,
         roughly 1/3 rise -> 1/3 plateau -> 1/3 decline,
         similar positive and negative slopes.
-    pressure_norm:
+    P_norm:
         Steady climb in dirty region 23% - shy of 87%,
         then in clean region after initial hump,
         prolonged plateau until decline,
         declines only way after clean region (+66ms).
-    local_sharpness:
+    loc_stness:
         Oscillating heavily (1-0-1) at dirty head and
         one negative spike at dirty tail,
         inner spikes frame clean region well.
@@ -66,9 +66,32 @@ def CJK_STROKE_H(stroke):
         pressure_norm(15:18) = (0.75 - 0.91)
         dP/dt(15:18) > 0
         ds(17/18[*])
-        local_straightness(15\16[*])
-        local_straightness(16/17[*])
+        loc_stness(15\16[*])
+        loc_stness(16/17[*])
     """
+
+    # head cut detector:
+    t = stroke.t
+    ds = stroke.features["ds"]
+
+    cs_mask = ds >= np.percentile(ds, 85)
+    t_centroid = np.average(t[cs_mask], weights=ds[cs_mask])
+
+    # top/left part:     < centroid_idx
+    # bottom/right part: > centroid_idx
+    centroid_idx = np.argmin(np.abs(t - t_centroid))
+
+
+
+
+
+    # tail cut detector:
+
+    # exit()
+
+
+
+
     # TODO: should be fun to work on this first.
     return default_detector(stroke)
 
@@ -89,7 +112,7 @@ composed_metrics = compose(
     do_the_magic_trick,
     metrics.local_straightness,
     metrics.pressure_derivative,
-    partial(metrics.tangential_acc, speed_key='central_speed'),
+    partial(metrics.tangential_acc, speed_key="c_speed"),
     metrics.vector_acc,
     metrics.curvature,
     metrics.tangent,

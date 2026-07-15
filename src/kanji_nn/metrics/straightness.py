@@ -11,12 +11,12 @@ def straightness(stroke):
     what the channel name promises).
 
     Ratio of the direct shortcut to the actual two-hop path through each point.
-    => local straightness score, bounded to (0, 1]
+    => local stness score, bounded to (0, 1]
     """
 
     s = stroke.features["s"]
     dx = np.gradient(stroke.x, s)
     dy = np.gradient(stroke.y, s)
-    straightness = np.hypot(dx, dy)
+    stness = np.hypot(dx, dy)
 
-    return stroke.clone(features={"straightness": straightness})
+    return stroke.clone(features={"stness": stness})

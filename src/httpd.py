@@ -35,7 +35,7 @@ class JSONRequestHandler(BaseHTTPRequestHandler):
                 timestamp = np.array(json_data['timestamp'], dtype=np.float32)      # 0
                 dx = np.array(json_data['dx'], dtype=np.float32)                    # 1
                 dy = np.array(json_data['dy'], dtype=np.float32)                    # 2
-                pressure = np.array(json_data['pressure'], dtype=np.float32)        # 3
+                pressure = np.array(json_data["pressure"], dtype=np.float32)        # 3
                 orientation = np.array(json_data['orientation'], dtype=np.float32)  # 4
                 tilt = np.array(json_data['tilt'], dtype=np.float32)                # 5
                 down = np.array(json_data['down'], dtype=np.float32)                # 6

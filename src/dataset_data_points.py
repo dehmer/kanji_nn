@@ -41,7 +41,7 @@ def stroke_data_frames(filename, dataset):
     raw = raw if raw.shape[1] == 5 else raw[:, (0, 1, 2, 3, 6)]
     strokes = split_strokes(raw)
 
-    columns = ['timestamp', 'x', 'y', 'pressure']
+    columns = ['timestamp', 'x', 'y', "P"]
 
     dfs = []
     for stroke_idx, stroke in enumerate(strokes):
@@ -80,8 +80,8 @@ def stroke_summary(df):
         'n_points': len(df),
         'duration_ms': df['timestamp'].iloc[-1] - df['timestamp'].iloc[0],
         'arc_length': arc_length,
-        'pressure_max': df['pressure'].max(),
-        'pressure_std': df['pressure'].std(),  # sample std (ddof=1) by default
+        'pressure_max': df["P"].max(),
+        'pressure_std': df["P"].std(),  # sample std (ddof=1) by default
     })
 
 

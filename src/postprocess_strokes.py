@@ -16,11 +16,11 @@ import kanji_nn.metrics as metrics
 threshold=0.2
 composed_metrics = compose(
     metrics.consolidate_edges,
-    partial(metrics.detect_edges, signal_key='local_straightness', threshold=threshold),
-    partial(metrics.detect_edges, signal_key='straightness', threshold=threshold),
-    metrics.local_straightness,
+    partial(metrics.detect_edges, signal_key='loc_stness', threshold=threshold),
+    partial(metrics.detect_edges, signal_key='stness', threshold=threshold),
+    metrics.loc_stness,
     metrics.pressure_derivative,
-    partial(metrics.tangential_acc, speed_key='central_speed'),
+    partial(metrics.tangential_acc, speed_key="c_speed"),
     metrics.vector_acc,
     metrics.curvature,
     metrics.tangent,
@@ -41,13 +41,13 @@ def process_file(dataset, filename):
     for stroke in strokes:
 
         # add pressure as explicit feature for plot:
-        stroke = stroke.clone(features={"pressure": stroke.pressure})
+        stroke = stroke.clone(features={"P": stroke.pressure})
         trimmed_stroke = composed_metrics(stroke)
         trimmed_strokes.append(trimmed_stroke)
 
-        # channels = ["pressure", "straightness", "central_speed", "θ", "dθ/ds", "K",]
-        # channels = ["pressure", "dP/dt", "straightness", "local_straightness", "central_speed", "at", "axy"]
-        channels = ["pressure", "dP/dt", "straightness", "local_straightness", "central_speed"]
+        # channels = ["P", "stness", "c_speed", "θ", "dθ/ds", "K",]
+        # channels = ["P", "dP/dt", "stness", "loc_stness", "c_speed", "at", "axy"]
+        channels = ["P", "dP/dt", "stness", "loc_stness", "c_speed"]
 
         if not trimmed_stroke.isbare:
             multi_channel_plot(trimmed_stroke, channels, figsize=(18, 8))

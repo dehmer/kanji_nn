@@ -28,7 +28,7 @@ class Kinematics:
 
     @cached_property
     def pressure(self):
-        return self.data['pressure']
+        return self.data["pressure"]
 
     @cached_property
     def pen(self):
