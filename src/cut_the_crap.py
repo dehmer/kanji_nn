@@ -7,14 +7,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter1d
 
-from kanji_nn.data import Character, Stroke, compose
 import kanji_nn.metrics as metrics
-from kanji_nn.plot import multi_channel_plot
-
-
-def do_the_cutting(stroke):
-    region = stroke.props["cuts"]
-    return stroke.trim(region)
+from kanji_nn.data import Character, Stroke, compose
+from kanji_nn.data import find_trim_region, trim_region
+from kanji_nn.plot import multi_channel_plot, strokes_plot
 
 
 def tap(fn):
@@ -25,91 +21,21 @@ def tap(fn):
 
 
 def plot(stroke):
-    channels = ["c_speed", "P_norm", "dP/dt", "ds", "loc_stness"]
+    channels = ["c_speed", "P_norm", "dP/dt", "ds", "dds", "loc_stness"]
     # channels = ["P_norm", "ds"]
 
-    figure = multi_channel_plot(stroke, channels, figsize=(18, 8))
+    # figure = multi_channel_plot(stroke, channels, figsize=(18, 8))
     # filename = f"data/dataset/{stroke.dataset}/mcp/{stroke.literal}-{stroke.stroke_index}"
     # plt.savefig(filename)
     # plt.close(figure)
-    plt.show()
-
-default_detector = lambda stroke: stroke.clone(props = {"cuts": (0, stroke.n_points)})
-
-def CJK_STROKE_H(stroke):
-    r"""
-    Legend:
-        abc(i/j[f]) = rising edge on abc between i,j.
-        abc(i\j[f]) = falling edge.
-        f = '*' both endpoints viable,
-        f = <idx> only that endpoint viable.
-
-    Note: all boundaries/indices are strictly inclusive: [a, b].
-
-    左/0 - general:
-    ds, c_speed:
-        Unimodal, symmetric, platykurtic, bracketing entire clean region,
-        roughly 1/3 rise -> 1/3 plateau -> 1/3 decline,
-        similar positive and negative slopes.
-    P_norm:
-        Steady climb in dirty region 23% - shy of 87%,
-        then in clean region after initial hump,
-        prolonged plateau until decline,
-        declines only way after clean region (+66ms).
-    loc_stness:
-        Oscillating heavily (1-0-1) at dirty head and
-        one negative spike at dirty tail,
-        inner spikes frame clean region well.
-
-    左/0 - head:
-    candidates 4 [15:18]: seemingly the same point
-        pressure_norm(15:18) = (0.75 - 0.91)
-        dP/dt(15:18) > 0
-        ds(17/18[*])
-        loc_stness(15\16[*])
-        loc_stness(16/17[*])
-    """
-
-    # head cut detector:
-    t = stroke.t
-    ds = stroke.features["ds"]
-
-    cs_mask = ds >= np.percentile(ds, 85)
-    t_centroid = np.average(t[cs_mask], weights=ds[cs_mask])
-
-    # top/left part:     < centroid_idx
-    # bottom/right part: > centroid_idx
-    centroid_idx = np.argmin(np.abs(t - t_centroid))
+    # plt.show()
 
 
-
-
-
-    # tail cut detector:
-
-    # exit()
-
-
-
-
-    # TODO: should be fun to work on this first.
-    return default_detector(stroke)
-
-detectors = {
-    "CJK STROKE H": CJK_STROKE_H
-}
-
-# scaffolding
-def do_the_magic_trick(stroke):
-    _, _, name = stroke.stroke_type
-    detector = detectors.get(name, default_detector)
-    return detector(stroke)
 
 composed_metrics = compose(
     # NOTE: after this point stroke lost all props/features.
-    # do_the_cutting,
-    tap(plot),
-    do_the_magic_trick,
+    # tap(plot),
+    find_trim_region,
     metrics.local_straightness,
     metrics.pressure_derivative,
     partial(metrics.tangential_acc, speed_key="c_speed"),
@@ -122,17 +48,21 @@ composed_metrics = compose(
     metrics.pressure
 )
 
+
+# LITERAL = '左'
+# STROKE = 2
+LITERAL = None
+STROKE = None
+
+
 def assess(df, row):
     dataset = row['dataset']
     code_point = row['code_point']
     stroke_idx = int(row['stroke_idx'])
     filename = f"data/dataset/{dataset}/npy-raw/{code_point}.npy"
 
-
-    TARGET_STROKE = 0
-    if not stroke_idx == TARGET_STROKE:
+    if STROKE != None and stroke_idx != STROKE:
         return df
-
 
     character = Character.of_npy(dataset, filename)
 
@@ -142,6 +72,8 @@ def assess(df, row):
 
     strokes = character.strokes()
     stroke = strokes[stroke_idx]
+    stroke = stroke.clone(props={"candidate_head": int(row['head_cut']), "candidate_tail": int(row['tail_cut'])})
+
     print(stroke.literal, stroke.stroke_index, stroke.stroke_type)
     stroke = composed_metrics(stroke)
 
@@ -154,6 +86,7 @@ def assess(df, row):
 
 
 if __name__ == "__main__":
+    np.set_printoptions(linewidth=np.inf)
     rows = []
     with open("data/analysis-short-samples.csv", mode="r", newline="", encoding="utf-8") as file:
         dict_reader = csv.DictReader(file)
@@ -162,8 +95,6 @@ if __name__ == "__main__":
     columns = ["hce", "hca", "hcd", "tce", "tca", "tcd", "rle", "rla", "rld"]
     df = pd.DataFrame(columns=columns)
     for row in rows:
-        if row["literal"] != '左':
+        if LITERAL != None and row["literal"] != LITERAL:
             continue
         df =  assess(df, row)
-
-    # print(df)

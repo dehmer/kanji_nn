@@ -1,5 +1,6 @@
 from .character import Character
 from .compose import compose
+from .find_trim_region import find_trim_region
 from .identity import identity
 from .KanjiVGDataset import KanjiVGDataset
 from .local_pace import local_pace
@@ -12,3 +13,4 @@ from .stroke_start_indices import stroke_start_indices
 from .stroke import Stroke
 from .structural_zero_mask import structural_zero_mask
 from .transform_absolute import transform_absolute
+from .trim_region import trim_region
