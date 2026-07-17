@@ -3,7 +3,12 @@
 import zipfile
 import re
 import xml.etree.ElementTree as ET
+import unicodedata
 
+def stroke_type_name(type_cp):
+    """type_cp like 'U+31D6' -> 'CJK STROKE HG'"""
+    ch = chr(int(type_cp[2:], 16))
+    return unicodedata.name(ch)
 
 if __name__ == '__main__':
     ZIP_PATH = "/Users/dehmer/Public/Data/kanjivg-20250816-all.zip"
@@ -45,10 +50,9 @@ if __name__ == '__main__':
         for i, path in enumerate(paths):
             key = '{http://kanjivg.tagaini.net}type'
             if not key in path.attrib.keys():
-                print(f"{literal}\t{i}\t\\N\t\\N")
-                # print(literal, i, '\\N', '\\N')
+                print(f"{literal}\t{i}\t\\N\t\\N\t\\N")
             else:
                 kvg_type = path.attrib[key]
                 code_point = f"U+{ord(kvg_type[0]):04X}"
-                # print(literal, i, kvg_type[0], code_point)
-                print(f"{literal}\t{i}\t{kvg_type[0]}\t{code_point}")
+                name = stroke_type_name(code_point)
+                print(f"{literal}\t{i}\t{kvg_type[0]}\t{code_point}\t{name}")

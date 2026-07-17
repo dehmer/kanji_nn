@@ -66,7 +66,7 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
     t = stroke.t
     t -= t[0]
 
-    # cuts = stroke.props['cuts']
+    cuts = stroke.props.get('cuts', None)
 
     for i in range(num_channels):
         sharex = ax_channels[0] if i > 0 else None
@@ -79,11 +79,11 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
         ax.grid(False)
         ax.grid(True, linestyle='--', alpha=0.5)
 
-        # if cuts and cuts[0] < stroke.n_points:
-        #     ax.axvline(t[cuts[0]], color='black', linestyle='--', linewidth=1, alpha=0.6)
+        if cuts and cuts[0] < stroke.n_points:
+            ax.axvline(t[cuts[0]], color='black', linestyle='--', linewidth=1, alpha=0.6)
 
-        # if cuts and cuts[1] < stroke.n_points:
-        #     ax.axvline(t[cuts[1]], color='black', linestyle='--', linewidth=1, alpha=0.6)
+        if cuts and cuts[1] < stroke.n_points:
+            ax.axvline(t[cuts[1] - 1], color='black', linestyle='--', linewidth=1, alpha=0.6)
 
         # # median
         # ax.axvline(t[t.size // 2], color='black', linewidth=1.5, alpha=1)

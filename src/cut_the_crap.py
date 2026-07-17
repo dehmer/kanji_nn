@@ -19,16 +19,27 @@ def tap(fn):
         return x
     return inner
 
+bimodal = [
+    "CJK STROKE HG",
+    "CJK STROKE WG",
+    "CJK STROKE N",
+    "CJK STROKE HZ",
+    "CJK STROKE SG",
+    "CJK STROKE SWG",
+]
 
 def plot(stroke):
-    channels = ["c_speed", "P_norm", "dP/dt", "ds", "dds", "loc_stness"]
-    # channels = ["P_norm", "ds"]
+    # if stroke.stroke_type[2] not in bimodal:
+    #     return stroke
 
-    # figure = multi_channel_plot(stroke, channels, figsize=(18, 8))
+    channels = ["P_norm", "dP/dt", "ds", "stness", "loc_stness"]
+    # channels = list(stroke.features.keys())
+
+    figure = multi_channel_plot(stroke, channels, figsize=(18, 8))
+    plt.show()
     # filename = f"data/dataset/{stroke.dataset}/mcp/{stroke.literal}-{stroke.stroke_index}"
     # plt.savefig(filename)
     # plt.close(figure)
-    # plt.show()
 
 
 
@@ -37,7 +48,6 @@ composed_metrics = compose(
     # tap(plot),
     find_trim_region,
     metrics.local_straightness,
-    metrics.pressure_derivative,
     partial(metrics.tangential_acc, speed_key="c_speed"),
     metrics.vector_acc,
     metrics.curvature,
@@ -45,20 +55,21 @@ composed_metrics = compose(
     metrics.central_speed,
     metrics.straightness,
     metrics.arc_length,
+    metrics.pressure_derivative,
     metrics.pressure
 )
 
 
-# LITERAL = '左'
+# LITERAL = "足"
 # STROKE = 2
 LITERAL = None
 STROKE = None
 
 
 def assess(df, row):
-    dataset = row['dataset']
-    code_point = row['code_point']
-    stroke_idx = int(row['stroke_idx'])
+    dataset = row["dataset"]
+    code_point = row["code_point"]
+    stroke_idx = int(row["stroke_idx"])
     filename = f"data/dataset/{dataset}/npy-raw/{code_point}.npy"
 
     if STROKE != None and stroke_idx != STROKE:
@@ -66,18 +77,24 @@ def assess(df, row):
 
     character = Character.of_npy(dataset, filename)
 
-    hce = int(row['head_cut'])
-    tce = int(row['tail_cut'])
+    hce = int(row["head_cut"])
+    tce = int(row["tail_cut"])
     rle = tce - hce
 
     strokes = character.strokes()
-    stroke = strokes[stroke_idx]
-    stroke = stroke.clone(props={"candidate_head": int(row['head_cut']), "candidate_tail": int(row['tail_cut'])})
+    stroke = composed_metrics(strokes[stroke_idx])
 
-    print(stroke.literal, stroke.stroke_index, stroke.stroke_type)
-    stroke = composed_metrics(stroke)
+    if stroke.stroke_type[2] == "CJK STROKE H":
+        cuts = stroke.props["cuts"]
+        head_cut = int(row["head_cut"])
+        tail_cut = int(row["tail_cut"])
+        error = (head_cut - cuts[0], tail_cut - cuts[1])
+        print(stroke.literal, stroke.stroke_index, stroke.stroke_type, f"head_cut={head_cut}, tail_cut={tail_cut}, error={error}")
+    else:
+        # print(stroke.literal, stroke.stroke_index, stroke.stroke_type)
+        pass
 
-    hca, tca = stroke.props['cuts']
+    hca, tca = stroke.props["cuts"]
     rla = tca - hca
 
     data = [hce, hca, hca - hce, tce, tca, tca - tce, rle, rla, rla - rle]

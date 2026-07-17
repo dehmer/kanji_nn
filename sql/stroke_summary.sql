@@ -1,3 +1,7 @@
+
+--
+--
+--
 CREATE TABLE stroke_summary (
   dataset text,
   literal text,
