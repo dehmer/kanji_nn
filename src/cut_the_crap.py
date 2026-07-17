@@ -29,17 +29,15 @@ bimodal = [
 ]
 
 def plot(stroke):
-    # if stroke.stroke_type[2] not in bimodal:
-    #     return stroke
+    if stroke.stroke_type[2] not in bimodal:
+        return stroke
 
     channels = ["P_norm", "dP/dt", "ds", "stness", "loc_stness"]
-    # channels = list(stroke.features.keys())
-
     figure = multi_channel_plot(stroke, channels, figsize=(18, 8))
+    filename = f"data/dataset/{stroke.dataset}/mcp/{stroke.literal}-{stroke.stroke_index}"
+    plt.savefig(filename)
     plt.show()
-    # filename = f"data/dataset/{stroke.dataset}/mcp/{stroke.literal}-{stroke.stroke_index}"
-    # plt.savefig(filename)
-    # plt.close(figure)
+    plt.close(figure)
 
 
 
@@ -60,10 +58,8 @@ composed_metrics = compose(
 )
 
 
-# LITERAL = "足"
-# STROKE = 2
-LITERAL = None
-STROKE = None
+# TARGET = ("文", 1)
+TARGET = (None, None)
 
 
 def assess(df, row):
@@ -72,7 +68,7 @@ def assess(df, row):
     stroke_idx = int(row["stroke_idx"])
     filename = f"data/dataset/{dataset}/npy-raw/{code_point}.npy"
 
-    if STROKE != None and stroke_idx != STROKE:
+    if TARGET[1] != None and stroke_idx != TARGET[1]:
         return df
 
     character = Character.of_npy(dataset, filename)
@@ -84,12 +80,13 @@ def assess(df, row):
     strokes = character.strokes()
     stroke = composed_metrics(strokes[stroke_idx])
 
-    if stroke.stroke_type[2] == "CJK STROKE H":
+    if stroke.stroke_type[2] in bimodal:
         cuts = stroke.props["cuts"]
         head_cut = int(row["head_cut"])
         tail_cut = int(row["tail_cut"])
         error = (head_cut - cuts[0], tail_cut - cuts[1])
-        print(stroke.literal, stroke.stroke_index, stroke.stroke_type, f"head_cut={head_cut}, tail_cut={tail_cut}, error={error}")
+        if error != (0 , 0):
+            print(stroke.literal, stroke.stroke_index, stroke.stroke_type, f"head_cut={head_cut}, tail_cut={tail_cut}, error={error}")
     else:
         # print(stroke.literal, stroke.stroke_index, stroke.stroke_type)
         pass
@@ -112,6 +109,6 @@ if __name__ == "__main__":
     columns = ["hce", "hca", "hcd", "tce", "tca", "tcd", "rle", "rla", "rld"]
     df = pd.DataFrame(columns=columns)
     for row in rows:
-        if LITERAL != None and row["literal"] != LITERAL:
+        if TARGET[0] != None and row["literal"] != TARGET[0]:
             continue
         df =  assess(df, row)
