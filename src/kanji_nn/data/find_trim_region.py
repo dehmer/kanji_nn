@@ -5,37 +5,27 @@ import numpy as np
 default_detector = lambda stroke: stroke.clone(props = {"cuts": (0, stroke.n_points)})
 
 
-@dataclass(frozen=True)
-class Params:
-    mask: object
-    sign: int
-    offset: int
-    default: int
-
-
-def _cut(params):
-    if np.all(params.mask):
-        return params.default
-    else:
-        return int(params.sign * np.argmin(params.mask) + params.offset)
-
-
 def CJK_STROKE_H(stroke):
     ds = stroke.features["ds"]
+    assert len(ds) != 0, "CJK_STROKE_H requires a non-degenerate stroke (empty ds)"
+
     ds_max_idx = np.argmax(ds)
-
     mask = (ds > 0)
-    head_mask = mask[:ds_max_idx]
-    tail_mask = mask[ds_max_idx:]
 
-    params = [
-        Params(head_mask[::-1], -1, ds_max_idx - 1, 0),
-        Params(tail_mask[::1], 1, ds_max_idx + 1, stroke.n_points)
+    def find_index(rng):
+        for i in rng:
+            if not mask[i]:
+                break
+        return i
+
+    ranges = [
+        range(ds_max_idx - 1, -1, -1),
+        range(ds_max_idx, stroke.n_points)
     ]
 
-    cuts = tuple(_cut(p) for p in params)
+    cuts = tuple(find_index(r) for r in ranges)
+    cuts = (cuts[0], cuts[1] + 1)
     return stroke.clone(props = {"cuts": cuts})
-
 
 detectors = {
     "CJK STROKE H": CJK_STROKE_H,
