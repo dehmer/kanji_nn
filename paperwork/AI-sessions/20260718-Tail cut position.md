@@ -1,4 +1,4 @@
-Topic: Tail cu position
+Topic: Tail cut position
 Bot: Gemini
 Date: 26 07 18
 
@@ -30,13 +30,13 @@ Since you're looking for the *last valid drawing sample*, search **backwards** f
 
 Define a confidence that the pen is still drawing:
 
-[
+$
 S(t)=
 w_pP_{norm}(t)+
 w_v\hat{ds}(t)+
 w_s\hat{speed}(t)+
 w_d\mathbf1(dP/dt>-\tau)
-]
+$
 
 where each term is normalized to [0,1].
 

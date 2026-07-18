@@ -19,6 +19,7 @@ def tap(fn):
         return x
     return inner
 
+
 bimodal = [
     "CJK STROKE HG",
     "CJK STROKE WG",
@@ -28,22 +29,22 @@ bimodal = [
     "CJK STROKE SWG",
 ]
 
+
 def plot(stroke):
     if stroke.stroke_type[2] not in bimodal:
         return stroke
 
-    channels = ["P_norm", "dP/dt", "dP", "ddP", "ds", "stness", "loc_stness"]
+    channels = ["P_norm", "dP/dt", "dP", "ds", "c_speed", "at", "stness", "loc_stness"]
     figure = multi_channel_plot(stroke, channels, figsize=(18, 8))
     filename = f"data/dataset/{stroke.dataset}/mcp/{stroke.literal}-{stroke.stroke_index}"
     plt.savefig(filename)
-    plt.show()
+    # plt.show()
     plt.close(figure)
-
 
 
 composed_metrics = compose(
     # NOTE: after this point stroke lost all props/features.
-    # tap(plot),
+    tap(plot),
     find_trim_region,
     metrics.local_straightness,
     partial(metrics.tangential_acc, speed_key="c_speed"),
@@ -58,7 +59,7 @@ composed_metrics = compose(
 )
 
 
-# TARGET = ("文", 1)
+# TARGET = ("字", 4)
 TARGET = (None, None)
 
 
@@ -79,17 +80,16 @@ def assess(df, row):
 
     strokes = character.strokes()
     stroke = strokes[stroke_idx]
-    # stroke = stroke.clone(props={"cuts": (hce, tce)})
+    stroke = stroke.clone(props={"cuts": (hce, tce)})
     stroke = composed_metrics(stroke)
 
-    if stroke.stroke_type[2] not in bimodal:
+    if stroke.stroke_type[2] in bimodal:
         cuts = stroke.props["cuts"]
         head_cut = int(row["head_cut"])
         tail_cut = int(row["tail_cut"])
         error = (head_cut - cuts[0], tail_cut - cuts[1])
+        # if error != (0 , 0):
         print(stroke.literal, stroke.stroke_index, stroke.stroke_type, f"head_cut={head_cut}, tail_cut={tail_cut}, error={error}")
-        if error != (0 , 0):
-            print(stroke.literal, stroke.stroke_index, stroke.stroke_type, f"head_cut={head_cut}, tail_cut={tail_cut}, error={error}")
     else:
         # print(stroke.literal, stroke.stroke_index, stroke.stroke_type)
         pass
