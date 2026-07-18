@@ -15,6 +15,7 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
     """
 
     num_channels = len(channels)
+    cuts = stroke.props.get('cuts', None)
 
     # Precompute spatial tangents (dx, dy) across the entire curve trajectory
     dx = np.gradient(stroke.x)
@@ -34,6 +35,13 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
     # 2. Left Side: Stroke Subplot
     ax_stroke = fig.add_subplot(gs[0, 0])
     ax_stroke.plot(stroke.x, stroke.y, color='#2c3e50', linewidth=1.5, label='Stroke Path')
+
+    if cuts and cuts[0] < stroke.n_points:
+        ax_stroke.scatter(stroke.x[cuts[0]],  stroke.y[cuts[0]], marker='o', color='green', zorder=3)
+
+    if cuts and cuts[1] <= stroke.n_points:
+        ax_stroke.scatter(stroke.x[cuts[1] - 1], stroke.y[cuts[1] - 1], marker='o', color='blue', zorder=3)
+
 
     # Primitives for mouse tracking: dot marker and an extended solid tangent line (tangent_length=0.30)
     stroke_marker, = ax_stroke.plot([], [], 'ro', markersize=6, alpha=0.7, zorder=5)
@@ -66,7 +74,6 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
     t = stroke.t
     t -= t[0]
 
-    cuts = stroke.props.get('cuts', None)
 
     for i in range(num_channels):
         sharex = ax_channels[0] if i > 0 else None
@@ -80,10 +87,10 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
         ax.grid(True, linestyle='--', alpha=0.5)
 
         if cuts and cuts[0] < stroke.n_points:
-            ax.axvline(t[cuts[0]], color='black', linestyle='--', linewidth=1, alpha=0.6)
+            ax.axvline(t[cuts[0]], color='green', linestyle='--', linewidth=1, alpha=0.6)
 
-        if cuts and cuts[1] < stroke.n_points:
-            ax.axvline(t[cuts[1] - 1], color='black', linestyle='--', linewidth=1, alpha=0.6)
+        if cuts and cuts[1] <= stroke.n_points:
+            ax.axvline(t[cuts[1] - 1], color='blue', linestyle='--', linewidth=1, alpha=0.6)
 
         # # median
         # ax.axvline(t[t.size // 2], color='black', linewidth=1.5, alpha=1)

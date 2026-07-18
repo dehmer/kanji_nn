@@ -4,12 +4,6 @@ import numpy as np
 default_detector = lambda stroke: stroke.clone(props = {"cuts": (0, stroke.n_points)})
 
 
-def get_channel(stroke, key, call_site="unknown"):
-    channel = stroke.features[key]
-    assert len(channel) == stroke.n_points, f"[{call_site}] channel sample count mismatch: {key}"
-    return channel
-
-
 def CJK_STROKE_H(stroke):
     """
     Find head/tail cut locations for simple shaped
@@ -43,19 +37,42 @@ def CJK_STROKE_H(stroke):
     return stroke.clone(props = {"cuts": cuts})
 
 
+def find_tail_trough(c_speed, ds_max_idx):
+    """
+    Finds the LAST local minimum (trough) in the tail segment: the last
+    point where c_speed stops declining and turns to rise again. This is
+    different from the global minimum, which can lock onto an earlier,
+    lower-valued pause (e.g. a mid-stroke corner) and miss the real,
+    later decay that precedes the genuine tail.
 
-def best_split(signal):
-    n = len(signal)
-    best_i = None
-    best_score = -1
+    Returns len(c_speed) if no local minimum is found before the
+    recording ends (speed still falling, or still rising throughout ->
+    no cut needed).
+    """
+    tail = c_speed[ds_max_idx:]
+    n = len(tail)
+
+    last_trough_idx = None
+    falling = False  # have we seen a decline since the last trough?
+
     for i in range(1, n):
-        left_mean = signal[:i].mean()
-        right_mean = signal[i:].mean()
-        score = abs(left_mean - right_mean)
-        if score > best_score:
-            best_score = score
-            best_i = i
-    return best_i
+        if tail[i] < tail[i - 1]:
+            falling = True
+        elif tail[i] > tail[i - 1] and falling:
+            # turned upward after a decline -> i-1 was a local minimum
+            last_trough_idx = i - 1
+            falling = False
+
+    if last_trough_idx is None:
+        return len(c_speed)  # no real trough found -> no cut
+
+    return ds_max_idx + last_trough_idx + 1  # exclusive tail_cut
+
+def get_channel(stroke, key, call_site="unknown"):
+    channel = stroke.features[key]
+    assert len(channel) == stroke.n_points, f"[{call_site}] channel sample count mismatch: {key}"
+    return channel
+
 
 def CJK_STROKE_HG(stroke):
     head_cut = 0
@@ -66,14 +83,10 @@ def CJK_STROKE_HG(stroke):
     ds = get_channel(stroke, "ds", call_site)
     c_speed = get_channel(stroke, "c_speed", call_site)
 
-    tail_cut = stroke.n_points
+    ds_max_idx = np.argmax(ds)
+    assert ds_max_idx != 0, f"[{call_site}] unexpected condition (ds_max_idx == 0)"
 
-    # construction site ahead =>
-
-    # ds_max_idx = np.argmax(ds)
-    # assert ds_max_idx != 0, f"[{call_site}] unexpected condition (ds_max_idx == 0)"
-
-    # tail_cut = find_tail_trough(c_speed, ds_max_idx)
+    tail_cut = find_tail_trough(c_speed, ds_max_idx)
 
     return stroke.clone(props = {"cuts": (head_cut, int(tail_cut))}, force=True)
 
