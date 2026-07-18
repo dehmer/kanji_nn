@@ -32,7 +32,7 @@ def plot(stroke):
     if stroke.stroke_type[2] not in bimodal:
         return stroke
 
-    channels = ["P_norm", "dP/dt", "ds", "stness", "loc_stness"]
+    channels = ["P_norm", "dP/dt", "dP", "ddP", "ds", "stness", "loc_stness"]
     figure = multi_channel_plot(stroke, channels, figsize=(18, 8))
     filename = f"data/dataset/{stroke.dataset}/mcp/{stroke.literal}-{stroke.stroke_index}"
     plt.savefig(filename)
@@ -78,13 +78,16 @@ def assess(df, row):
     rle = tce - hce
 
     strokes = character.strokes()
-    stroke = composed_metrics(strokes[stroke_idx])
+    stroke = strokes[stroke_idx]
+    # stroke = stroke.clone(props={"cuts": (hce, tce)})
+    stroke = composed_metrics(stroke)
 
-    if stroke.stroke_type[2] in bimodal:
+    if stroke.stroke_type[2] not in bimodal:
         cuts = stroke.props["cuts"]
         head_cut = int(row["head_cut"])
         tail_cut = int(row["tail_cut"])
         error = (head_cut - cuts[0], tail_cut - cuts[1])
+        print(stroke.literal, stroke.stroke_index, stroke.stroke_type, f"head_cut={head_cut}, tail_cut={tail_cut}, error={error}")
         if error != (0 , 0):
             print(stroke.literal, stroke.stroke_index, stroke.stroke_type, f"head_cut={head_cut}, tail_cut={tail_cut}, error={error}")
     else:
