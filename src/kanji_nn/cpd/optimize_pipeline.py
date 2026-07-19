@@ -1,9 +1,9 @@
 import numpy as np
 from . import compute_combined_signal
-from . import find_change_point_adaptive
+from . import find_change_point
 
 # 3. 4D Joint Optimization Loop (Weights + Adaptive Window Scale)
-def optimize_pipeline(strokes):
+def optimize_pipeline(strokes, fraction=(1 - 0.15)):
     """
     Optimizes both the feature weights and the adaptive window percentage.
     """
@@ -12,7 +12,7 @@ def optimize_pipeline(strokes):
 
     weight_grid = np.linspace(0, 1, 11)
     # Search from 4% to 14% of stroke length for the optimal window scale
-    pct_grid = np.linspace(0.0, 0.25, 26)
+    pct_grid = np.linspace(0.04, 0.14, 26)
 
     for w1 in weight_grid:
         for w2 in weight_grid:
@@ -24,10 +24,9 @@ def optimize_pipeline(strokes):
             for pct in pct_grid:
                 total_error = 0
                 for stroke in strokes:
-                    S = compute_combined_signal(stroke, w1, w2, w3)
-
                     # Run CPD with current adaptive window percentage
-                    predicted_idx = find_change_point_adaptive(S, window_pct=pct)
+                    S = stroke.features['S']
+                    predicted_idx = find_change_point(S, fraction, window_pct=pct)
                     tail_cut = stroke.props["cuts"][1]
                     total_error += abs(predicted_idx - tail_cut)
 

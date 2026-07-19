@@ -1,7 +1,7 @@
 import numpy as np
+from kanji_nn.cpd import find_change_point
 
-
-default_detector = lambda stroke: stroke.clone(props = {"cuts": (0, stroke.n_points)})
+default_detector = lambda stroke: stroke.clone(props = {"cuts": (0, stroke.n_points)}, force=True)
 
 
 def get_channel(stroke, key, call_site="unknown"):
@@ -43,53 +43,30 @@ def CJK_STROKE_H(stroke):
     return stroke.clone(props = {"cuts": cuts})
 
 
-
-def best_split(signal):
-    n = len(signal)
-    best_i = None
-    best_score = -1
-    for i in range(1, n):
-        left_mean = signal[:i].mean()
-        right_mean = signal[i:].mean()
-        score = abs(left_mean - right_mean)
-        if score > best_score:
-            best_score = score
-            best_i = i
-    return best_i
-
-def CJK_STROKE_HG(stroke):
-    head_cut = 0
+def CJK_STROKE_HZ(stroke):
+    head_cut, tail_cut = 0, stroke.n_points
     if "cuts" in stroke.props:
-        head_cut, _ = stroke.props["cuts"]
+        head_cut, tail_cut = stroke.props["cuts"]
 
-    call_site = "CJK_STROKE_HG"
-    ds = get_channel(stroke, "ds", call_site)
-    c_speed = get_channel(stroke, "c_speed", call_site)
-
-    tail_cut = stroke.n_points
+    call_site = "CJK_STROKE_HZ"
+    S = get_channel(stroke, "S", call_site)
 
     # construction site ahead =>
-
-    # ds_max_idx = np.argmax(ds)
-    # assert ds_max_idx != 0, f"[{call_site}] unexpected condition (ds_max_idx == 0)"
-
-    # tail_cut = find_tail_trough(c_speed, ds_max_idx)
+    fraction = (1.0 - 0.15)
+    window_pct = 0.06
+    # window_pct = 0.048
+    tail_cut = find_change_point(S, fraction, window_pct)
 
     return stroke.clone(props = {"cuts": (head_cut, int(tail_cut))}, force=True)
 
 detectors = {
-    "CJK STROKE H": CJK_STROKE_H,
-    "CJK STROKE S": CJK_STROKE_H,
-    "CJK STROKE P": CJK_STROKE_H,
-    "CJK STROKE D": CJK_STROKE_H,
-
-    # test CJK_STROKE_HG on remaining stroke type as well
-    "CJK STROKE HG": CJK_STROKE_HG,
-    "CJK STROKE WG": CJK_STROKE_HG,
-    "CJK STROKE N": CJK_STROKE_HG,
-    "CJK STROKE HZ": CJK_STROKE_HG,
-    "CJK STROKE SG": CJK_STROKE_HG,
-    "CJK STROKE SWG": CJK_STROKE_HG,
+    "H": CJK_STROKE_H,
+    "S": CJK_STROKE_H,
+    "P": CJK_STROKE_H,
+    "D": CJK_STROKE_H,
+    "N": CJK_STROKE_H,
+    "T": CJK_STROKE_H,
+    "HZ": CJK_STROKE_HZ,
 }
 
 

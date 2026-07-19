@@ -20,7 +20,8 @@ def get_connection():
 def stroke_type_name(type_cp):
     """type_cp like 'U+31D6' -> 'CJK STROKE HG'"""
     ch = chr(int(type_cp[2:], 16))
-    return unicodedata.name(ch)
+    name = unicodedata.name(ch)
+    return name.split(' ')[2]
 
 def fetch_stroke_types(literal):
     """

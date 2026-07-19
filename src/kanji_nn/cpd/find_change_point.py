@@ -1,14 +1,17 @@
 import numpy as np
 
 # 2. Mean-Difference Sweep CPD Engine
-def find_change_point(S, window_size=6):
+def find_change_point(S, fraction=(1 - 0.15), window_pct=0.08, min_w=4, max_w=10):
     """
     Finds the index that maximizes the change in mean between two adjacent windows.
-    Focuses exclusively on the last 40% of the stroke to avoid writing pauses.
     """
     n = len(S)
     scores = np.zeros(n)
-    start_search_idx = int(n * 0.6)
+
+    # Calculate adaptive window size based on individual stroke length
+    window_size = int(round(n * window_pct))
+    window_size = max(min_w, min(window_size, max_w))
+    start_search_idx = int(n * fraction)
 
     for t in range(start_search_idx, n - window_size):
         left_window = S[t - window_size : t]

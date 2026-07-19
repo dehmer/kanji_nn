@@ -1,6 +1,7 @@
 from .arc_length import arc_length
 from .backward_speed import backward_speed
 from .central_speed import central_speed
+from .cpd_signal import cpd_signal
 from .curvature import curvature
 from .forward_speed import forward_speed
 from .local_straightness import local_straightness

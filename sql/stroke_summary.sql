@@ -8,7 +8,5 @@ CREATE TABLE stroke_summary (
   stroke_idx int,
   n_points int,
   duration float4,
-  arc_length float4,
-  pressure_max float4,
-  pressure_std float4
+  arc_length float4
 );
