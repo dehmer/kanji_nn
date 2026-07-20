@@ -8,4 +8,4 @@ def pressure(stroke):
     p_inv = (1.0 - p_norm)
     dp = np.diff(p, prepend=0)
 
-    return stroke.clone(features={"P": p, "P_norm": p_norm, "P_inv": p_inv, "dP": dp})
+    return stroke.clone(features={"P": p, "P:norm": p_norm, "P:inv": p_inv, "dP": dp})

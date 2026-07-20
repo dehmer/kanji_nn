@@ -13,5 +13,5 @@ def backward_speed(stroke):
         speed = np.where(dt > 0, np.hypot(dxy[:, 0], dxy[:, 1]) / dt, 0.0)
 
     # Right-pad with a single 0.0 to restore size to N elements
-    speed =  np.pad(speed, (1, 0), mode='constant', constant_values=0.0)
-    return stroke.clone(features={"backward_speed": speed})
+    speed = np.pad(speed, (1, 0), mode='constant', constant_values=0.0)
+    return stroke.clone(features={"raw:speed:backward": speed})

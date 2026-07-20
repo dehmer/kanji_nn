@@ -14,4 +14,4 @@ def forward_speed(stroke):
 
     # Right-pad with a single 0.0 to restore size to N elements
     speed =  np.pad(speed, (0, 1), mode='constant', constant_values=0.0)
-    return stroke.clone(features={"forward_speed": speed})
+    return stroke.clone(features={"raw:speed:forward": speed})

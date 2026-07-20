@@ -40,7 +40,7 @@ def plot_stroke_geometry(geometries,
 
         xy = g["xy"]
         s = g["norm(s)"]
-        curvature = g["K"]
+        curvature = g["gauss:K"]
 
         # ------------------------------------------------------
         # Left plot: stroke colored by curvature
@@ -82,11 +82,11 @@ def plot_stroke_geometry(geometries,
         # Right plot: geometry
         # ------------------------------------------------------
 
-        ax1.plot(s, g["θ"], lw=2, label="θ")
+        ax1.plot(s, g["gauss:θ"], lw=2, label="gauss:θ")
         ax1.plot(s, curvature, lw=2, label="curvature")
 
-        if "dθ/ds" in g:
-            ax1.plot(s, g["dθ/ds"], "--", lw=1.5, label="dθ/ds")
+        if "gauss:dθ/ds" in g:
+            ax1.plot(s, g["gauss:dθ/ds"], "--", lw=1.5, label="gauss:dθ/ds")
 
         ax1.set_xlim(0.0, 1.0)
         ax1.grid(True, alpha=0.3)

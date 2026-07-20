@@ -10,14 +10,14 @@ from kanji_nn.data import find_trim_region, tap, plot_mcp
 from kanji_nn.cli import *
 
 
-cpd_channels = ["loc_stness", "K"]
+cpd_channels = ["raw:stness:loc", "gauss:K"]
 
 composed_metrics = compose(
     # tap(partial(plot_mcp, channels=plot_channels, show=False)),
     find_trim_region,
     partial(metrics.cpd_signal, channels=cpd_channels),
     metrics.local_straightness,
-    partial(metrics.tangential_acc, speed_key="c_speed"),
+    partial(metrics.tangential_acc, speed_key="raw:speed:central"),
     metrics.vector_acc,
     metrics.curvature,
     metrics.tangent,

@@ -23,7 +23,7 @@ def CJK_STROKE_H(stroke):
     if "cuts" in stroke.props:
         return stroke
 
-    ds = stroke.features["ds"]
+    ds = stroke.features["raw:ds"]
     assert len(ds) != 0, "[CJK_STROKE_H] degenerate stroke detected (empty ds)"
 
     ds_max_idx = np.argmax(ds)
@@ -62,7 +62,7 @@ def CJK_STROKE_GENERIC(stroke):
 
     # HEAD CUT =>
 
-    ds = get_channel(stroke, "ds", call_site)
+    ds = get_channel(stroke, "raw:ds", call_site)
     ds_max_idx = np.argmax(ds)
     mask = (ds > 0)
     find_index = lambda rng: next((i for i in rng if not mask[i]), rng[-1])

@@ -14,19 +14,19 @@ from kanji_nn.data import find_trim_region, trim_region, plot_mcp
 import kanji_nn.metrics as metrics
 
 
-plot_channels=["P_inv", "ds", "c_speed", "K", "loc_stness"]
-plot_channels=["P", "ds", "c_speed", "K", "loc_stness"]
-cpd_channels = ["loc_stness", "K"]
+plot_channels=["P:inv", "raw:ds", "raw:speed:central", "gauss:K", "raw:stness:loc"]
+plot_channels=["P", "raw:ds", "raw:speed:central", "gauss:K", "raw:stness:loc"]
+cpd_channels = ["raw:stness:loc", "gauss:K"]
 
 
 composed_metrics = compose(
     # NOTE: after this point stroke lost all props/features.
-    trim_region,
+    # trim_region,
     tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
     find_trim_region,
     partial(metrics.cpd_signal, channels=cpd_channels),
     metrics.local_straightness,
-    partial(metrics.tangential_acc, speed_key="c_speed"),
+    partial(metrics.tangential_acc, speed_key="raw:speed:central"),
     metrics.vector_acc,
     metrics.curvature,
     metrics.tangent,
@@ -48,7 +48,7 @@ def process_file(dataset, filename):
         print(stroke.stroke_type)
         if (stroke.stroke_type[2] != "HZWG"):
             continue
-        composed_metrics(stroke)
+        stroke = composed_metrics(stroke)
 
     # strokes = [composed_metrics(s) for s in strokes]
     # strokes = [s.raw[:, 1:] for s in strokes]

@@ -1,3 +1,37 @@
+"""
+    Manifest
+    ========
+
+    P
+    P:norm
+    P:inv
+    dP
+    dP/dt
+    raw:ds
+    raw:s
+    raw:s:norm
+    gauss:xy
+    gauss:ds
+    gauss:s
+    gauss:s:norm
+    raw:stness
+    raw:speed:forward
+    raw:speed:backward
+    raw:speed:central
+    gauss:tx
+    gauss:ty
+    gauss:θ
+    gauss:dθ/ds
+    gauss:K
+    raw:vx
+    raw:vy
+    raw:axy
+    raw:ax
+    raw:ay
+    raw:am
+    at
+    raw:stness:loc
+"""
 from .arc_length import arc_length
 from .backward_speed import backward_speed
 from .central_speed import central_speed

@@ -26,11 +26,11 @@ def arc_length(stroke, sigma=1.0, mode='reflect'):
 
 
     return stroke.clone(features={
-        "ds": ds,
-        "s": s,
-        "s_norm": s_norm,
-        "xy_smooth": xy_smooth,
-        "ds_smooth": ds_smooth,
-        "s_smooth": s_smooth,
-        "s_smooth_norm": s_smooth_norm,
+        "raw:ds": ds,
+        "raw:s": s,
+        "raw:s:norm": s_norm,
+        "gauss:xy": xy_smooth,
+        "gauss:ds": ds_smooth,
+        "gauss:s": s_smooth,
+        "gauss:s:norm": s_smooth_norm,
     })

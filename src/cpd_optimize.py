@@ -11,12 +11,12 @@ from kanji_nn.cpd import optimize_pipeline, compute_combined_signal
 from kanji_nn.cli import *
 
 
-# cpd_channels = ["P_inv", "c_speed", "K"]
-cpd_channels = ["loc_stness", "K"]
+# cpd_channels = ["P:inv", "raw:speed:central", "gauss:K"]
+cpd_channels = ["raw:stness:loc", "gauss:K"]
 
 composed_metrics = compose(
     metrics.local_straightness,
-    partial(metrics.tangential_acc, speed_key="c_speed"),
+    partial(metrics.tangential_acc, speed_key="raw:speed:central"),
     metrics.vector_acc,
     metrics.curvature,
     metrics.tangent,

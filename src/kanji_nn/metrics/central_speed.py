@@ -7,4 +7,4 @@ def central_speed(stroke):
     """
     dx_dt = np.gradient(stroke.x, stroke.t)
     dy_dt = np.gradient(stroke.y, stroke.t)
-    return stroke.clone(features={"c_speed": np.hypot(dx_dt, dy_dt)})
+    return stroke.clone(features={"raw:speed:central": np.hypot(dx_dt, dy_dt)})

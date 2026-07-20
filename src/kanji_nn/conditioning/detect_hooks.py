@@ -13,7 +13,7 @@ def detect_hooks(
 
     s = geometry["norm(s)"]
     n = len(s)
-    gradient = np.abs(geometry["dθ/ds"])
+    gradient = np.abs(geometry["gauss:dθ/ds"])
 
     condition = gradient > 40
     padded = np.empty(len(condition) + 2, dtype=bool)

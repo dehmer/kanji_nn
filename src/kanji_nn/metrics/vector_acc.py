@@ -16,4 +16,11 @@ def vector_acc(stroke):
 
     # 3. Combine using hypotenuse for total acceleration magnitude
     am = np.hypot(ax, ay)
-    return stroke.clone(features={"vx": vx, "vy": vy, "axy": axy, "ax": ax, "ay": ay, "am": am})
+    return stroke.clone(features={
+        "raw:vx": vx,
+        "raw:vy": vy,
+        "raw:axy": axy,
+        "raw:ax": ax,
+        "raw:ay": ay,
+        "raw:am": am
+    })
