@@ -14,17 +14,17 @@ from kanji_nn.data import find_trim_region, trim_region, plot_mcp
 import kanji_nn.metrics as metrics
 
 
-plot_channels=["P", "ds", "c_speed", "θ", "dθ/ds", "K"]
-cpd_channels=["P_inv", "c_speed", "K"]
-cpd_weights=[0.5, 0.35, 0.15]
+plot_channels=["P_inv", "ds", "c_speed", "K", "loc_stness"]
+plot_channels=["P", "ds", "c_speed", "K", "loc_stness"]
+cpd_channels = ["loc_stness", "K"]
 
 
 composed_metrics = compose(
     # NOTE: after this point stroke lost all props/features.
     trim_region,
-    tap(partial(plot_mcp, show=True, save=True, channels=plot_channels)),
+    tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
     find_trim_region,
-    partial(metrics.cpd_signal, channels=cpd_channels, weights=cpd_weights),
+    partial(metrics.cpd_signal, channels=cpd_channels),
     metrics.local_straightness,
     partial(metrics.tangential_acc, speed_key="c_speed"),
     metrics.vector_acc,
@@ -44,18 +44,17 @@ def process_file(dataset, filename):
     char = Character.of_npy(dataset, filename)
     strokes = char.strokes(smooth_fn=identity)
 
-    trimmed_strokes = []
     for stroke in strokes:
-        if stroke.stroke_type[2] == 'HZ':
-            # kanken-10_80,学,7,17,62
-            print(f"{stroke.dataset},{stroke.literal},{stroke.stroke_index},0,{stroke.n_points}")
-            stroke = composed_metrics(stroke)
-        trimmed_strokes.append(stroke)
+        print(stroke.stroke_type)
+        if (stroke.stroke_type[2] != "HZWG"):
+            continue
+        composed_metrics(stroke)
 
-    trimmed_strokes = [stroke.raw[:, 1:] for stroke in trimmed_strokes]
-    filename = f'data/dataset/{dataset}/png-post/{char.code_point}'
-    # strokes_plot.show(trimmed_strokes, alpha=0.1)
-    strokes_plot.save(filename, trimmed_strokes, alpha=0.1)
+    # strokes = [composed_metrics(s) for s in strokes]
+    # strokes = [s.raw[:, 1:] for s in strokes]
+    # filename = f'data/dataset/{dataset}/png-post/{char.code_point}'
+    # # strokes_plot.show(trimmed_strokes, alpha=0.1)
+    # strokes_plot.save(filename, strokes, alpha=0.1)
 
 
 if __name__ == "__main__":
@@ -73,7 +72,7 @@ if __name__ == "__main__":
     white_list = []
     # white_list = infer_file_names("字学左文村校森玉空貝赤足音") # shorties
     # white_list = infer_file_names("人休入八大天文木本林校森森水火犬耳虫足金") # CJK STROKES N, T
-    white_list = infer_file_names("中五口右名四日早田男町白百目石草虫見貝足車音") # CJK STROKE HZ
+    # white_list = infer_file_names("中五口右名四日早田男町白百目石草虫見貝足車音") # CJK STROKE HZ
 
     for (dirpath, dirnames, filenames) in os.walk(in_dir):
         for filename in filenames:
