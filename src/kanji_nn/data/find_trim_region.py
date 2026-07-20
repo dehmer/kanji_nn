@@ -48,14 +48,12 @@ def CJK_STROKE_HZ(stroke):
     if "cuts" in stroke.props:
         head_cut, tail_cut = stroke.props["cuts"]
 
-    call_site = "CJK_STROKE_HZ"
-    S = get_channel(stroke, "S", call_site)
-
-    # construction site ahead =>
+    weights = [0.95, 0.05] # optimized
+    window_pct = 0.04
     fraction = (1.0 - 0.15)
-    window_pct = 0.06
-    # window_pct = 0.048
-    tail_cut = find_change_point(S, fraction, window_pct)
+
+    S = stroke.props["S"]
+    tail_cut = find_change_point(S(weights), fraction, window_pct)
 
     return stroke.clone(props = {"cuts": (head_cut, int(tail_cut))}, force=True)
 
