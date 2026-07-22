@@ -6,25 +6,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter1d
 from more_itertools import partition
+from signal import signal, SIGINT
 
 from kanji_nn.plot import strokes_plot
 from kanji_nn.conditioning import join_strokes
 from kanji_nn.data import compose, identity, tap, Character, Stroke
 from kanji_nn.data import find_trim_region, trim_region, plot_mcp
 import kanji_nn.metrics as metrics
+from kanji_nn.io.WKBReader import WKBReader
+import kanji_nn.data as data
 
 
-plot_channels=["P:inv", "raw:ds", "raw:speed:central", "gauss:K", "raw:stness:loc"]
-plot_channels=["P", "raw:ds", "raw:speed:central", "gauss:K", "raw:stness:loc"]
-cpd_channels = ["raw:stness:loc", "gauss:K"]
-
+wkb_reader = WKBReader('data/dataset/kanken_6355/wkb', 'kanken_6355')
+plot_channels=["P", "raw:ds", "raw:speed:central", "gauss:θ", "dirty"]
 
 composed_metrics = compose(
     # NOTE: after this point stroke lost all props/features.
-    # trim_region,
-    tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
-    find_trim_region,
-    partial(metrics.cpd_signal, channels=cpd_channels),
+    trim_region,
+    # tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
+    data.vg_trace_align,
+    partial(data.wkb, wkb_reader=wkb_reader),
     metrics.local_straightness,
     partial(metrics.tangential_acc, speed_key="raw:speed:central"),
     metrics.vector_acc,
@@ -44,20 +45,15 @@ def process_file(dataset, filename):
     char = Character.of_npy(dataset, filename)
     strokes = char.strokes(smooth_fn=identity)
 
-    for stroke in strokes:
-        print(stroke.stroke_type)
-        if (stroke.stroke_type[2] != "HZWG"):
-            continue
-        stroke = composed_metrics(stroke)
-
-    # strokes = [composed_metrics(s) for s in strokes]
-    # strokes = [s.raw[:, 1:] for s in strokes]
-    # filename = f'data/dataset/{dataset}/png-post/{char.code_point}'
-    # # strokes_plot.show(trimmed_strokes, alpha=0.1)
-    # strokes_plot.save(filename, strokes, alpha=0.1)
+    strokes = [composed_metrics(s) for s in strokes]
+    strokes = [s.raw[:, 1:] for s in strokes]
+    filename = f'data/dataset/{dataset}/png-post/{char.code_point}'
+    # strokes_plot.show(trimmed_strokes, alpha=0.1)
+    strokes_plot.save(filename, strokes, alpha=0.1)
 
 
 if __name__ == "__main__":
+    signal(SIGINT, lambda _, __: exit())
     # dataset = 'katakana_49'
     # dataset = 'hiragana_48'
     dataset = 'kanken-10_80'
@@ -73,6 +69,7 @@ if __name__ == "__main__":
     # white_list = infer_file_names("字学左文村校森玉空貝赤足音") # shorties
     # white_list = infer_file_names("人休入八大天文木本林校森森水火犬耳虫足金") # CJK STROKES N, T
     # white_list = infer_file_names("中五口右名四日早田男町白百目石草虫見貝足車音") # CJK STROKE HZ
+    # white_list = infer_file_names("九円")
 
     for (dirpath, dirnames, filenames) in os.walk(in_dir):
         for filename in filenames:

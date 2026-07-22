@@ -7,14 +7,14 @@ import os
 from .identity import identity
 from ..conditioning import split_strokes, join_strokes
 from .stroke import Stroke
+from .conninfo_from_env import conninfo_from_env
 
-_conninfo = 'postgresql://localhost/kanji_nn'
 _connection = None
 
 def get_connection():
     global _connection
     if _connection is None:
-        _connection = psycopg.connect(_conninfo)
+        _connection = psycopg.connect(conninfo_from_env())
     return _connection
 
 def stroke_type_name(type_cp):
@@ -32,7 +32,7 @@ def fetch_stroke_types(literal):
     conn = get_connection()
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT stroke_idx, type_literal, type_cp "
+            "SELECT stroke_idx, type_literal, code_point "
             "FROM kvg_type WHERE literal = %s",
             (literal,)
         )

@@ -8,6 +8,7 @@ filter_any = lambda label: True
 
 @dataclass
 class IndexEntry:
+    index:  int # 0-based index
     label:  str # e.g. 'U+4E00'
     offset: int # [byte]
     length: int # [byte]
@@ -22,10 +23,12 @@ class WKBReader:
         with self.index_path.open(newline="") as f:
             self.meta = [
                 # Note: We are dropping reduncant index column.
-                IndexEntry(row["label"], int(row["offset"]), int(row["length"]))
+                IndexEntry(int(row["index"]), row["label"], int(row["offset"]), int(row["length"]))
                 for row in csv.DictReader(f)
                 if filter(row["label"])
             ]
+
+            self.lookup = {entry.label: entry for entry in self.meta}
 
     def __enter__(self):
         return self
@@ -38,7 +41,13 @@ class WKBReader:
     def __len__(self):
         return len(self.meta)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx_like):
+        idx = idx_like
+
+        # code_point => lookup index:
+        if isinstance(idx_like, str):
+            idx = self.lookup[idx_like].index
+
         entry = self.meta[idx]
         self.wkb.seek(entry.offset)
         buffer = self.wkb.read(entry.length)
@@ -49,6 +58,7 @@ class WKBReader:
         strokes = [np.array(ls.coords) for ls in mls.geoms]
 
         return entry.label, strokes
+
 
     def __iter__(self):
         for i in range(len(self)):

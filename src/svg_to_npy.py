@@ -58,31 +58,13 @@ def all_literals(literal, groups):
 
 if __name__ == '__main__':
     ZIP_PATH = "/Users/dehmer/Public/Data/kanjivg-20250816-all.zip"
-    dataset = "hiragana_46"
-    output_dir = f"data/dataset/{dataset}/wkb"
+    dataset = "kanken_6355"
+    output_dir = f"data/dataset/{dataset}/npy-vg"
 
-    arc_lengths = []
-    stroke_counts = []
-    point_counts = []
-
-    csv_path=f"{output_dir}/{dataset}.csv"
-    bin_path=f"{output_dir}/{dataset}.wkb"
-
-    with open(csv_path, mode='w', newline='', encoding='utf-8') as csv_file, open(bin_path, mode='wb') as bin_file:
-        csv_writer = csv.writer(csv_file)
-        csv_writer.writerow(["index", "label", "offset", "length"])
-
-        filter = literal_filter('一日鼻')
-        filter = kanken_filter
-        filter = filters.hiragana_46
-
-        for index, entry in enumerate(parse_archive(ZIP_PATH, filter=filter)):
-            label = entry[0]
-            paths = entry[1]
-            strokes = sample_kanjivg_char(paths, tol=0.05)
-            strokes = join_strokes(strokes)
-            print(strokes)
-            exit()
-            print(index, label, len(strokes))
-            data = {"index": index, "label": label, "strokes": strokes}
-            write_wkb(csv_writer, bin_file, data)
+    for index, entry in enumerate(parse_archive(ZIP_PATH, filter=filters.kanji_kanken)):
+        label = entry[0]
+        paths = entry[1]
+        strokes = sample_kanjivg_char(paths, tol=0.05)
+        strokes = join_strokes(strokes)
+        print(index, label, len(strokes))
+        np.save(f'{output_dir}/{label}-vg.npy', strokes)

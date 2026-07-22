@@ -1,5 +1,8 @@
 from .character import Character
 from .compose import compose
+from .conninfo_from_env import conninfo_from_env
+from .densify import densify
+from .dtw_align import dtw_align
 from .find_trim_region import find_trim_region
 from .identity import identity
 from .KanjiVGDataset import KanjiVGDataset
@@ -16,3 +19,5 @@ from .structural_zero_mask import structural_zero_mask
 from .tap import tap
 from .transform_absolute import transform_absolute
 from .trim_region import trim_region
+from .vg_trace_align import vg_trace_align
+from .wkb import wkb
