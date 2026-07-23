@@ -72,17 +72,13 @@ if __name__ == '__main__':
         csv_writer = csv.writer(csv_file)
         csv_writer.writerow(["index", "label", "offset", "length"])
 
-        filter = literal_filter('一日鼻')
-        filter = kanken_filter
         filter = filters.hiragana_46
 
         for index, entry in enumerate(parse_archive(ZIP_PATH, filter=filter)):
             label = entry[0]
             paths = entry[1]
             strokes = sample_kanjivg_char(paths, tol=0.05)
-            strokes = join_strokes(strokes)
-            print(strokes)
-            exit()
+            # strokes = join_strokes(strokes)
             print(index, label, len(strokes))
             data = {"index": index, "label": label, "strokes": strokes}
             write_wkb(csv_writer, bin_file, data)

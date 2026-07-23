@@ -18,7 +18,12 @@ def get_connection():
     return _connection
 
 def stroke_type_name(type_cp):
-    """type_cp like 'U+31D6' -> 'CJK STROKE HG'"""
+    """type_cp like 'U+31D6' -> 'HG'"""
+
+    # Kana without stroke types:
+    if not type_cp:
+        return 'N/A'
+
     ch = chr(int(type_cp[2:], 16))
     name = unicodedata.name(ch)
     return name.split(' ')[2]
