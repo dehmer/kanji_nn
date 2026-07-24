@@ -3,6 +3,7 @@ from .compose import compose
 from .conninfo_from_env import conninfo_from_env
 from .densify import densify
 from .dtw_align import dtw_align
+from .gauss_1d import gauss_1d
 from .identity import identity
 from .KanjiVGDataset import KanjiVGDataset
 from .local_pace import local_pace
@@ -19,5 +20,6 @@ from .structural_zero_mask import structural_zero_mask
 from .tap import tap
 from .transform_absolute import transform_absolute
 from .trim_region import trim_region
+from .turning_angle import turning_angle
 from .vg_trace_align import vg_trace_align
 from .wkb import wkb

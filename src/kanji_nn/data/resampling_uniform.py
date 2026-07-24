@@ -1,20 +1,28 @@
 import numpy as np
 from scipy.ndimage import gaussian_filter1d
-from kanji_nn.plot import strokes_plot
+from kanji_nn.data.stroke import Stroke
 
-def resampling_uniform(stroke, sigma=1.0, mode="reflect"):
+def resampling_uniform(stroke, n_out=None):
+    n_out = stroke.n_points if not n_out else n_out
+    n_out = max(n_out, 2)
 
     s = stroke.features['raw:s']
-    samples = np.linspace(0.0, s[-1], stroke.n_points)
-
-    # keep x/y separate for now:
+    samples = np.linspace(0.0, s[-1], n_out)
     x = np.interp(samples, s, stroke.x)
     y = np.interp(samples, s, stroke.y)
     xy = np.column_stack([x, y])
 
-    xy_gauss = gaussian_filter1d(xy, axis=0, sigma=sigma, mode=mode)
-    title = f"Resampled, gaussian filter\nσ = {sigma}, mode = {mode}"
-    strokes_plot.show([xy_gauss], title=title, alpha=0.1)
+    raw = np.column_stack([
+        np.arange(xy.shape[0]), # fake timestamp
+        xy,
+        np.zeros(xy.shape[0]) # pressure
+    ])
 
-
-    return xy_gauss
+    return Stroke(
+        dataset=stroke.dataset,
+        stroke_index=stroke.stroke_index,
+        raw=raw,
+        code_point=stroke.code_point,
+        literal=stroke.literal,
+        stroke_type=stroke.stroke_type
+    )

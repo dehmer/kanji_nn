@@ -17,16 +17,18 @@ from kanji_nn.io.WKBReader import WKBReader
 import kanji_nn.data as data
 
 
-plot_channels=["P", "raw:ds", "raw:speed:central", "gauss:θ"]
+plot_channels=["angle"]
 
 
 def compose_pipeline(wkb_reader):
     return compose(
+        tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
+        data.turning_angle,
+        partial(data.gauss_1d, sigma=3.0),
         data.resampling_uniform,
         metrics.arc_length_raw,
         # NOTE: after this point stroke lost all props/features.
         trim_region,
-        # tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
         data.vg_trace_align,
         partial(data.wkb, wkb_reader=wkb_reader),
         metrics.local_straightness,
@@ -50,7 +52,8 @@ def process_file(dataset, pipeline, filename):
 
     reference = wkb_reader[char.code_point][1]
     trimmed = [pipeline(s) for s in strokes]
-    # trimmed = [s.raw[:, 1:] for s in trimmed]
+    trimmed = [s.raw[:, 1:] for s in trimmed]
+
     # strokes = [s.raw[:, 1:] for s in strokes]
     # strokes_plot.show(reference, alpha=0.0)
     # strokes_plot.show(trimmed, alpha=0.0)
@@ -69,8 +72,8 @@ def process_file(dataset, pipeline, filename):
 if __name__ == "__main__":
     signal(SIGINT, lambda _, __: exit())
     # dataset = 'katakana_47'
-    # dataset = 'hiragana_46'
-    dataset = 'kanken-10_80'
+    dataset = 'hiragana_46'
+    # dataset = 'kanken-10_80'
     in_dir = f'data/dataset/{dataset}/npy-raw'
 
     wkb_reader = WKBReader(f"data/dataset/{dataset}/wkb", dataset)
@@ -83,7 +86,7 @@ if __name__ == "__main__":
         return [f'U+{literal_to_hex(literal)}.npy' for literal in literals]
 
     white_list = []
-    white_list = infer_file_names("虫") # 学字校森林
+    white_list = infer_file_names("ね") # 学字校森林
 
     for (dirpath, dirnames, filenames) in os.walk(in_dir):
         for filename in filenames:
