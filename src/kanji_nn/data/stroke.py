@@ -40,13 +40,13 @@ class Stroke:
     @property
     def pressure(self): return self.raw[:, 3]
 
-    @property
-    def isbare(self): return len(self.props) == 0 and len(self.features) == 0
-
     def trim(self, region):
+        xy = self.xy[region[0]:region[1], :]
+        zeros = np.zeros(xy.shape[0])
+        raw = np.column_stack([zeros, xy, zeros])
         return replace(
             self,
-            raw = self.raw[region[0]:region[1], :],
+            raw = raw,
             props = dict(),
             features = dict()
         )

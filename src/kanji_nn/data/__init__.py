@@ -3,7 +3,6 @@ from .compose import compose
 from .conninfo_from_env import conninfo_from_env
 from .densify import densify
 from .dtw_align import dtw_align
-from .find_trim_region import find_trim_region
 from .identity import identity
 from .KanjiVGDataset import KanjiVGDataset
 from .local_pace import local_pace
@@ -11,6 +10,7 @@ from .paced_sigma import paced_sigma
 from .plot_mcp import plot_mcp
 from .prepare_label_encoding import prepare_label_encoding
 from .random_walk_delta_noise import random_walk_delta_noise
+from .resampling_uniform import resampling_uniform
 from .s_weighted_random_walk_noise import s_weighted_random_walk_noise
 from .shape_tensor_sequence import shape_tensor_sequence
 from .stroke_start_indices import stroke_start_indices
