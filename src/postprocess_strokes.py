@@ -24,6 +24,7 @@ plot_channels=["angle"]
 def compose_pipeline(wkb_reader):
     return compose(
         # tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
+        data.resolve_segments,
         data.dtw,
         data.turning_angle,
         metrics.arc_length_raw,
@@ -54,29 +55,29 @@ def process_file(dataset, pipeline, wkb_reader, filename):
     strokes = char.strokes()
 
     trimmed = [pipeline(s) for s in strokes]
-    reference = wkb_reader[char.code_point][1]
+    # reference = wkb_reader[char.code_point][1]
 
-    paths = [s.sticky["path"] for s in trimmed]
-    paths_plot(paths)
+    # paths = [s.sticky["path"] for s in trimmed]
+    # paths_plot(paths)
 
-    struts = np.concatenate([s.props["struts"] for s in trimmed])
-    trimmed = [s.features["gauss:xy"] for s in trimmed]
+    # struts = np.concatenate([s.props["struts"] for s in trimmed])
+    # trimmed = [s.features["gauss:xy"] for s in trimmed]
 
-    styles = [
-        {"color": "green", "linewidth": 1.0, "alpha": 1.0},
-        {"color": "black", "linewidth": 1.0, "alpha": 1.0},
-    ]
-    strokes_plot.overlays([reference, trimmed], styles, struts)
+    # styles = [
+    #     {"color": "green", "linewidth": 1.0, "alpha": 1.0},
+    #     {"color": "black", "linewidth": 1.0, "alpha": 1.0},
+    # ]
+    # strokes_plot.overlays([reference, trimmed], styles, struts)
 
-    plot_filename = f'data/dataset/{dataset}/png-post/{char.code_point}'
-    strokes_plot.save(plot_filename, trimmed, alpha=0.1)
+    # plot_filename = f'data/dataset/{dataset}/png-post/{char.code_point}'
+    # strokes_plot.save(plot_filename, trimmed, alpha=0.1)
 
 
 if __name__ == "__main__":
     signal(SIGINT, lambda _, __: sys.exit())
     # dataset = 'katakana_47'
-    dataset = 'hiragana_46'
-    # dataset = 'kanken-10_80'
+    # dataset = 'hiragana_46'
+    dataset = 'kanken-10_80'
     in_dir = f'data/dataset/{dataset}/npy-raw'
 
     wkb_reader = WKBReader(f"data/dataset/{dataset}/wkb", dataset)
@@ -91,7 +92,7 @@ if __name__ == "__main__":
     white_list = []
     # white_list = infer_file_names("虫")
     # white_list = infer_file_names("ね")
-    white_list = infer_file_names("ま")
+    # white_list = infer_file_names("ま")
 
     for (dirpath, dirnames, filenames) in os.walk(in_dir):
         for filename in filenames:

@@ -1,5 +1,6 @@
 from .bezier_obb import bezier_obb
 from .character import Character
+from .classify_bezier import classify_bezier
 from .compose import compose
 from .conninfo_from_env import conninfo_from_env
 from .densify import densify
@@ -14,6 +15,7 @@ from .plot_mcp import plot_mcp
 from .prepare_label_encoding import prepare_label_encoding
 from .random_walk_delta_noise import random_walk_delta_noise
 from .resampling_uniform import resampling_uniform
+from .resolve_segments import resolve_segments
 from .s_weighted_random_walk_noise import s_weighted_random_walk_noise
 from .ScaledPath import ScaledPath
 from .shape_tensor_sequence import shape_tensor_sequence
