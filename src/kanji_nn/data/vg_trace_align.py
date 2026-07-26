@@ -66,6 +66,7 @@ def vg_trace_align(stroke):
         ([c(), d()], lambda s: 0),           # 森/11, 林/2
     ])
 
+    # TODO: check for overtrim: ふらな
     # print(readable(signature[::-1], " <- "))
     tail_cut = find_cut(signature[::-1], [
         ([d(), c(), d()], lambda s: s[1][2] + 2),

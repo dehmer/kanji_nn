@@ -8,9 +8,9 @@ class Stroke:
     raw: np.ndarray # [t, x, y, pressure]
     code_point: str
     literal: str
-    stroke_type: tuple[str, str, str]
     features: dict[str, np.ndarray] = field(default_factory=dict)
     props: dict[str, Any] = field(default_factory=dict)
+    sticky: dict[str, Any] = field(default_factory=dict)
 
     @property
     def n_points(self) -> int:
@@ -43,18 +43,20 @@ class Stroke:
     def trim(self, region):
         xy = self.xy[region[0]:region[1], :]
         zeros = np.zeros(xy.shape[0])
-        raw = np.column_stack([zeros, xy, zeros])
+
         return replace(
             self,
-            raw = raw,
-            props = dict(),
-            features = dict()
+            raw=np.column_stack([zeros, xy, zeros]),
+            props=dict(),
+            features=dict(),
+            sticky=self.sticky
         )
 
-    def clone(self, features = None, props = None, force = False):
+    def clone(self, features=None, props=None, sticky=None, force=False):
         # Default to empty dictionaries if None is passed
         features = features or {}
         props = props or {}
+        sticky = sticky or {}
 
         # Check for duplicate feature keys
         if not force:
@@ -84,5 +86,6 @@ class Stroke:
         return replace(
             self,
             features=self.features | features,
-            props=self.props | props
+            props=self.props | props,
+            sticky=self.sticky | sticky,
         )

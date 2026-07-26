@@ -24,5 +24,5 @@ def resampling_uniform(stroke, n_out=None):
         raw=raw,
         code_point=stroke.code_point,
         literal=stroke.literal,
-        stroke_type=stroke.stroke_type
+        sticky=stroke.sticky
     )

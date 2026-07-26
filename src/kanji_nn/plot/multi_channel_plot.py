@@ -47,10 +47,11 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
     stroke_marker, = ax_stroke.plot([], [], 'ro', markersize=6, alpha=0.7, zorder=5)
     tangent_line, = ax_stroke.plot([], [], color='red', linestyle='-', linewidth=2.0, alpha=0.9, zorder=4)
 
+    kvg_type = stroke.sticky["kvg_type"]
+    type_name = f"({kvg_type[1]})" if kvg_type else ""
     title_lines = [
         "Kanji Stroke Spatial Trajectory",
-        f"{stroke.literal} - {stroke.code_point}, Stroke: {stroke.stroke_index}",
-        f"type: {stroke.stroke_type[1]}, {stroke.stroke_type[2]}"
+        f"{stroke.literal} - {stroke.code_point}, Stroke: {stroke.stroke_index} {type_name}"
     ]
 
     title = "\n".join(title_lines)
@@ -91,6 +92,9 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
 
         if cuts and cuts[1] <= stroke.n_points:
             ax.axvline(t[cuts[1] - 1], color='blue', linestyle='--', linewidth=1, alpha=0.6)
+
+        for index, options in stroke.props["vlines"]:
+            ax.axvline(t[index], **options)
 
         # # median
         # ax.axvline(t[t.size // 2], color='black', linewidth=1.5, alpha=1)

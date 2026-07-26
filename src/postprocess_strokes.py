@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 from functools import partial
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,7 +9,7 @@ from scipy.ndimage import gaussian_filter1d
 from more_itertools import partition
 from signal import signal, SIGINT
 
-from kanji_nn.plot import strokes_plot
+from kanji_nn.plot import strokes_plot, paths_plot
 from kanji_nn.conditioning import join_strokes
 from kanji_nn.data import compose, identity, tap, Character, Stroke
 from kanji_nn.data import trim_region, plot_mcp
@@ -22,8 +23,10 @@ plot_channels=["angle"]
 
 def compose_pipeline(wkb_reader):
     return compose(
-        tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
+        # tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
+        data.dtw,
         data.turning_angle,
+        metrics.arc_length_raw,
         partial(data.gauss_1d, sigma=3.0),
         data.resampling_uniform,
         metrics.arc_length_raw,
@@ -44,33 +47,33 @@ def compose_pipeline(wkb_reader):
     )
 
 
-def process_file(dataset, pipeline, filename):
+def process_file(dataset, pipeline, wkb_reader, filename):
 
     # reflect, nearest, mirror
     char = Character.of_npy(dataset, filename)
-    strokes = char.strokes(smooth_fn=identity)
+    strokes = char.strokes()
 
-    reference = wkb_reader[char.code_point][1]
     trimmed = [pipeline(s) for s in strokes]
-    trimmed = [s.raw[:, 1:] for s in trimmed]
+    reference = wkb_reader[char.code_point][1]
 
-    # strokes = [s.raw[:, 1:] for s in strokes]
-    # strokes_plot.show(reference, alpha=0.0)
-    # strokes_plot.show(trimmed, alpha=0.0)
-    # strokes_plot.show(reference, alpha=0.3)
+    paths = [s.sticky["path"] for s in trimmed]
+    paths_plot(paths)
+
+    struts = np.concatenate([s.props["struts"] for s in trimmed])
+    trimmed = [s.features["gauss:xy"] for s in trimmed]
+
     styles = [
-        {"color": "royalblue", "linewidth": 5.0, "alpha": 0.5},
-        # {"color": "red", "linewidth": 2.0, "alpha": 1.0},
-        {"color": "black", "linewidth": 2.0, "alpha": 1.0},
+        {"color": "green", "linewidth": 1.0, "alpha": 1.0},
+        {"color": "black", "linewidth": 1.0, "alpha": 1.0},
     ]
-    strokes_plot.overlays([reference, trimmed], styles)
+    strokes_plot.overlays([reference, trimmed], styles, struts)
 
-    filename = f'data/dataset/{dataset}/png-post/{char.code_point}'
-    strokes_plot.save(filename, trimmed, alpha=0.1)
+    plot_filename = f'data/dataset/{dataset}/png-post/{char.code_point}'
+    strokes_plot.save(plot_filename, trimmed, alpha=0.1)
 
 
 if __name__ == "__main__":
-    signal(SIGINT, lambda _, __: exit())
+    signal(SIGINT, lambda _, __: sys.exit())
     # dataset = 'katakana_47'
     dataset = 'hiragana_46'
     # dataset = 'kanken-10_80'
@@ -86,10 +89,13 @@ if __name__ == "__main__":
         return [f'U+{literal_to_hex(literal)}.npy' for literal in literals]
 
     white_list = []
-    white_list = infer_file_names("ね") # 学字校森林
+    # white_list = infer_file_names("虫")
+    # white_list = infer_file_names("ね")
+    white_list = infer_file_names("ま")
 
     for (dirpath, dirnames, filenames) in os.walk(in_dir):
         for filename in filenames:
             if not filename.endswith('npy'): continue
-            if len(white_list) and not filename in white_list: continue
-            process_file(dataset, pipeline, f'{dirpath}/{filename}')
+            # if len(white_list) and not filename in white_list: continue
+            if white_list and filename not in white_list: continue
+            process_file(dataset, pipeline, wkb_reader, f'{dirpath}/{filename}')

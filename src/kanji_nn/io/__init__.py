@@ -1,5 +1,6 @@
 from .code_point import groups
 from .filters import *
+from .KanjiVG import KanjiVG
 from .load_wkb import load_wkb
 from .write_wkb import write_wkb
 from .tsv import *

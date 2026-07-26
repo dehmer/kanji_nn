@@ -24,15 +24,16 @@ def _strokes(strokes, title, alpha, figsize):
     return figure
 
 
-def overlays(characters, styles, figsize=(6, 6)):
-
+def overlays(characters, styles, struts=[], figsize=(6, 6)):
     figure = plt.figure(figsize=figsize)
 
     for c, strokes in enumerate(characters):
         for i, stroke in enumerate(strokes):
             xy = stroke[:, (0, 1)]
             plt.plot(xy[:, 0], xy[:, 1], zorder=c, **styles[c])
-            # plt.plot(xy[:, 0], xy[:, 1], color='black', zorder=c, linewidth=7.0, alpha=0.1)
+
+    for i in range(struts.shape[0]):
+        plt.plot(struts[i, (0, 1)], struts[i, (2, 3)], color="red")
 
     # Kanji coordinate systems usually start at the top-left (invert Y-axis)
     ax = plt.gca()
