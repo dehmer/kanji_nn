@@ -3,6 +3,7 @@ from .character import Character
 from .classify_bezier import classify_bezier
 from .compose import compose
 from .conninfo_from_env import conninfo_from_env
+from .curve_fitting import curve_fitting
 from .densify import densify
 from .dtw_align import dtw_align
 from .dtw import dtw

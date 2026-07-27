@@ -24,6 +24,7 @@ plot_channels=["angle"]
 def compose_pipeline(wkb_reader):
     return compose(
         # tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
+        data.curve_fitting,
         data.resolve_segments,
         data.dtw,
         data.turning_angle,
@@ -55,48 +56,58 @@ def process_file(dataset, pipeline, wkb_reader, filename):
     strokes = char.strokes()
 
     trimmed = [pipeline(s) for s in strokes]
-    # reference = wkb_reader[char.code_point][1]
+    reference = wkb_reader[char.code_point][1]
+    paths = [s.sticky["path"] for s in trimmed]
+    fitted_paths = [s.props["fitted_path"] for s in trimmed]
 
-    # paths = [s.sticky["path"] for s in trimmed]
+    struts = np.concatenate([s.props["struts"] for s in trimmed])
+    gauss_xy = [s.features["gauss:xy"] for s in trimmed]
+    xy = [s.xy for s in trimmed]
+
+    styles = [
+        {"color": "green", "linewidth": 1.0, "alpha": 1.0},
+        {"color": "black", "linewidth": 1.0, "alpha": 1.0},
+    ]
+
+    paths_plot(fitted_paths, xdim=1.0, ydim=1.0, show_obb=False)
     # paths_plot(paths)
-
-    # struts = np.concatenate([s.props["struts"] for s in trimmed])
-    # trimmed = [s.features["gauss:xy"] for s in trimmed]
-
-    # styles = [
-    #     {"color": "green", "linewidth": 1.0, "alpha": 1.0},
-    #     {"color": "black", "linewidth": 1.0, "alpha": 1.0},
-    # ]
-    # strokes_plot.overlays([reference, trimmed], styles, struts)
+    # strokes_plot.overlays([reference, xy], styles, struts)
+    # strokes_plot.overlays([xy, gauss_xy], styles, struts=struts)
+    # strokes_plot.show(xy, alpha=0.0)
+    # strokes_plot.quads(trimmed, figsize=(18, 18))
 
     # plot_filename = f'data/dataset/{dataset}/png-post/{char.code_point}'
     # strokes_plot.save(plot_filename, trimmed, alpha=0.1)
 
 
+def literal_to_hex(literal):
+    return f'{ord(literal):x}'.upper()
+
+def infer_file_names(literals):
+    return [f'U+{literal_to_hex(literal)}.npy' for literal in literals]
+
 if __name__ == "__main__":
     signal(SIGINT, lambda _, __: sys.exit())
-    # dataset = 'katakana_47'
-    # dataset = 'hiragana_46'
-    dataset = 'kanken-10_80'
-    in_dir = f'data/dataset/{dataset}/npy-raw'
-
-    wkb_reader = WKBReader(f"data/dataset/{dataset}/wkb", dataset)
-    pipeline = compose_pipeline(wkb_reader)
-
-    def literal_to_hex(literal):
-        return f'{ord(literal):x}'.upper()
-
-    def infer_file_names(literals):
-        return [f'U+{literal_to_hex(literal)}.npy' for literal in literals]
 
     white_list = []
     # white_list = infer_file_names("虫")
-    # white_list = infer_file_names("ね")
+    white_list = infer_file_names("ね")
     # white_list = infer_file_names("ま")
 
-    for (dirpath, dirnames, filenames) in os.walk(in_dir):
-        for filename in filenames:
-            if not filename.endswith('npy'): continue
-            # if len(white_list) and not filename in white_list: continue
-            if white_list and filename not in white_list: continue
-            process_file(dataset, pipeline, wkb_reader, f'{dirpath}/{filename}')
+    datasets = ['katakana_47', 'hiragana_46', 'kanken-10_80']
+    for dataset in datasets:
+        in_dir = f'data/dataset/{dataset}/npy-raw'
+        wkb_reader = WKBReader(f"data/dataset/{dataset}/wkb", dataset)
+        pipeline = compose_pipeline(wkb_reader)
+
+        def literal_to_hex(literal):
+            return f'{ord(literal):x}'.upper()
+
+        def infer_file_names(literals):
+            return [f'U+{literal_to_hex(literal)}.npy' for literal in literals]
+
+        for (dirpath, dirnames, filenames) in os.walk(in_dir):
+            for filename in filenames:
+                if not filename.endswith('npy'): continue
+                if white_list and filename not in white_list: continue
+                process_file(dataset, pipeline, wkb_reader, f'{dirpath}/{filename}')

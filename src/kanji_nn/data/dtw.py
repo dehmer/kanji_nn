@@ -37,7 +37,7 @@ def dtw(stroke):
     # record same hw index addressing consecutive segments
     same_index = D[:-1, 0] == D[1:, 0]
     rising = D[1:, 2] > D[:-1, 2]
-    not_moveto = D[:-1, 0] != 0
+    not_moveto = D[:-1, 2] != 0
     conflict_rows = np.flatnonzero(not_moveto & same_index & rising)
 
     return stroke.clone(props={
