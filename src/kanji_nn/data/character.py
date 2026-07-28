@@ -7,6 +7,7 @@ from .identity import identity
 from ..conditioning import split_strokes, join_strokes
 from .stroke import Stroke
 from kanji_nn.io.KanjiVG import KanjiVG
+from kanji_nn.svg.transform import transform
 
 
 def extract_code_point(filename):
@@ -36,7 +37,7 @@ class Character:
         code_point = extract_code_point(filename)
         raw = np.load(filename)
 
-        # Silently drop orientation and tile:
+        # Silently drop orientation and tilt:
         if raw.shape[1] == 7:
             raw = raw[:, (0, 1, 2, 3, 6)]
 
@@ -52,6 +53,7 @@ class Character:
     def strokes(self):
         kvg = KanjiVG(self.code_point)
         strokes = split_strokes(self.raw)
+        paths = [transform(path, a=1/109) for path in kvg.paths]
 
         return [Stroke(
             dataset=self.dataset,
@@ -61,7 +63,7 @@ class Character:
             literal=self.literal,
             sticky={
                 "kvg_type": kvg.types[i],
-                "path": kvg.paths[i]
+                "path": paths[i]
             }
         ) for i, raw in enumerate(strokes)]
 
