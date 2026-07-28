@@ -2,7 +2,7 @@ import numpy as np
 from fastdtw import fastdtw
 from scipy.spatial.distance import euclidean
 from svg.path import CubicBezier
-from .ScaledPath import ScaledPath
+from kanji_nn.svg.ScaledPath import ScaledPath
 
 
 def dtw(stroke):

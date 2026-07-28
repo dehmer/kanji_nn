@@ -3,6 +3,5 @@ from .filters import *
 from .KanjiVG import KanjiVG
 from .load_wkb import load_wkb
 from .write_wkb import write_wkb
-from .tsv import *
 from .parse_archive import parse_archive
 from .WKBReader import WKBReader

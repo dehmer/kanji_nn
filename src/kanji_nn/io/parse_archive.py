@@ -5,7 +5,6 @@ import xml.etree.ElementTree as ET
 from svg.path import Path, parse_path
 
 from . import code_point
-from .. import vg
 
 def _extract_paths(content: str) -> Path:
     """

@@ -9,44 +9,42 @@ from scipy.ndimage import gaussian_filter1d
 from more_itertools import partition
 from signal import signal, SIGINT
 
+import kanji_nn.pipeline as pipeline
 from kanji_nn.plot import strokes_plot, paths_plot
 from kanji_nn.conditioning import join_strokes
 from kanji_nn.data import Character, Stroke
-from kanji_nn.data import trim_region, plot_mcp
-import kanji_nn.metrics as metrics
+from kanji_nn.data import plot_mcp
 from kanji_nn.io.WKBReader import WKBReader
-import kanji_nn.data as data
 from kanji_nn.predef import compose, tap
 
 
 plot_channels=["angle"]
 
-
 def compose_pipeline(wkb_reader):
     return compose(
         # tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
-        data.curve_fitting,
-        data.resolve_segments,
-        data.dtw,
-        data.turning_angle,
-        metrics.arc_length_raw,
-        partial(data.gauss_1d, sigma=3.0),
-        data.resampling_uniform,
-        metrics.arc_length_raw,
+        pipeline.curve_fitting,
+        pipeline.resolve_segments,
+        pipeline.dtw,
+        pipeline.turning_angle,
+        pipeline.arc_length_raw,
+        partial(pipeline.gauss_1d, sigma=3.0),
+        pipeline.resampling_uniform,
+        pipeline.arc_length_raw,
         # NOTE: after this point stroke lost all props/features.
-        trim_region,
-        data.vg_trace_align,
-        partial(data.wkb, wkb_reader=wkb_reader),
-        metrics.local_straightness,
-        partial(metrics.tangential_acc, speed_key="raw:speed:central"),
-        metrics.vector_acc,
-        metrics.curvature,
-        metrics.tangent,
-        metrics.central_speed,
-        metrics.straightness,
-        metrics.arc_length,
-        metrics.pressure_derivative,
-        metrics.pressure
+        pipeline.trim_region,
+        pipeline.vg_trace_align,
+        partial(pipeline.wkb, wkb_reader=wkb_reader),
+        pipeline.local_straightness,
+        partial(pipeline.tangential_acc, speed_key="raw:speed:central"),
+        pipeline.vector_acc,
+        pipeline.curvature,
+        pipeline.tangent,
+        pipeline.central_speed,
+        pipeline.straightness,
+        pipeline.arc_length,
+        pipeline.pressure_derivative,
+        pipeline.pressure
     )
 
 
@@ -99,10 +97,10 @@ if __name__ == "__main__":
     for dataset in datasets:
         npy_raw = f'data/dataset/{dataset}/npy-raw'
         wkb_reader = WKBReader(f"data/dataset/{dataset}/wkb", dataset)
-        pipeline = compose_pipeline(wkb_reader)
+        p = compose_pipeline(wkb_reader)
 
         for (dirpath, dirnames, filenames) in os.walk(npy_raw):
             for filename in filenames:
                 if not filename.endswith('npy'): continue
                 if white_list and filename not in white_list: continue
-                process_file(dataset, pipeline, wkb_reader, f'{dirpath}/{filename}')
+                process_file(dataset, p, wkb_reader, f'{dirpath}/{filename}')

@@ -93,8 +93,9 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
         if cuts and cuts[1] <= stroke.n_points:
             ax.axvline(t[cuts[1] - 1], color='blue', linestyle='--', linewidth=1, alpha=0.6)
 
-        for index, options in stroke.props["vlines"]:
-            ax.axvline(t[index], **options)
+        if "vlines" in stroke.props:
+            for index, options in stroke.props["vlines"]:
+                ax.axvline(t[index], **options)
 
         # # median
         # ax.axvline(t[t.size // 2], color='black', linewidth=1.5, alpha=1)

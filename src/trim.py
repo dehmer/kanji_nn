@@ -7,8 +7,9 @@ from functools import partial
 from fastdtw import fastdtw
 from scipy.spatial.distance import euclidean
 
-from kanji_nn.data import compose, tap, Character, Stroke
-import kanji_nn.metrics as metrics
+from kanji_nn.data import Character, Stroke
+from kanji_nn.predef import compose, tap
+import kanji_nn.pipeline as pipeline
 import kanji_nn.svg as svg
 from kanji_nn.plot import strokes_plot
 
@@ -81,7 +82,7 @@ def compose_pipeline():
         rle,
         partial(resample_path_equidistant, error=1e-2),
         partial(resample_xy, factor=1.0),
-        metrics.arc_length_raw,
+        pipeline.arc_length_raw,
         # tap(lambda s: print(s)),
     )
 
@@ -116,10 +117,10 @@ if __name__ == "__main__":
 
     for dataset in datasets:
         directory = f'data/dataset/{dataset}/npy-raw'
-        pipeline = compose_pipeline()
+        p = compose_pipeline()
 
         for (dirpath, dirnames, filenames) in os.walk(directory):
             for filename in filenames:
                 if not filename.endswith('npy'): continue
                 if white_list and filename not in white_list: continue
-                process_file(dataset, pipeline, f'{dirpath}/{filename}')
+                process_file(dataset, p, f'{dirpath}/{filename}')

@@ -2,7 +2,7 @@ import numpy as np
 from functools import partial
 from itertools import accumulate
 from kanji_nn.plot import strokes_plot
-from . import dtw_align, densify
+from kanji_nn.data import dtw_align, densify
 
 
 def find_cut(s, patterns):
