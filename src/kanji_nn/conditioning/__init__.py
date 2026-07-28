@@ -1,6 +1,5 @@
 from .absolute_of import absolute_of
 from .adaptive_sampling import sample_kanjivg_char
-from .detect_hooks import detect_hooks
 from .downsample import downsample
 from .join_strokes import join_strokes
 from .point_count import point_count

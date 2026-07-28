@@ -26,11 +26,13 @@ def vg_trace_align(stroke):
     # Add interpolated points to reference
     # to make up for sparse point distribution.
     # max_ds := target delta arc length:
-    hs = stroke.features["raw:s"]
-    max_ds = hs[-1] / stroke.n_points
+    raw_s = stroke.features["raw:s"]
+    max_ds = raw_s[-1] / stroke.n_points
     reference = stroke.props["wkb"]
     densified = densify(reference, max_ds)
-    path, _ = dtw_align(stroke.xy, densified)
+    path, distance = dtw_align(stroke.xy, densified)
+
+    print("distance", distance, "\n", path)
 
     A = 0 # path column index: (handwritten) stroke
     B = 1 # path column index: reference

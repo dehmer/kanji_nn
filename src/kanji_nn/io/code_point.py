@@ -12,7 +12,6 @@ _DATA_FILE = Path(__file__).with_name("kanji_sets.tsv")
 with _DATA_FILE.open(encoding="utf-8", newline="") as fp:
     sets = dict(csv.reader(fp, delimiter="\t"))
 
-
 def sorted_ord_list(s):
     list = [ord(c) for c in s]
     list.sort() # in-place

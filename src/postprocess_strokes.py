@@ -97,17 +97,11 @@ if __name__ == "__main__":
 
     datasets = ['katakana_47', 'hiragana_46', 'kanken-10_80']
     for dataset in datasets:
-        in_dir = f'data/dataset/{dataset}/npy-raw'
+        npy_raw = f'data/dataset/{dataset}/npy-raw'
         wkb_reader = WKBReader(f"data/dataset/{dataset}/wkb", dataset)
         pipeline = compose_pipeline(wkb_reader)
 
-        def literal_to_hex(literal):
-            return f'{ord(literal):x}'.upper()
-
-        def infer_file_names(literals):
-            return [f'U+{literal_to_hex(literal)}.npy' for literal in literals]
-
-        for (dirpath, dirnames, filenames) in os.walk(in_dir):
+        for (dirpath, dirnames, filenames) in os.walk(npy_raw):
             for filename in filenames:
                 if not filename.endswith('npy'): continue
                 if white_list and filename not in white_list: continue

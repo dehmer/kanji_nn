@@ -183,30 +183,3 @@ def rdp_to_budget_weighted(strokes, target_total, min_points_per_stroke=2):
     ]
 
     return simplified, per_stroke_targets, sum(len(s) for s in simplified)
-
-
-# ---------------------------------------------------------------------------
-# Quick self-test / demo
-# ---------------------------------------------------------------------------
-
-# if __name__ == "__main__":
-#     rng = np.random.default_rng(0)
-
-#     def fake_stroke(n, curviness=0.02):
-#         t = np.linspace(0, 1, n)
-#         x = t
-#         y = 0.3 * np.sin(t * np.pi * 2) + curviness * rng.standard_normal(n)
-#         return np.stack([x, y], axis=1)
-
-#     # simulate a 12-stroke character with mixed complexity
-#     strokes = [fake_stroke(rng.integers(15, 60)) for _ in range(12)]
-#     original_total = sum(len(s) for s in strokes)
-#     print(f"original total points: {original_total}")
-
-#     flat_simplified, eps_used, flat_total = rdp_to_budget_flat(strokes, target_total=256)
-#     print(f"[flat]     eps={eps_used:.5f}  total={flat_total}  "
-#           f"per-stroke={[len(s) for s in flat_simplified]}")
-
-#     weighted_simplified, targets, weighted_total = rdp_to_budget_weighted(strokes, target_total=256)
-#     print(f"[weighted] total={weighted_total}  targets={list(targets)}  "
-#           f"actual={[len(s) for s in weighted_simplified]}")

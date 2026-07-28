@@ -170,33 +170,3 @@ def sample_kanjivg_char(parsed_paths, tol=0.01, max_depth=12, viewbox_size=109.0
         pts = sample_path_d(path, tol=tol, max_depth=max_depth)
         strokes.append(pts / viewbox_size)
     return strokes
-
-
-# ---------------------------------------------------------------------------
-# Demo
-# ---------------------------------------------------------------------------
-
-# if __name__ == "__main__":
-#     # A single stroke shaped roughly like a hook: mostly straight, then a
-#     # sharp curl at the end -- similar to the tail flick on many kanji strokes.
-#     example_d = "M 20,20 C 20,20 60,20 90,25 C 95,26 40,80 30,60 C 25,50 45,40 55,45"
-
-#     pts = sample_path_d(example_d, tol=0.5, max_depth=12)
-#     print(f"sampled {len(pts)} points from a 3-segment cubic path:")
-#     print(pts)
-
-#     print()
-#     print("effect of tolerance on point count:")
-#     for tol in [5.0, 1.0, 0.5, 0.1, 0.01]:
-#         pts = sample_path_d(example_d, tol=tol)
-#         print(f"  tol={tol:<6} -> {len(pts)} points")
-
-#     print()
-#     print("normalized character example (two fake strokes):")
-#     strokes = sample_kanjivg_char([
-#         "M 20,20 L 90,20",                       # a straight horizontal stroke
-#         "M 50,10 C 50,10 55,90 20,95",            # a curved vertical stroke
-#     ], tol=0.5)
-#     for i, s in enumerate(strokes):
-#         print(f"  stroke {i}: {len(s)} points, range x[{s[:,0].min():.3f},{s[:,0].max():.3f}] "
-#               f"y[{s[:,1].min():.3f},{s[:,1].max():.3f}]")
