@@ -3,7 +3,6 @@ import numpy as np
 import unicodedata
 import os
 
-from .identity import identity
 from ..conditioning import split_strokes, join_strokes
 from .stroke import Stroke
 from kanji_nn.io.KanjiVG import KanjiVG

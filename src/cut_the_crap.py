@@ -5,9 +5,11 @@ from functools import partial
 import numpy as np
 
 import kanji_nn.metrics as metrics
-from kanji_nn.data import Character, Stroke, compose
-from kanji_nn.data import tap, plot_mcp
+from kanji_nn.data import Character, Stroke
+from kanji_nn.data import plot_mcp
 from kanji_nn.cli import *
+from kanji_nn.predef import compose, tap
+
 
 
 cpd_channels = ["raw:stness:loc", "gauss:K"]

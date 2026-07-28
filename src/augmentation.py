@@ -6,9 +6,10 @@ import torch
 from kanji_nn.io import WKBReader
 from kanji_nn.data import KanjiVGDataset, transform_absolute
 from kanji_nn.data import s_weighted_random_walk_noise, shape_tensor_sequence
-from kanji_nn.data import prepare_label_encoding, compose
+from kanji_nn.data import prepare_label_encoding
 from kanji_nn.plot import character
 from kanji_nn.conditioning import rdp_to_budget_flat, absolute_of, downsample
+from kanji_nn.predef import compose
 
 literal = lambda code_point: chr(int(code_point[2:], 16))
 def filter_literals(literals): return lambda label: literal(label) in literals

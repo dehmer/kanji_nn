@@ -11,11 +11,12 @@ from signal import signal, SIGINT
 
 from kanji_nn.plot import strokes_plot, paths_plot
 from kanji_nn.conditioning import join_strokes
-from kanji_nn.data import compose, identity, tap, Character, Stroke
+from kanji_nn.data import Character, Stroke
 from kanji_nn.data import trim_region, plot_mcp
 import kanji_nn.metrics as metrics
 from kanji_nn.io.WKBReader import WKBReader
 import kanji_nn.data as data
+from kanji_nn.predef import compose, tap
 
 
 plot_channels=["angle"]
