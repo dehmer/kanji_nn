@@ -10,6 +10,8 @@ from .gauss_1d import gauss_1d
 from .local_straightness import local_straightness
 from .pressure_derivative import pressure_derivative
 from .pressure import pressure
+from .resample_path_equidistant import resample_path_equidistant
+from .resample_path_parametric import resample_path_parametric
 from .resampling_uniform import resampling_uniform
 from .resolve_segments import resolve_segments
 from .straightness import straightness

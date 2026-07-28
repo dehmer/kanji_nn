@@ -33,8 +33,9 @@ def overlays(characters, styles, struts=[], figsize=(6, 6)):
             xy = stroke[:, (0, 1)]
             plt.plot(xy[:, 0], xy[:, 1], zorder=c, **styles[c])
 
-    for i in range(struts.shape[0]):
-        plt.plot(struts[i, (0, 1)], struts[i, (2, 3)], color="red")
+    if struts:
+        for i in range(struts.shape[0]):
+            plt.plot(struts[i, (0, 1)], struts[i, (2, 3)], color="red")
 
     # Kanji coordinate systems usually start at the top-left (invert Y-axis)
     ax = plt.gca()

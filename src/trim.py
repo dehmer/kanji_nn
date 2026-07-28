@@ -4,14 +4,16 @@ import sys
 from signal import signal, SIGINT
 import numpy as np
 from functools import partial
-from fastdtw import fastdtw
+from itertools import accumulate
+from dtw import dtw, asymmetric
 from scipy.spatial.distance import euclidean
+import matplotlib.pyplot as plt
 
 from kanji_nn.data import Character, Stroke
 from kanji_nn.predef import compose, tap
 import kanji_nn.pipeline as pipeline
-import kanji_nn.svg as svg
 from kanji_nn.plot import strokes_plot
+from kanji_nn.data import plot_mcp # TODO: move
 
 
 def resample_xy(stroke, factor=1.0):
@@ -27,63 +29,55 @@ def resample_xy(stroke, factor=1.0):
     return stroke.clone(props={"resampled:xy": xy})
 
 
-def resample_path_parametric(stroke, error=1e-5):
-    """
-    Resamples the path using raw parametric steps.
-    NOTE: Vertices will NOT be perfectly equidistant by distance.
-    Sampling happens in the parametric domain, not the spatial domain.
-    This parameterization is non-linear with respect to distance for
-    most complex curves.
-    """
-    path = stroke.sticky["path"]
-    ts = np.linspace(0.0, 1.0, stroke.n_points)
-
-    # Pull points directly from the main path object
-    vertices = np.zeros((stroke.n_points, 2), dtype=np.float64)
-    for i, t in enumerate(ts):
-        raw_point = path.point(t, error)
-        vertices[i, 0] = raw_point.real
-        vertices[i, 1] = raw_point.imag
-
-    return stroke.clone(props={"path:xy": vertices})
-
-
-def resample_path_equidistant(stroke, error=1e-5):
-    path = stroke.sticky["path"]
-    xy = stroke.props["resampled:xy"]
-    raw_s = stroke.features["raw:s"]
-    max_ds = raw_s[-1] / stroke.n_points
-
-    xys = svg.resample_equidistant(path, len(xy), error=error)
-    return stroke.clone(props={"path:xys": xys})
-
 def rle(stroke):
-    resampled_xy = stroke.props["resampled:xy"]
+    """
+    Wording:
+        * query, reference, (optomized) warping path
+        * one-to-many "stagnation" points
+    """
+
+    query = stroke.xy
     path_xys = stroke.props["path:xys"]
-    print(len(resampled_xy), len(path_xys))
+    reference = path_xys[:, :-1]
 
-    A = 0 # path column index: (handwritten) stroke
-    B = 1 # path column index: reference
-    # True/1:  consecutive A-indices hit same B-index => dirty
-    # False/0: strict monotonic advancement           => clean
+    W = dtw(
+        query,
+        reference,
+        dist_method="euclidean",
+        step_pattern=asymmetric,  # Crucial for open-ended alignment
+        open_begin=True,          # Relaxes the starting boundary condition
+        open_end=True,            # Relaxes the ending boundary condition
+        keep_internals=False
+    )
 
-    radius = 1
-    distance, path = fastdtw(resampled_xy, path_xys[:, -1], radius=radius, dist=euclidean)
-    path = np.asarray(path)
-    mask = np.diff(path[:, B]) == 0
+
+    # Create "stroke signature" with respective run lengths
+    # and cumulative run length sums for T/F groups:
+    mask = np.diff(W.index2) == 0
     edges = np.r_[0, np.flatnonzero(mask[1:] != mask[:-1]) + 1, len(mask)]
-    signature = np.asarray(list(zip(mask[edges[:-1]], np.diff(edges))))
-    print(f"{stroke.literal}/{stroke.stroke_index}: ", "signature", distance, "\n", signature)
+    signature = list(zip(mask[edges[:-1]], np.diff(edges)))
+
+    signature = [
+        (tag, rl, W.index1[cs]) for (tag, rl), cs in zip(
+            signature,
+            accumulate(length for _, length in signature)
+        )
+    ]
+
+    print(np.asarray(signature))
+    # W.plot(type="threeway")
 
     return stroke
 
+plot_channels=["angle"]
+
 def compose_pipeline():
     return compose(
+        tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
         rle,
-        partial(resample_path_equidistant, error=1e-2),
-        partial(resample_xy, factor=1.0),
-        pipeline.arc_length_raw,
-        # tap(lambda s: print(s)),
+        partial(pipeline.resample_path_equidistant, error=1e-2),
+        pipeline.turning_angle,
+        pipeline.arc_length,
     )
 
 
@@ -95,9 +89,14 @@ def process_file(dataset, pipeline, filename):
     trimmed = [pipeline(s) for s in strokes]
 
     # xy = [s.xy for s in trimmed]
-    xy = [s.props["resampled:xy"] for s in trimmed]
-    # xy = [s.props["path:xys"] for s in trimmed]
-    strokes_plot.show(xy, alpha=0.0)
+    xy = [s.xy for s in trimmed]
+    path_xy = [s.props["path:xys"][:, :-1] for s in trimmed]
+    # strokes_plot.show(xy, alpha=0.0)
+
+    # strokes_plot.overlays([path_xy, xy], styles=[
+    #     {"color": "black", "linewidth": 2.0, "alpha": 1.0},
+    #     {"color": "red", "linewidth": 2.0, "alpha": 1.0},
+    # ])
 
 
 def literal_to_hex(literal):
