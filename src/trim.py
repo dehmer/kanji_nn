@@ -55,27 +55,43 @@ def rle(stroke):
     # and cumulative run length sums for T/F groups:
     mask = np.diff(W.index2) == 0
     edges = np.r_[0, np.flatnonzero(mask[1:] != mask[:-1]) + 1, len(mask)]
-    signature = list(zip(mask[edges[:-1]], np.diff(edges)))
+    s = list(zip(mask[edges[:-1]], np.diff(edges)))
 
-    signature = [
+    s = [
         (tag, rl, W.index1[cs]) for (tag, rl), cs in zip(
-            signature,
-            accumulate(length for _, length in signature)
+            s,
+            accumulate(length for _, length in s)
         )
     ]
 
-    print(np.asarray(signature))
-    # W.plot(type="threeway")
+    # print(f"{stroke.literal}/{stroke.stroke_index}", stroke.n_points)
 
-    return stroke
+    i, j = 0, len(s) - 1 # [i, j]
+
+    # unconditional. cut dirty at 0 and n-1
+    if s[i][0]: i = i + 1
+    if s[j][0]: j = j - 1
+
+    # max_gap = 2
+    # # jump small clean gaps (length < max_gap)
+    # if s[i][1] < max_gap: i = i + 2
+    # if s[j][1] < max_gap: j = j - 2
+
+    head_cut = 0 if i == 0 else s[i-1][2] + 1 # inclusive
+    tail_cut = s[j][2] + 1                    # exclusive
+    cuts = (head_cut, tail_cut)
+
+    return stroke.clone(props={"cuts": cuts})
+
 
 plot_channels=["angle"]
 
 def compose_pipeline():
     return compose(
-        tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
+        pipeline.trim_region,
+        # tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
         rle,
-        partial(pipeline.resample_path_equidistant, error=1e-2),
+        partial(pipeline.resample_path_equidistant, factor=1.0, error=1e-2),
         pipeline.turning_angle,
         pipeline.arc_length,
     )
@@ -86,17 +102,22 @@ def process_file(dataset, pipeline, filename):
     # reflect, nearest, mirror
     char = Character.of_npy(dataset, filename)
     strokes = char.strokes()
+    raw_xy = [s.xy for s in strokes]
     trimmed = [pipeline(s) for s in strokes]
 
     # xy = [s.xy for s in trimmed]
-    xy = [s.xy for s in trimmed]
-    path_xy = [s.props["path:xys"][:, :-1] for s in trimmed]
-    # strokes_plot.show(xy, alpha=0.0)
+    trimmed_xy = [s.xy for s in trimmed]
+    # path_xy = [s.props["path:xys"][:, :-1] for s in trimmed]
+    # strokes_plot.show(trimmed_xy, alpha=0.0)
 
-    # strokes_plot.overlays([path_xy, xy], styles=[
-    #     {"color": "black", "linewidth": 2.0, "alpha": 1.0},
+    # strokes_plot.overlays([raw_xy, trimmed_xy], styles=[
     #     {"color": "red", "linewidth": 2.0, "alpha": 1.0},
+    #     {"color": "black", "linewidth": 2.0, "alpha": 1.0},
     # ])
+
+    plot_filename = f'data/dataset/{dataset}/png-post/{char.code_point}'
+    strokes_plot.save(plot_filename, trimmed_xy, alpha=0.1)
+
 
 
 def literal_to_hex(literal):
@@ -113,6 +134,7 @@ if __name__ == "__main__":
 
     white_list = []
     # white_list = infer_file_names("ふらなまね虫")
+    # white_list = infer_file_names("虫")
 
     for dataset in datasets:
         directory = f'data/dataset/{dataset}/npy-raw'

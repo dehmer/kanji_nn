@@ -1,13 +1,12 @@
 import numpy as np
 import kanji_nn.svg as svg
 
-def resample_path_equidistant(stroke, error=1e-5):
+def resample_path_equidistant(stroke, factor=2.0/3.0, error=1e-5):
     path = stroke.sticky["path"]
     raw_s = stroke.features["raw:s"]
     query = stroke.xy
 
     # increase density compared to stroke:
-    factor = 2.0 / 3.0
     ds = raw_s[-1] / stroke.n_points
     path_length = path.length(error=error)
     n_out = round(path_length / (ds * factor))
