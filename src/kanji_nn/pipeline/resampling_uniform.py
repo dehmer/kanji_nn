@@ -12,17 +12,4 @@ def resampling_uniform(stroke, n_out=None):
     y = np.interp(samples, s, stroke.y)
     xy = np.column_stack([x, y])
 
-    raw = np.column_stack([
-        np.arange(xy.shape[0]), # fake timestamp
-        xy,
-        np.zeros(xy.shape[0]) # pressure
-    ])
-
-    return Stroke(
-        dataset=stroke.dataset,
-        stroke_index=stroke.stroke_index,
-        raw=raw,
-        code_point=stroke.code_point,
-        literal=stroke.literal,
-        sticky=stroke.sticky
-    )
+    return stroke.clone(props={"resampled:xy", xy})

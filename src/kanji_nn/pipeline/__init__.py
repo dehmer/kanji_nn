@@ -13,6 +13,7 @@ from .pressure import pressure
 from .resample_path_equidistant import resample_path_equidistant
 from .resample_path_parametric import resample_path_parametric
 from .resampling_uniform import resampling_uniform
+from .reset import reset
 from .resolve_segments import resolve_segments
 from .straightness import straightness
 from .tangent import tangent

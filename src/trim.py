@@ -88,6 +88,7 @@ plot_channels=["angle"]
 
 def compose_pipeline():
     return compose(
+        partial(pipeline.reset, key="trimmed:xy"),
         pipeline.trim_region,
         # tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
         rle,
@@ -116,7 +117,7 @@ def process_file(dataset, pipeline, filename):
     # ])
 
     plot_filename = f'data/dataset/{dataset}/png-post/{char.code_point}'
-    strokes_plot.save(plot_filename, trimmed_xy, alpha=0.1)
+    strokes_plot.save(plot_filename, trimmed_xy, alpha=0.0)
 
 
 

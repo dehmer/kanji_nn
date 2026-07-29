@@ -40,17 +40,6 @@ class Stroke:
     @property
     def pressure(self): return self.raw[:, 3]
 
-    def trim(self, region):
-        xy = self.xy[region[0]:region[1], :]
-        zeros = np.zeros(xy.shape[0])
-
-        return replace(
-            self,
-            raw=np.column_stack([zeros, xy, zeros]),
-            props=dict(),
-            features=dict(),
-            sticky=self.sticky
-        )
 
     def clone(self, features=None, props=None, sticky=None, force=False):
         # Default to empty dictionaries if None is passed

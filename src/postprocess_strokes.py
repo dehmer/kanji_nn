@@ -22,16 +22,19 @@ plot_channels=["angle"]
 
 def compose_pipeline(wkb_reader):
     return compose(
-        # tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
-        pipeline.curve_fitting,
-        pipeline.resolve_segments,
-        pipeline.dtw,
-        pipeline.turning_angle,
-        pipeline.arc_length_raw,
-        partial(pipeline.gauss_1d, sigma=3.0),
-        pipeline.resampling_uniform,
-        pipeline.arc_length_raw,
-        # NOTE: after this point stroke lost all props/features.
+        # # tap(partial(plot_mcp, show=True, save=False, channels=plot_channels)),
+        # pipeline.curve_fitting,
+        # pipeline.resolve_segments,
+        # pipeline.dtw,
+        # pipeline.turning_angle,
+        # pipeline.arc_length_raw,
+        # partial(pipeline.gauss_1d, sigma=3.0),
+        # # NOTE: after this point stroke lost all props/features.
+        # partial(pipeline.reset, key="resampled:xy"),
+        # pipeline.resampling_uniform,
+        # pipeline.arc_length_raw,
+        # # NOTE: after this point stroke lost all props/features.
+        partial(pipeline.reset, key="trimmed:xy"),
         pipeline.trim_region,
         pipeline.vg_trace_align,
         partial(pipeline.wkb, wkb_reader=wkb_reader),
@@ -55,28 +58,28 @@ def process_file(dataset, pipeline, wkb_reader, filename):
     strokes = char.strokes()
 
     trimmed = [pipeline(s) for s in strokes]
-    reference = wkb_reader[char.code_point][1]
-    paths = [s.sticky["path"] for s in trimmed]
-    fitted_paths = [s.props["fitted_path"] for s in trimmed]
+    # reference = wkb_reader[char.code_point][1]
+    # paths = [s.sticky["path"] for s in trimmed]
+    # fitted_paths = [s.props["fitted_path"] for s in trimmed]
 
-    struts = np.concatenate([s.props["struts"] for s in trimmed])
-    gauss_xy = [s.features["gauss:xy"] for s in trimmed]
-    xy = [s.xy for s in trimmed]
+    # struts = np.concatenate([s.props["struts"] for s in trimmed])
+    # gauss_xy = [s.features["gauss:xy"] for s in trimmed]
 
-    styles = [
-        {"color": "green", "linewidth": 1.0, "alpha": 1.0},
-        {"color": "black", "linewidth": 1.0, "alpha": 1.0},
-    ]
+    # styles = [
+    #     {"color": "green", "linewidth": 1.0, "alpha": 1.0},
+    #     {"color": "black", "linewidth": 1.0, "alpha": 1.0},
+    # ]
 
-    paths_plot(fitted_paths, xdim=1.0, ydim=1.0, show_obb=False)
+    # paths_plot(fitted_paths, xdim=1.0, ydim=1.0, show_obb=False)
     # paths_plot(paths)
     # strokes_plot.overlays([reference, xy], styles, struts)
     # strokes_plot.overlays([xy, gauss_xy], styles, struts=struts)
     # strokes_plot.show(xy, alpha=0.0)
     # strokes_plot.quads(trimmed, figsize=(18, 18))
 
-    # plot_filename = f'data/dataset/{dataset}/png-post/{char.code_point}'
-    # strokes_plot.save(plot_filename, trimmed, alpha=0.1)
+    trimmed_xy = [s.xy for s in trimmed]
+    plot_filename = f'data/dataset/{dataset}/png-post/{char.code_point}-PP'
+    strokes_plot.save(plot_filename, trimmed_xy, alpha=0.0)
 
 
 def literal_to_hex(literal):
@@ -90,7 +93,7 @@ if __name__ == "__main__":
 
     white_list = []
     # white_list = infer_file_names("虫")
-    white_list = infer_file_names("ね")
+    # white_list = infer_file_names("ね")
     # white_list = infer_file_names("ま")
 
     datasets = ['katakana_47', 'hiragana_46', 'kanken-10_80']

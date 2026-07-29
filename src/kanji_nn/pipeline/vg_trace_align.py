@@ -32,8 +32,6 @@ def vg_trace_align(stroke):
     densified = densify(reference, max_ds)
     path, distance = dtw_align(stroke.xy, densified)
 
-    print("distance", distance, "\n", path)
-
     A = 0 # path column index: (handwritten) stroke
     B = 1 # path column index: reference
     # True/1:  consecutive A-indices hit same B-index => dirty
