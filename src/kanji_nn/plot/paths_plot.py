@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.path import Path as MplPath
 from svg.path import CubicBezier, Line, Move, Close
-from kanji_nn.data.bezier_obb import bezier_obb
+from kanji_nn.svg.bezier_obb import bezier_obb
 
-def paths_plot(paths: list, xdim=109, ydim=109, show_obb=True):
+def paths_plot(paths: list, xdim=109, ydim=109, show_obb=True, show_badges=True):
     """
     Plots pre-parsed svg.path.Path objects, their OBB patches, and
     annotates each cubic segment with its H/W straightness ratio.
@@ -25,7 +25,7 @@ def paths_plot(paths: list, xdim=109, ydim=109, show_obb=True):
         mpl_verts = []
         mpl_codes = []
 
-        for segment in stroke:
+        for segment_idx, segment in enumerate(stroke):
             if isinstance(segment, Move):
                 mpl_verts.append((segment.start.real, segment.start.imag))
                 mpl_codes.append(MplPath.MOVETO)
@@ -62,20 +62,20 @@ def paths_plot(paths: list, xdim=109, ydim=109, show_obb=True):
                     )
                     ax.add_patch(obb_patch)
 
-                    # 4. Label the curve with its ratio
-                    # Calculate a rough midpoint of the curve using t=0.5
-                    p0, p1, p2, p3 = segment.start, segment.control1, segment.control2, segment.end
-                    mid_point = 0.125*p0 + 0.375*p1 + 0.375*p2 + 0.125*p3
-
                     # Place a small badge showing the H/W ratio
-                    ax.text(
-                        mid_point.real, mid_point.imag,
-                        f"{ratio:.2f}" if ratio else 'N/A',
-                        color=text_color,
-                        fontsize=8,
-                        fontweight='bold',
-                        ha='center', va='center',
-                        bbox=dict(boxstyle="round,pad=0.2", fc="white", ec=text_color, lw=0.5, alpha=0.85)
+                    if show_badges:
+                        # 4. Label the curve with its ratio
+                        # Calculate a rough midpoint of the curve using t=0.5
+                        p0, p1, p2, p3 = segment.start, segment.control1, segment.control2, segment.end
+                        mid_point = 0.125*p0 + 0.375*p1 + 0.375*p2 + 0.125*p3
+                        ax.text(
+                            mid_point.real, mid_point.imag,
+                            f"{segment_idx}: {ratio:.2f}" if ratio else 'N/A',
+                            color=text_color,
+                            fontsize=8,
+                            fontweight='bold',
+                            ha='center', va='center',
+                            bbox=dict(boxstyle="round,pad=0.2", fc="white", ec=text_color, lw=0.5, alpha=0.85)
                     )
 
             elif isinstance(segment, Close):

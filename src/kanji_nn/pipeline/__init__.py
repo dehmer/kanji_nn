@@ -4,10 +4,13 @@ from .backward_speed import backward_speed
 from .central_speed import central_speed
 from .curvature import curvature
 from .curve_fitting import curve_fitting
+from .dtw_rle import dtw_rle
+from .dtw_segmentation import dtw_segmentation
 from .dtw import dtw
 from .forward_speed import forward_speed
 from .gauss_1d import gauss_1d
 from .local_straightness import local_straightness
+from .minmax import minmax
 from .pressure_derivative import pressure_derivative
 from .pressure import pressure
 from .resample_path_equidistant import resample_path_equidistant
@@ -15,11 +18,12 @@ from .resample_path_parametric import resample_path_parametric
 from .resampling_uniform import resampling_uniform
 from .reset import reset
 from .resolve_segments import resolve_segments
+from .savgol_smooth_hf import savgol_smooth_hf
+from .stack_xy import stack_xy
 from .straightness import straightness
 from .tangent import tangent
 from .tangential_acc import tangential_acc
 from .trim_region import trim_region
 from .turning_angle import turning_angle
 from .vector_acc import vector_acc
-from .vg_trace_align import vg_trace_align
 from .wkb import wkb

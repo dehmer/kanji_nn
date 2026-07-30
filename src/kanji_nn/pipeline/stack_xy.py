@@ -1,15 +1,15 @@
+import numpy as np
 from kanji_nn.data import Stroke
 
 
-def trim_region(stroke):
-    region = stroke.props["cuts"]
-    trimmed_raw = stroke.raw[region[0]:region[1], :]
+def stack_xy(stroke, key):
+    xy = stroke.features[key]
+    raw = np.column_stack([stroke.t, xy, stroke.pressure])
 
-    # implicitly create new stroke from trimmed raw:
     return Stroke(
         dataset=stroke.dataset,
         stroke_index=stroke.stroke_index,
-        raw=trimmed_raw,
+        raw=raw,
         code_point=stroke.code_point,
         literal=stroke.literal,
         sticky=stroke.sticky

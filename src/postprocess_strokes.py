@@ -10,10 +10,9 @@ from more_itertools import partition
 from signal import signal, SIGINT
 
 import kanji_nn.pipeline as pipeline
-from kanji_nn.plot import strokes_plot, paths_plot
+from kanji_nn.plot import strokes_plot, paths_plot, plot_mcp
 from kanji_nn.conditioning import join_strokes
 from kanji_nn.data import Character, Stroke
-from kanji_nn.data import plot_mcp
 from kanji_nn.io.WKBReader import WKBReader
 from kanji_nn.predef import compose, tap
 
@@ -36,7 +35,6 @@ def compose_pipeline(wkb_reader):
         # # NOTE: after this point stroke lost all props/features.
         partial(pipeline.reset, key="trimmed:xy"),
         pipeline.trim_region,
-        pipeline.vg_trace_align,
         partial(pipeline.wkb, wkb_reader=wkb_reader),
         pipeline.local_straightness,
         partial(pipeline.tangential_acc, speed_key="raw:speed:central"),

@@ -1,7 +1,7 @@
 import numpy as np
 from svg.path import CubicBezier
-from kanji_nn.data.bezier_obb import bezier_obb
-from kanji_nn.data.classify_bezier import classify_bezier
+from kanji_nn.svg.bezier_obb import bezier_obb
+from kanji_nn.svg.classify_bezier import classify_bezier
 
 
 def resolve_segments(stroke):
