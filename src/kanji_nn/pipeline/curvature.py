@@ -42,5 +42,6 @@ def curvature(stroke):
     return stroke.clone(features={
         "gauss:θ": theta,
         "gauss:dθ/ds": theta_gradient,
+        "gauss:dθ/ds:abs": abs(theta_gradient),
         "gauss:K": curvature
     })

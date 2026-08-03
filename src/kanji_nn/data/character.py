@@ -56,10 +56,8 @@ class Character:
 
         return [Stroke(
             dataset=self.dataset,
-            stroke_index=i,
+            key=f"{self.literal}/{i}",
             raw=raw,
-            code_point=self.code_point,
-            literal=self.literal,
             sticky={
                 "kvg_type": kvg.types[i],
                 "path": paths[i]

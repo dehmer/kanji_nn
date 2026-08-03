@@ -168,7 +168,6 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
             for idx in range(num_channels):
                 channel_data = stroke.features[channels[idx]]
                 val = channel_data[target_idx]
-                val = f"{val}" if isinstance(channel_data[target_idx], np.ndarray) else f"{val:>7.3f}"
                 text = f"{channels[idx][:10]:<10}: {val}\n"
                 info_text += text
 

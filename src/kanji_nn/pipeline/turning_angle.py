@@ -21,5 +21,5 @@ def turning_angle(stroke, w=3):
     diff = (diff + np.pi) % (2 * np.pi) - np.pi   # wrap into (-pi, pi]
 
     angle[w:n-w] = diff
-
-    return stroke.clone(features={"angle": angle}, props={"w": w})
+    key = f"angle:w={w}"
+    return stroke.clone(features={key: angle, f"{key}:abs": abs(angle)}, props={"w": w})

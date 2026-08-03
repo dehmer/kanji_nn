@@ -51,8 +51,8 @@ def dtw_rle(stroke):
     # if s[i][1] < max_gap: i = i + 2
     # if s[j][1] < max_gap: j = j - 2
 
-    head_cut = 0 if i == 0 else s[i-1][2] + 1 # inclusive
-    tail_cut = s[j][2] + 1                    # exclusive
+    head_cut = 0 if i == 0 else int(s[i-1][2]) + 1 # inclusive
+    tail_cut = int(s[j][2]) + 1                    # exclusive
     cuts = (head_cut, tail_cut)
 
     return stroke.clone(props={"cuts": cuts})

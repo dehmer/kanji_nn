@@ -4,7 +4,7 @@ from matplotlib.path import Path as MplPath
 from svg.path import CubicBezier, Line, Move, Close
 from kanji_nn.svg.bezier_obb import bezier_obb
 
-def paths_plot(paths: list, xdim=109, ydim=109, show_obb=True, show_badges=True):
+def paths_plot(paths: list, xdim=1.0, ydim=1.0, show_obb=True, show_badges=True):
     """
     Plots pre-parsed svg.path.Path objects, their OBB patches, and
     annotates each cubic segment with its H/W straightness ratio.

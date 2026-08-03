@@ -4,13 +4,25 @@ import numpy as np
 @dataclass(frozen=True, kw_only=True)
 class Stroke:
     dataset: str
-    stroke_index: int
+    key: str
     raw: np.ndarray # [t, x, y, pressure]
-    code_point: str
-    literal: str
     features: dict[str, np.ndarray] = field(default_factory=dict)
     props: dict[str, Any] = field(default_factory=dict)
     sticky: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def literal(self) -> str:
+        literal, _ = self.key.split("/")
+        return literal
+
+    @property
+    def stroke_index(self) -> int:
+        _, index = self.key.split("/")
+        return index
+
+    @property
+    def code_point(self) -> str:
+        return f"U+{ord(self.literal[0]):04X}"
 
     @property
     def n_points(self) -> int:

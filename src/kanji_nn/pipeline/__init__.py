@@ -4,13 +4,16 @@ from .backward_speed import backward_speed
 from .central_speed import central_speed
 from .curvature import curvature
 from .curve_fitting import curve_fitting
+from .detect_tracebacks import detect_tracebacks
 from .dtw_rle import dtw_rle
 from .dtw_segmentation import dtw_segmentation
 from .dtw import dtw
+from .find_cuts import find_cuts
 from .forward_speed import forward_speed
 from .gauss_1d import gauss_1d
 from .local_straightness import local_straightness
 from .minmax import minmax
+from .plot_mcp import plot_mcp
 from .pressure_derivative import pressure_derivative
 from .pressure import pressure
 from .resample_path_equidistant import resample_path_equidistant
@@ -19,6 +22,7 @@ from .resampling_uniform import resampling_uniform
 from .reset import reset
 from .resolve_segments import resolve_segments
 from .savgol_smooth_hf import savgol_smooth_hf
+from .simplify_rdp import simplify_rdp
 from .stack_xy import stack_xy
 from .straightness import straightness
 from .tangent import tangent

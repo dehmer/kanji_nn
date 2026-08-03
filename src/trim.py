@@ -4,26 +4,71 @@ import sys
 from signal import signal, SIGINT
 import numpy as np
 from functools import partial
+import csv
+import math
 
 from kanji_nn.data import Character, Stroke
 from kanji_nn.predef import compose, tap
 import kanji_nn.pipeline as pipeline
 from kanji_nn.conditioning import join_strokes
+from kanji_nn.plot import strokes_plot
+
+plot_channels=[
+    "angle:w=1:abs",
+    "raw:speed:central",
+    "raw:speed:SG",
+    "raw:speed:ds",
+    "raw:speed:dds",
+]
 
 
-plot_channels=["angle"]
+def dump(stroke):
+    print(f"{stroke.dataset},{stroke.literal}/{stroke.stroke_index},{stroke.props["cuts"][0]},{stroke.props["cuts"][1]}")
 
-def compose_pipeline():
+
+def compare(cuts_target):
+    def inner(stroke):
+        if not stroke.key in cuts_target:
+            return
+
+        t = stroke.t - stroke.t[0]
+        a = stroke.props["cuts"]
+        e = cuts_target[stroke.key]
+        d = (e[0] - a[0], e[1] - a[1])
+
+        head = f"{stroke.literal}/{stroke.stroke_index} - "
+        if t[a[0]] > 200:
+            print(head, f"actual: {a}, timestamp/head: {t[a[0]]}")
+
+        # if d[0] < 0:
+        #     print(head, f"expected: {e}, actual: {a}, difference: {d}")
+
+    return inner
+
+
+def inject_cuts_target(stroke, cuts_target):
+    return stroke.clone(props={"cuts_target": cuts_target[stroke.key]})
+
+def compose_pipeline(cuts_target):
     return compose(
-        partial(pipeline.stack_xy, key="savgol:hf:xy"),
-        pipeline.savgol_smooth_hf,
-        partial(pipeline.resample_path_equidistant, factor=1.0, error=1e-2),
-        pipeline.arc_length,
-        pipeline.trim_region,
+        # partial(pipeline.stack_xy, key="savgol:hf:xy"),
+        # pipeline.savgol_smooth_hf,
+        # pipeline.arc_length,
+        # pipeline.trim_region,
+        tap(partial(pipeline.plot_mcp, show=True, save=False, channels=plot_channels)),
+
+        # tap(dump),
+        # tap(compare(cuts_target)),
+        pipeline.find_cuts,
         pipeline.dtw_rle,
         partial(pipeline.resample_path_equidistant, factor=1.0, error=1e-2),
-        pipeline.turning_angle,
+        pipeline.tangent,
+        pipeline.central_speed,
+        partial(pipeline.turning_angle, w=1),
         pipeline.arc_length,
+        pipeline.pressure,
+        partial(inject_cuts_target, cuts_target=cuts_target),
+        tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
 
 
@@ -31,37 +76,71 @@ def process_file(dataset, pipeline, filename):
     character = Character.of_npy(dataset, filename)
     strokes = character.strokes()
     strokes = [pipeline(s) for s in strokes]
-    strokes = [s.raw for s in strokes]
-    raw = join_strokes(strokes)
-    np.save(f'data/dataset/{dataset}/npy-trimmed/{character.code_point}.npy', raw)
+    xy = [s.xy for s in strokes]
+    raw = [s.raw for s in strokes]
+    raw = join_strokes(raw)
+
+    dirs = [
+        f"data/dataset/{dataset}/npy-trimmed",
+        f"data/dataset/{dataset}/png-post",
+        f"data/dataset/{dataset}/png-fine",
+    ]
+
+    for dir in dirs:
+        if os.path.exists(dir): continue
+        os.mkdir(dir)
+
+    # np.save(f"data/dataset/{dataset}/npy-trimmed/{character.code_point}.npy", raw)
+    # filename = f"data/dataset/{dataset}/png-fine/{character.code_point}"
+    # strokes_plot.save(filename, xy, alpha=0.1)
+
+    # simplified = [s.props["rdp:xy"] for s in strokes]
+    # strokes_plot.show(simplified)
 
 
 def literal_to_hex(literal):
-    return f'{ord(literal):x}'.upper()
+    return f"{ord(literal):x}".upper()
 
 
 def infer_file_names(literals):
-    return [f'U+{literal_to_hex(literal)}.npy' for literal in literals]
+    return [f"U+{literal_to_hex(literal)}.npy" for literal in literals]
+
+
+def load_cuts(filename):
+    cuts = {}
+    with open(filename, mode="r", newline="", encoding="utf-8") as file:
+        dict_reader = csv.DictReader(file)
+        for row in dict_reader:
+            key = row['stroke']
+            value = (int(row["head"]), int(row["tail"]))
+            cuts[key] = value
+
+    return cuts
 
 
 if __name__ == "__main__":
     signal(SIGINT, lambda _, __: sys.exit())
+
     datasets = [
-        'katakana_47',
-        'hiragana_46',
-        'kanken-10_80',
+        "katakana_47",
+        "hiragana_46",
+        "kanken-10_80",
     ]
 
+    cuts_target = load_cuts("data/cuts-target.csv")
+
     white_list = []
-    # white_list = infer_file_names("そぬねみむ")
-    # white_list = infer_file_names("む")
+    # white_list = infer_file_names("ヤモヲオおやれそたさきてまななふ車小青学足夕水空立白気出糸日休花竹玉子先")
+    # white_list = infer_file_names("オコネメヨロうにや入口年村犬")
+    # white_list = infer_file_names("キ   ")
 
     for dataset in datasets:
-        directory = f'data/dataset/{dataset}/npy-raw'
-        p = compose_pipeline()
+        directory = f"data/dataset/{dataset}/npy-raw"
+        p = compose_pipeline(cuts_target)
 
         for (dirpath, dirnames, filenames) in os.walk(directory):
+            filenames.sort()
             for filename in filenames:
-                if not filename.endswith('npy'): continue
+                if not filename.endswith("npy"): continue
                 if white_list and filename not in white_list: continue
-                process_file(dataset, p, f'{dirpath}/{filename}')
+                process_file(dataset, p, f"{dirpath}/{filename}")

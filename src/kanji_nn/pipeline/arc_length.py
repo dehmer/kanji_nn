@@ -16,21 +16,17 @@ def arc_length(stroke, sigma=1.0, mode='reflect'):
     s += np.arange(len(s)) * 1e-12
     s_norm = s / s[-1]
 
-
-    xy_smooth = gaussian_filter1d(stroke.xy, axis=0, sigma=sigma, mode=mode)
-    ds_smooth = np.linalg.norm(np.diff(xy_smooth, axis=0), axis=1)
-    ds_smooth = np.concatenate(([0.0], ds_smooth))
-    s_smooth = np.cumsum(ds_smooth)
-    s_smooth += np.arange(len(s_smooth)) * 1e-12
-    s_smooth_norm = s_smooth / s_smooth[-1]
-
+    gauss_xy = gaussian_filter1d(stroke.xy, axis=0, sigma=sigma, mode=mode)
+    gauss_ds = np.linalg.norm(np.diff(gauss_xy, axis=0), axis=1)
+    gauss_ds = np.concatenate(([0.0], gauss_ds))
+    gauss_s = np.cumsum(gauss_ds)
+    gauss_s += np.arange(len(gauss_s)) * 1e-12
 
     return stroke.clone(features={
         "raw:ds": ds,
         "raw:s": s,
         "raw:s:norm": s_norm,
-        "gauss:xy": xy_smooth,
-        "gauss:ds": ds_smooth,
-        "gauss:s": s_smooth,
-        "gauss:s:norm": s_smooth_norm,
+        "gauss:xy": gauss_xy,
+        "gauss:ds": gauss_ds,
+        "gauss:s": gauss_s,
     })
