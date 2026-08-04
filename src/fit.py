@@ -59,9 +59,7 @@ if __name__ == "__main__":
     ]
 
     white_list = []
-    # white_list = infer_file_names("アセぬむ虫気")
-    white_list = infer_file_names("コネルヤレムモロヲカオアこおやるれそういたんゆをけさろくきむてひまなにみえふらね車円小青五貝学早森見足草町夕水山空上立白耳赤村気出糸日字休花竹雨玉子先手月")
-    white_list = infer_file_names("ヤモヲオおやれそたさきてまななふ車小青学足夕水空立白気出糸日休花竹玉子先")
+    # white_list = infer_file_names("ヤ")
 
     for dataset in datasets:
         directory = f'data/dataset/{dataset}/npy-trimmed'

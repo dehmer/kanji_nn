@@ -8,9 +8,7 @@ def trim_region(stroke):
     # implicitly create new stroke from trimmed raw:
     return Stroke(
         dataset=stroke.dataset,
-        stroke_index=stroke.stroke_index,
+        key=stroke.key,
         raw=trimmed_raw,
-        code_point=stroke.code_point,
-        literal=stroke.literal,
         sticky=stroke.sticky
     )

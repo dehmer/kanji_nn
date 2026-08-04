@@ -8,7 +8,6 @@ from .detect_tracebacks import detect_tracebacks
 from .dtw_rle import dtw_rle
 from .dtw_segmentation import dtw_segmentation
 from .dtw import dtw
-from .find_cuts import find_cuts
 from .forward_speed import forward_speed
 from .gauss_1d import gauss_1d
 from .local_straightness import local_straightness

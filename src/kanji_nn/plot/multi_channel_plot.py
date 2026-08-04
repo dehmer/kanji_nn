@@ -95,6 +95,7 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
 
         if "vlines" in stroke.props:
             for index, options in stroke.props["vlines"]:
+                if index == len(t): continue
                 ax.axvline(t[index], **options)
 
         # # median
