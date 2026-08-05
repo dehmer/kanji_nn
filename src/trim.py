@@ -47,9 +47,9 @@ plot_channels=[
 def compose_pipeline(cuts_target):
     return compose(
         pipeline.trim_region,
-        tap(dump),
-        # tap(partial(pipeline.plot_mcp, show=True, save=False, channels=plot_channels)),
-        # tap(compare(cuts_target)),
+        # tap(dump),
+        tap(partial(pipeline.plot_mcp, show=True, save=False, channels=plot_channels)),
+        tap(compare(cuts_target)),
         pipeline.dtw_rle,
         partial(pipeline.resample_path_equidistant, factor=1.0, error=1e-2),
         pipeline.tangent,
@@ -72,8 +72,6 @@ def process_file(dataset, pipeline, filename):
 
     dirs = [
         f"data/dataset/{dataset}/npy-trimmed",
-        f"data/dataset/{dataset}/png-post",
-        f"data/dataset/{dataset}/png-fine",
     ]
 
     for dir in dirs:
@@ -115,10 +113,10 @@ if __name__ == "__main__":
         "kanken-10_80",
     ]
 
-    cuts_target = load_cuts("data/cuts-target.csv")
+    cuts_target = load_cuts("data/cuts-baseline.csv")
 
     white_list = []
-    # white_list = infer_file_names("気")
+    # white_list = infer_file_names("花")
 
     for dataset in datasets:
         directory = f"data/dataset/{dataset}/npy-raw"
