@@ -2,6 +2,7 @@ import numpy as np
 from dtw import dtw, asymmetric
 from itertools import accumulate
 from scipy.signal import find_peaks
+import math
 
 
 def signature(mask):
@@ -60,6 +61,7 @@ def dtw_rle(stroke):
     # Create "stroke signature" with respective run lengths for T/F groups:
     mask = np.diff(W.index2) == 0
     s = signature(mask)
+    # print(s)
 
     i, j = 0, len(s) - 1
 
@@ -71,6 +73,24 @@ def dtw_rle(stroke):
 
     head_cut = 0 if i == 0 else int(s[i-1][2]) # inclusive
     tail_cut = int(s[j][2]) + 1                # exclusive
-    cuts = (head_cut, tail_cut)
 
+    # Guard for sharp direction changes in near vicinity of cut regions.
+    # We cannot have sharp direction changes right after (head) or
+    # before (tail) cuts. In case we find a prominent turning
+    # angle peak, we snap cut position one sample
+    # after (head) or before (tail).
+
+    window = 3
+    angle = stroke.features["angle:w=1:abs"]
+    peaks, _ = find_peaks(angle, prominence=math.pi/2)
+
+    shift_right = np.where(peaks - head_cut <= window)[0]
+    if len(shift_right):
+        head_cut = int(peaks[shift_right[0]]) + 1
+
+    shift_left = np.where(tail_cut - peaks <= window)[0]
+    if len(shift_left):
+        tail_cut = int(peaks[shift_left[-1]])
+
+    cuts = (head_cut, tail_cut)
     return stroke.clone(props={"cuts": cuts})

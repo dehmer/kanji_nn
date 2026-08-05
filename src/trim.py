@@ -48,8 +48,8 @@ def compose_pipeline(cuts_target):
     return compose(
         pipeline.trim_region,
         # tap(dump),
-        tap(partial(pipeline.plot_mcp, show=True, save=False, channels=plot_channels)),
-        tap(compare(cuts_target)),
+        # tap(partial(pipeline.plot_mcp, show=True, save=False, channels=plot_channels)),
+        # tap(compare(cuts_target)),
         pipeline.dtw_rle,
         partial(pipeline.resample_path_equidistant, factor=1.0, error=1e-2),
         pipeline.tangent,
@@ -58,7 +58,7 @@ def compose_pipeline(cuts_target):
         pipeline.arc_length,
         pipeline.pressure,
         partial(inject_cuts_target, cuts_target=cuts_target),
-        # tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
+        tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
 
 
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     cuts_target = load_cuts("data/cuts-baseline.csv")
 
     white_list = []
-    # white_list = infer_file_names("花")
+    # white_list = infer_file_names("音")
 
     for dataset in datasets:
         directory = f"data/dataset/{dataset}/npy-raw"
