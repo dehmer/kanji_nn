@@ -82,15 +82,15 @@ def dtw_rle(stroke):
 
     window = 3
     angle = stroke.features["angle:w=1:abs"]
-    peaks, _ = find_peaks(angle, prominence=math.pi/2)
+    peaks, _ = find_peaks(angle, distance=10, prominence=math.pi/2)
 
     shift_right = np.where(peaks - head_cut <= window)[0]
     if len(shift_right):
-        head_cut = int(peaks[shift_right[0]]) + 1
+        head_cut = int(peaks[shift_right[-1]]) + 1
 
     shift_left = np.where(tail_cut - peaks <= window)[0]
     if len(shift_left):
-        tail_cut = int(peaks[shift_left[-1]])
+        tail_cut = int(peaks[shift_left[0]])
 
     cuts = (head_cut, tail_cut)
     return stroke.clone(props={"cuts": cuts})
