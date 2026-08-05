@@ -61,7 +61,6 @@ def dtw_rle(stroke):
     # Create "stroke signature" with respective run lengths for T/F groups:
     mask = np.diff(W.index2) == 0
     s = signature(mask)
-    # print(s)
 
     i, j = 0, len(s) - 1
 
