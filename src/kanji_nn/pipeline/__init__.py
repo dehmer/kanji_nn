@@ -2,6 +2,7 @@ from .arc_length_raw import arc_length_raw
 from .arc_length import arc_length
 from .backward_speed import backward_speed
 from .central_speed import central_speed
+from .cleanup_clusters import cleanup_clusters
 from .curvature import curvature
 from .curve_fitting import curve_fitting
 from .detect_clusters import detect_clusters

@@ -15,12 +15,20 @@ from kanji_nn.plot import strokes_plot, paths_plot
 plot_channels=[
     "angle:w=1:abs",
     "raw:speed:central",
-    "gauss:θ"
+    "gauss:θ",
+    "gauss:txy"
 ]
 
 
 def compose_pipeline():
     return compose(
+        tap(partial(pipeline.plot_mcp, show=True, save=False, channels=plot_channels)),
+        pipeline.central_speed,
+        partial(pipeline.turning_angle, w=1),
+        pipeline.curvature,
+        pipeline.tangent,
+        pipeline.arc_length,
+        pipeline.cleanup_clusters,
         tap(partial(pipeline.plot_mcp, show=True, save=False, channels=plot_channels)),
         pipeline.detect_clusters,
         pipeline.central_speed,
@@ -36,10 +44,9 @@ def process_file(dataset, pipeline, filename):
     character = Character.of_npy(dataset, filename)
     strokes = character.strokes()
     strokes = [pipeline(s) for s in strokes]
-    raw = [s.raw for s in strokes]
-    raw = join_strokes(raw)
-    paths = [s.sticky["path"] for s in strokes]
-    # paths_plot(paths, show_badges=False)
+    xy = [s.xy for s in strokes]
+    strokes_plot.show(xy, alpha=0.0)
+
     # np.save(f'data/dataset/{dataset}/npy-trimmed/{character.code_point}.npy', raw)
 
 
@@ -70,8 +77,8 @@ if __name__ == "__main__":
     white_list = []
     # white_list = infer_file_names(complex)
     # white_list = infer_file_names(backtrace)
-    white_list = infer_file_names(angle_prominence_pi_third)
-    white_list = infer_file_names("ん")
+    # white_list = infer_file_names(angle_prominence_pi_third)
+    white_list = infer_file_names("ア")
 
     for dataset in datasets:
         directory = f'data/dataset/{dataset}/npy-trimmed'
