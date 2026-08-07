@@ -83,11 +83,13 @@ def dtw_rle(stroke):
     angle = stroke.features["angle:w=1:abs"]
     peaks, _ = find_peaks(angle, distance=10, prominence=math.pi/2)
 
-    shift_right = np.where(peaks - head_cut <= window)[0]
+    head_diff = peaks - head_cut
+    shift_right = np.where((head_diff > 0) & (head_diff <= window))[0]
     if len(shift_right):
         head_cut = int(peaks[shift_right[-1]]) + 1
 
-    shift_left = np.where(tail_cut - peaks <= window)[0]
+    tail_diff = peaks - tail_cut
+    shift_left = np.where((tail_diff > 0) & (tail_diff <= window))[0]
     if len(shift_left):
         tail_cut = int(peaks[shift_left[0]])
 
