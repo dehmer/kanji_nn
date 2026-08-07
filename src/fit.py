@@ -15,19 +15,20 @@ from kanji_nn.plot import strokes_plot, paths_plot
 plot_channels=[
     "angle:w=1:abs",
     "raw:speed:central",
-    "gauss:tx", "gauss:ty",
-    "gauss:dθ/ds:abs"]
+    "gauss:θ"
+]
 
 
 def compose_pipeline():
     return compose(
         tap(partial(pipeline.plot_mcp, show=True, save=False, channels=plot_channels)),
-        pipeline.detect_tracebacks,
+        pipeline.detect_clusters,
         pipeline.central_speed,
         partial(pipeline.turning_angle, w=1),
         pipeline.curvature,
         pipeline.tangent,
         pipeline.arc_length,
+        tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
 
 
@@ -58,8 +59,19 @@ if __name__ == "__main__":
         'kanken-10_80',
     ]
 
+    complex_kanken = "七中九五先円出力口右名四夕女子字学小山手日早月村気水田男町白百目石空竹糸花草虫見貝赤足車雨青音"
+    complex_hiragana = "おかきせそたなにねはほみりるれろわいうえけこさちてひふむやゆらをん"
+    complex_katakana = "アウオカクコスセタヌネヒフホマムヤユヨラルレロワ"
+    backtrace = "えきけこさせそたちてなにねひみむゆらるろをアオカネムラワ中五円出夕子学小山手早村空糸花草見青"
+    angle_prominence_pi_third = "いうえおかきくけこさせそたちてなにぬねはひほまみむめゆらるれろわをんアウオカコスセツヌネホマムヤラルレロワヲー上中九五人先円出力名夕女子字学小山川手日早月村気水町空竹糸花草見赤足車雨青"
+
+    complex = complex_kanken + complex_hiragana + complex_katakana
+
     white_list = []
-    # white_list = infer_file_names("ヤ")
+    # white_list = infer_file_names(complex)
+    # white_list = infer_file_names(backtrace)
+    white_list = infer_file_names(angle_prominence_pi_third)
+    white_list = infer_file_names("ん")
 
     for dataset in datasets:
         directory = f'data/dataset/{dataset}/npy-trimmed'

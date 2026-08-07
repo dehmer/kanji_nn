@@ -4,7 +4,7 @@ from .backward_speed import backward_speed
 from .central_speed import central_speed
 from .curvature import curvature
 from .curve_fitting import curve_fitting
-from .detect_tracebacks import detect_tracebacks
+from .detect_clusters import detect_clusters
 from .dtw_rle import dtw_rle
 from .dtw_segmentation import dtw_segmentation
 from .dtw import dtw
