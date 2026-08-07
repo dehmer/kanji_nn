@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field, replace
+from typing import Any
 import numpy as np
 
 @dataclass(frozen=True, kw_only=True)
