@@ -42,6 +42,10 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
     if cuts and cuts[1] <= stroke.n_points:
         ax_stroke.scatter(stroke.x[cuts[1] - 1], stroke.y[cuts[1] - 1], marker='o', color='blue', zorder=3)
 
+    if "scatter" in stroke.props:
+        scatter_xy, scatter_options = stroke.props["scatter"]
+        ax_stroke.scatter(scatter_xy[:, 0], scatter_xy[:, 1], **scatter_options)
+
 
     # Primitives for mouse tracking: dot marker and an extended solid tangent line (tangent_length=0.30)
     stroke_marker, = ax_stroke.plot([], [], 'ro', markersize=6, alpha=0.7, zorder=5)
