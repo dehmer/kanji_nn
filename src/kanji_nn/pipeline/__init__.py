@@ -16,12 +16,13 @@ from .minmax import minmax
 from .plot_mcp import plot_mcp
 from .pressure_derivative import pressure_derivative
 from .pressure import pressure
+from .prune import prune
+from .replace_xy import replace_xy
 from .resample_path_equidistant import resample_path_equidistant
 from .resample_path_parametric import resample_path_parametric
 from .resampling_uniform import resampling_uniform
-from .reset import reset
 from .resolve_segments import resolve_segments
-from .savgol_smooth_hf import savgol_smooth_hf
+from .savgol import savgol
 from .simplify_rdp import simplify_rdp
 from .stack_xy import stack_xy
 from .straightness import straightness

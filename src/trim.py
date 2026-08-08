@@ -20,16 +20,18 @@ def dump(stroke):
 
 def compare(cuts_target):
     def inner(stroke):
+        head = f"{stroke.literal}/{stroke.stroke_index} - "
+
         if not stroke.key in cuts_target:
             return
 
+        nonlocal max
         t = stroke.t - stroke.t[0]
         a = stroke.props["cuts"]
         e = cuts_target[stroke.key]
-        d = (e[0] - a[0], e[1] - a[1])
-
-        head = f"{stroke.literal}/{stroke.stroke_index} - "
-        print(head, f"expected: {e}, actual: {a}, difference: {d}")
+        d = (abs(e[0] - a[0]), abs(e[1] - a[1]))
+        if d != (0, 0):
+            print(head, f"expected: {e}, actual: {a}, difference: {d}")
 
     return inner
 
@@ -51,16 +53,16 @@ def compose_pipeline(cuts_target):
         # tap(partial(pipeline.plot_mcp, show=True, save=False, channels=plot_channels)),
         # tap(compare(cuts_target)),
         pipeline.dtw_rle,
-        partial(pipeline.resample_path_equidistant, factor=1.0, error=1e-2),
-        pipeline.tangent,
+        partial(pipeline.resample_path_equidistant, factor=1.0, error=1e-5),
         pipeline.central_speed,
         partial(pipeline.turning_angle, w=1),
         pipeline.arc_length,
-        pipeline.pressure,
-        partial(inject_cuts_target, cuts_target=cuts_target),
-        tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
+        pipeline.prune,
+        partial(pipeline.replace_xy, key="savgol:xy"),
+        partial(pipeline.savgol, window_length=5, polyorder=2),
+        # partial(inject_cuts_target, cuts_target=cuts_target),
+        # tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
-
 
 def process_file(dataset, pipeline, filename):
     character = Character.of_npy(dataset, filename)
@@ -116,7 +118,7 @@ if __name__ == "__main__":
     cuts_target = load_cuts("data/cuts-baseline.csv")
 
     white_list = []
-    # white_list = infer_file_names("音")
+    # white_list = infer_file_names("三")
 
     for dataset in datasets:
         directory = f"data/dataset/{dataset}/npy-raw"
