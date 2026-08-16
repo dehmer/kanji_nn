@@ -2,6 +2,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter1d
 from kanji_nn.data.stroke import Stroke
 
+
 def resampling_uniform(stroke, n_out=None):
     n_out = stroke.n_points if not n_out else n_out
     n_out = max(n_out, 2)

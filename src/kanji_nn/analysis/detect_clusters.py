@@ -76,6 +76,34 @@ def intersect_lines(p1, d1, p2, d2):
     return p1 + t[0] * d1
 
 
+def measure_traceback(stroke, peak_idx, window=5):
+    window = window + 1
+
+    # Don't event bother if window extends over data bounds.
+    if peak_idx - window < 0 or peak_idx + window >= stroke.n_points:
+        return np.full(window, np.nan)
+
+    xy = stroke.xy
+    apex = xy[peak_idx]
+
+    dots = np.array([
+        np.dot(
+            xy[peak_idx + k] - apex,
+            xy[peak_idx - k] - apex
+        )
+        for k in range(1, window)
+    ])
+
+    # TODO: zero-norm gap might bite us below.
+    norms = np.array([
+        np.linalg.norm(xy[peak_idx + k] - apex) *
+        np.linalg.norm(xy[peak_idx - k] - apex)
+        for k in range(1, window)
+    ])
+
+    return dots / norms
+
+
 def compute_leg_agreement(stroke, leg_bounds, leg_window=16):
     """
     For each (i_in, i_out) candidate, estimate clean entry/exit headings
@@ -90,22 +118,26 @@ def compute_leg_agreement(stroke, leg_bounds, leg_window=16):
         entry_start = max(0, i_in - leg_window)
         exit_end = min(n, i_out + leg_window)
 
-        entry = estimate_leg_heading(stroke, entry_start, i_in)
-        exit_ = estimate_leg_heading(stroke, i_out, exit_end)
-
-        cross = entry[0] * exit_[1] - entry[1] * exit_[0]
-        dot = np.dot(entry, exit_)
+        v_entry = estimate_leg_heading(stroke, entry_start, i_in)
+        v_exit = estimate_leg_heading(stroke, i_out, exit_end)
+        cross = v_entry[0] * v_exit[1] - v_entry[1] * v_exit[0]
+        dot = np.dot(v_entry, v_exit)
         signed_angle = math.atan2(cross, dot)
 
         # Anchor each line at the last/first clean boundary sample.
         p_in = stroke.xy[i_in]
         p_out = stroke.xy[i_out]
-        designated_apex = intersect_lines(p_in, entry, p_out, exit_)
+        designated_apex = intersect_lines(p_in, v_entry, p_out, v_exit)
+
+        for peak_idx in peaks:
+            traceback = measure_traceback(stroke, peak_idx)
+            if traceback[0] == 1.0:
+                print(f"{stroke.literal}/{stroke.stroke_index} - peak_idx={peak_idx}, traceback={traceback}")
 
         agreement[(i_in, i_out)] = {
             "peaks": peaks,
-            "entry_heading": entry,
-            "exit_heading": exit_,
+            "entry_heading": v_entry,
+            "exit_heading": v_exit,
             "signed_angle": signed_angle,
             "signed_angle_deg": math.degrees(signed_angle),
             "designated_apex": designated_apex
@@ -152,12 +184,25 @@ def detect_clusters(stroke, distance=1, prominence=math.pi/3):
     leg_bounds = find_legs(stroke, peaksfn)
     if not leg_bounds:
         return stroke
+    else:
+        # print(f"{stroke.literal}/{stroke.stroke_index} -", leg_bounds)
+        pass
 
-    # Note:
-    # With relative low angle peak prominence (<< pi) indentified bounds are
-    # just candidates for possible cleanup of some sort, not actual
-    # direction reversals.
+    # Note: With relative low angle peak prominence (<< pi) indentified
+    # bounds are just candidates for possible cleanup of some sort,
+    # not necessarily direction reversals only.
     #
     clusters = compute_leg_agreement(stroke, leg_bounds)
-    props = plot_props(clusters) | {"clusters": clusters}
+    # print(clusters)
+
+    # For single cluster, zoom-in on designated apex:
+    zoom = None
+    if len(clusters) == 1:
+        apex = list(clusters.values())[0]["designated_apex"]
+        xlim = (clamp(apex[0] - 0.15, 0.0, 1.0), clamp(apex[0] + 0.15, 0.0, 1.0))
+        ylim = (clamp(apex[1] - 0.15, 0.0, 1.0), clamp(apex[1] + 0.15, 0.0, 1.0))
+        zoom = (xlim, ylim)
+
+    props = plot_props(clusters) | {"clusters": clusters, "zoom": zoom}
+    # props = {"clusters": clusters, "zoom": zoom}
     return stroke.clone(props=props)

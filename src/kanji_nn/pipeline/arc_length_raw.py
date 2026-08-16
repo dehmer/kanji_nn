@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.ndimage import gaussian_filter1d
+
 
 def arc_length_raw(stroke, epsilon = 1e-12):
     """

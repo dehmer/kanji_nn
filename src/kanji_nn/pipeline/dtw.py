@@ -6,6 +6,8 @@ from kanji_nn.svg.ScaledPath import ScaledPath
 
 
 def dtw(stroke):
+    """
+    """
     xy = stroke.features["gauss:xy"]
     parsed_path = stroke.sticky["path"]
 
@@ -34,7 +36,7 @@ def dtw(stroke):
     b = path_vertices[D[boundary_rows, 1]]
     struts = np.column_stack([a[:, 0], b[:, 0], a[:, 1], b[:, 1]])
 
-    # record same hw index addressing consecutive segments
+    # record same query index addressing consecutive segments
     same_index = D[:-1, 0] == D[1:, 0]
     rising = D[1:, 2] > D[:-1, 2]
     not_moveto = D[:-1, 2] != 0

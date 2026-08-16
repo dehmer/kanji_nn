@@ -4,4 +4,6 @@ from .KanjiVG import KanjiVG
 from .load_wkb import load_wkb
 from .write_wkb import write_wkb
 from .parse_archive import parse_archive
+from .save_npy import save_npy
+from .wkb import wkb
 from .WKBReader import WKBReader

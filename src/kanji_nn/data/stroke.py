@@ -5,6 +5,8 @@ import numpy as np
 @dataclass(frozen=True, kw_only=True)
 class Stroke:
     dataset: str
+
+    # literal/stroke_index/stroke_count
     key: str
     raw: np.ndarray # [t, x, y, pressure]
     features: dict[str, np.ndarray] = field(default_factory=dict)
@@ -13,13 +15,23 @@ class Stroke:
 
     @property
     def literal(self) -> str:
-        literal, _ = self.key.split("/")
+        literal, _, _ = self.key.split("/")
         return literal
 
     @property
     def stroke_index(self) -> int:
-        _, index = self.key.split("/")
-        return index
+        _, index, _ = self.key.split("/")
+        return int(index)
+
+    @property
+    def stroke_count(self) -> int:
+        """
+        Overall character stroke count.
+        Useful if we want to perform operations on a complete
+        character in the pipeline.
+        """
+        _, _, count = self.key.split("/")
+        return int(count)
 
     @property
     def code_point(self) -> str:

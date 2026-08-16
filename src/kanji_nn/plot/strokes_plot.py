@@ -33,9 +33,8 @@ def overlays(characters, styles, struts=[], figsize=(6, 6)):
             xy = stroke[:, (0, 1)]
             plt.plot(xy[:, 0], xy[:, 1], zorder=c, **styles[c])
 
-    if struts:
-        for i in range(struts.shape[0]):
-            plt.plot(struts[i, (0, 1)], struts[i, (2, 3)], color="red")
+    for i in range(len(struts)):
+        plt.plot(struts[i, (0, 1)], struts[i, (2, 3)], color="red", zorder=len(characters) + 1)
 
     # Kanji coordinate systems usually start at the top-left (invert Y-axis)
     ax = plt.gca()
@@ -67,9 +66,9 @@ def quads(strokes, figsize=(6, 6)):
             )
 
             plt.scatter(quad[0, 0],  quad[0, 1], marker='o', color='green', zorder=2, alpha=0.8)
-            plt.scatter(quad[3, 0],  quad[3, 1], marker='o', color='red', zorder=2, alpha=0.8)
             plt.scatter(quad[1, 0],  quad[1, 1], marker='o', color='blue', zorder=2, alpha=0.8)
-            plt.scatter(quad[2, 0],  quad[2, 1], marker='o', color='blue', zorder=2, alpha=0.8)
+            plt.scatter(quad[2, 0],  quad[2, 1], marker='o', color='yellow', zorder=2, alpha=0.8)
+            plt.scatter(quad[3, 0],  quad[3, 1], marker='o', color='red', zorder=2, alpha=0.8)
             ax.add_patch(polygon_patch)
 
     # Kanji coordinate systems usually start at the top-left (invert Y-axis)

@@ -7,18 +7,19 @@ from functools import partial
 import csv
 import math
 
-from kanji_nn.data import Character, Stroke
+from kanji_nn.data import Character
 from kanji_nn.predef import compose, tap
 import kanji_nn.pipeline as pipeline
-from kanji_nn.conditioning import join_strokes
-from kanji_nn.plot import strokes_plot
+import kanji_nn.io as io
+import kanji_nn.plot as plot
 
 
 def dump(stroke):
-    print(f"{stroke.dataset},{stroke.literal}/{stroke.stroke_index},{stroke.props["cuts"][0]},{stroke.props["cuts"][1]}")
+    print(f"{stroke.dataset},{stroke.key},{stroke.props["cuts"][0]},{stroke.props["cuts"][1]}")
 
 
 def compare(cuts_target):
+    max = 0.0
     def inner(stroke):
         head = f"{stroke.literal}/{stroke.stroke_index} - "
 
@@ -41,49 +42,33 @@ def inject_cuts_target(stroke, cuts_target):
 
 
 plot_channels=[
-    "angle:w=1:abs",
-    "raw:speed:central",
+    "angle:w=1"
 ]
-
 
 def compose_pipeline(cuts_target):
     return compose(
+        # plot.show_strokes_plot(lambda s: s.xy),
+        plot.save_strokes_plot("png-trimmed"),
+        io.save_npy("npy-trimmed"),
         pipeline.trim_region,
-        # tap(dump),
         # tap(partial(pipeline.plot_mcp, show=True, save=False, channels=plot_channels)),
+        # tap(dump),
         # tap(compare(cuts_target)),
         pipeline.dtw_rle,
         partial(pipeline.resample_path_equidistant, factor=1.0, error=1e-5),
-        pipeline.central_speed,
         partial(pipeline.turning_angle, w=1),
-        pipeline.arc_length,
+        pipeline.arc_length_raw,
+        partial(pipeline.replace_xy, key="gauss:xy"),
+        partial(pipeline.gauss_1d, sigma=1.4, f=None),
         pipeline.prune,
-        partial(pipeline.replace_xy, key="savgol:xy"),
-        partial(pipeline.savgol, window_length=5, polyorder=2),
-        # partial(inject_cuts_target, cuts_target=cuts_target),
-        # tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
+        tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
+
 
 def process_file(dataset, pipeline, filename):
     character = Character.of_npy(dataset, filename)
     strokes = character.strokes()
     strokes = [pipeline(s) for s in strokes]
-    xy = [s.xy for s in strokes]
-    raw = [s.raw for s in strokes]
-    raw = join_strokes(raw)
-
-    dirs = [
-        f"data/dataset/{dataset}/npy-trimmed",
-    ]
-
-    for dir in dirs:
-        if os.path.exists(dir): continue
-        os.mkdir(dir)
-
-    np.save(f"data/dataset/{dataset}/npy-trimmed/{character.code_point}.npy", raw)
-    filename = f"data/dataset/{dataset}/png-trimmed/{character.code_point}"
-    strokes_plot.save(filename, xy, alpha=0.1)
-
 
 
 def literal_to_hex(literal):
@@ -118,7 +103,7 @@ if __name__ == "__main__":
     cuts_target = load_cuts("data/cuts-baseline.csv")
 
     white_list = []
-    # white_list = infer_file_names("三")
+    # white_list = infer_file_names("林")
 
     for dataset in datasets:
         directory = f"data/dataset/{dataset}/npy-raw"

@@ -64,7 +64,7 @@ def dtw_rle(stroke):
 
     i, j = 0, len(s) - 1
 
-    # unconditional. cut dirty at 0 and n-1
+    # unconditional: cut dirty at 0 and n-1
     if s[i][0]: i = i + 1
     if s[j][0]: j = j - 1
 

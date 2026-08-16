@@ -63,10 +63,14 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
     ax_stroke.set_xlabel('X Coordinate')
     ax_stroke.set_ylabel('Y Coordinate')
     ax_stroke.grid(True, linestyle='--', alpha=0.5)
-    ax_stroke.set_xlim(0, 1)
-    ax_stroke.set_ylim(0, 1)
-    ax_stroke.invert_yaxis()
 
+    xlim, ylim = (0, 1), (0, 1)
+    if "zoom" in stroke.props and stroke.props["zoom"]:
+        xlim, ylim = stroke.props["zoom"]
+    ax_stroke.set_xlim(*xlim)
+    ax_stroke.set_ylim(*ylim)
+
+    ax_stroke.invert_yaxis()
     ax_stroke.set_aspect('equal')
 
     # 3. Right Side: Vertically Stacked Channels

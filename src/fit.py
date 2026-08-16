@@ -8,34 +8,31 @@ from functools import partial
 from kanji_nn.data import Character, Stroke
 from kanji_nn.predef import compose, tap
 import kanji_nn.pipeline as pipeline
-from kanji_nn.conditioning import join_strokes
-from kanji_nn.plot import strokes_plot, paths_plot
+import kanji_nn.svg as svg
+import kanji_nn.io as io
+import kanji_nn.plot as plot
 
 
-plot_channels=[
-    "angle:w=1:abs",
-    "raw:speed:central",
-    "gauss:θ",
-    "gauss:txy"
-]
+def path_xys_raw(stroke):
+    xys = stroke.props["path:xys"]
+    return np.column_stack([
+        np.arange(0, len(xys)), # fake
+        xys[:, :-1],
+        np.zeros(len(xys)) # zero
+    ])
 
 
 def compose_pipeline():
     return compose(
-        tap(partial(pipeline.plot_mcp, show=True, save=False, channels=plot_channels)),
-        pipeline.central_speed,
-        partial(pipeline.turning_angle, w=1),
-        pipeline.curvature,
-        pipeline.tangent,
-        pipeline.arc_length,
-        pipeline.cleanup_clusters,
-        tap(partial(pipeline.plot_mcp, show=True, save=False, channels=plot_channels)),
-        pipeline.detect_clusters,
-        pipeline.central_speed,
-        partial(pipeline.turning_angle, w=1),
-        pipeline.curvature,
-        pipeline.tangent,
-        pipeline.arc_length,
+        # pipeline.plot_overlays(),
+        plot.save_strokes_plot(dirname="png-fitted"),
+        # plot.show_strokes_plot(alpha=0.0),
+        partial(pipeline.replace_raw, raw_fn=path_xys_raw),
+        partial(pipeline.resample_path_equidistant, path_fn=lambda s: s.props["fitted"], factor=1),
+        pipeline.fit_segments,
+        pipeline.dtw_segmentation,
+        pipeline.resample_path_equidistant,
+        pipeline.arc_length_raw,
         tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
 
@@ -44,10 +41,6 @@ def process_file(dataset, pipeline, filename):
     character = Character.of_npy(dataset, filename)
     strokes = character.strokes()
     strokes = [pipeline(s) for s in strokes]
-    xy = [s.xy for s in strokes]
-    strokes_plot.show(xy, alpha=0.0)
-
-    # np.save(f'data/dataset/{dataset}/npy-trimmed/{character.code_point}.npy', raw)
 
 
 def literal_to_hex(literal):
@@ -66,25 +59,15 @@ if __name__ == "__main__":
         'kanken-10_80',
     ]
 
-    complex_kanken = "七中九五先円出力口右名四夕女子字学小山手日早月村気水田男町白百目石空竹糸花草虫見貝赤足車雨青音"
-    complex_hiragana = "おかきせそたなにねはほみりるれろわいうえけこさちてひふむやゆらをん"
-    complex_katakana = "アウオカクコスセタヌネヒフホマムヤユヨラルレロワ"
-    backtrace = "えきけこさせそたちてなにねひみむゆらるろをアオカネムラワ中五円出夕子学小山手早村空糸花草見青"
-    angle_prominence_pi_third = "いうえおかきくけこさせそたちてなにぬねはひほまみむめゆらるれろわをんアウオカコスセツヌネホマムヤラルレロワヲー上中九五人先円出力名夕女子字学小山川手日早月村気水町空竹糸花草見赤足車雨青"
-
-    complex = complex_kanken + complex_hiragana + complex_katakana
-
     white_list = []
-    # white_list = infer_file_names(complex)
-    # white_list = infer_file_names(backtrace)
-    # white_list = infer_file_names(angle_prominence_pi_third)
-    white_list = infer_file_names("ア")
+    # white_list = infer_file_names("校")
 
     for dataset in datasets:
         directory = f'data/dataset/{dataset}/npy-trimmed'
         p = compose_pipeline()
 
         for (dirpath, dirnames, filenames) in os.walk(directory):
+            filenames.sort()
             for filename in filenames:
                 if not filename.endswith('npy'): continue
                 if white_list and filename not in white_list: continue

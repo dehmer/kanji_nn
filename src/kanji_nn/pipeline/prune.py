@@ -1,9 +1,12 @@
 import numpy as np
-from scipy.ndimage import gaussian_filter1d
 from kanji_nn.data import Stroke
 
 
 def prune(stroke, epsilon=1e-9):
+    """
+    Prune consecutive vertices with zero net displacement
+    while keeping the first of a run.
+    """
     diffs = np.diff(stroke.xy, axis=0)
     mask = np.any(np.abs(diffs) > epsilon, axis=1)
     keep = np.concatenate(([True], mask))
