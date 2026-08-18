@@ -11,10 +11,13 @@ def parametric_continuity(stroke, path_fn=path_fn):
     continuities = determine_knot_continuity(path)
     angles = calculate_knot_angles(path)
 
-    if not is_regular_path(path):
-        print(f"{stroke.literal}/{stroke.stroke_index} - irregular path")
+    regular, reason = is_regular_path(path)
+    if not regular:
+        print(f"{stroke.literal}/{stroke.stroke_index} - irregular path: ", reason)
 
-    if len(path) > 2:
+    angle_treshold = 0.0
+
+    if len(path) > 2 and any(angle > angle_treshold for angle in angles):
         print(f"{stroke.literal}/{stroke.stroke_index} -", continuities, angles)
 
     return stroke

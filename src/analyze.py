@@ -24,7 +24,8 @@ plot_channels=[
 
 def compose_pipeline():
     return compose(
-        analysis.segment_classification,
+        analysis.density(),
+        pipeline.arc_length_raw,
         # tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
 

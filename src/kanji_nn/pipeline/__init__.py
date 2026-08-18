@@ -1,5 +1,6 @@
 from .arc_length_gauss import arc_length_gauss
 from .arc_length_raw import arc_length_raw
+from .backtrack_fraction import backtrack_fraction
 from .backward_speed import backward_speed
 from .central_speed import central_speed
 from .curvature import curvature
@@ -9,6 +10,7 @@ from .dtw import dtw
 from .fit_segments import fit_segments
 from .forward_speed import forward_speed
 from .gauss_1d import gauss_1d
+from .joint_refinement import joint_refinement
 from .local_straightness import local_straightness
 from .plot_mcp import plot_mcp
 from .plot_overlays import plot_overlays
@@ -26,6 +28,7 @@ from .simplify_rdp import simplify_rdp
 from .straightness import straightness
 from .tangent import tangent
 from .tangential_acc import tangential_acc
+from .tortuosity import tortuosity
 from .trim_region import trim_region
 from .turning_angle import turning_angle
 from .vector_acc import vector_acc

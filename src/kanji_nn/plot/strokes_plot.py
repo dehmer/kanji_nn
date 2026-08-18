@@ -28,9 +28,14 @@ def _strokes(strokes, title, alpha, figsize):
 def overlays(characters, styles, struts=[], figsize=(6, 6)):
     figure = plt.figure(figsize=figsize)
 
+    # characters[0] is considered 'query', i.e. xy stroke to fit.
+    # Plot markers for query vertices:
+    for xy in characters[0]:
+        plt.scatter(xy[:, 0],  xy[:, 1], marker='o', color='red', zorder=2, alpha=0.1)
+
     for c, strokes in enumerate(characters):
-        for i, stroke in enumerate(strokes):
-            xy = stroke[:, (0, 1)]
+        for i, xy in enumerate(strokes):
+            xy = xy[:, (0, 1)]
             plt.plot(xy[:, 0], xy[:, 1], zorder=c, **styles[c])
 
     for i in range(len(struts)):

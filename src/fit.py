@@ -21,19 +21,23 @@ def path_xys_raw(stroke):
         np.zeros(len(xys)) # zero
     ])
 
+fitted_path = lambda s: s.props["fitted"]
 
 def compose_pipeline():
     return compose(
-        # pipeline.plot_overlays(),
-        plot.save_strokes_plot(dirname="png-fitted"),
-        # plot.show_strokes_plot(alpha=0.0),
+        # plot.save_strokes_plot(dirname="png-fitted"),
+        plot.show_strokes_plot(alpha=0.1),
         partial(pipeline.replace_raw, raw_fn=path_xys_raw),
-        partial(pipeline.resample_path_equidistant, path_fn=lambda s: s.props["fitted"], factor=1),
+        partial(pipeline.resample_path_equidistant, path_fn=fitted_path, factor=1),
+        # plot.show_paths_plot(path_fn=fitted_path, show_obb=False, show_badges=False, show_quads=True),
+        partial(svg.parametric_continuity, path_fn=fitted_path),
+        pipeline.joint_refinement,
         pipeline.fit_segments,
+        # pipeline.plot_overlays(),
         pipeline.dtw_segmentation,
         pipeline.resample_path_equidistant,
         pipeline.arc_length_raw,
-        tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
+        # tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
 
 
@@ -60,7 +64,7 @@ if __name__ == "__main__":
     ]
 
     white_list = []
-    # white_list = infer_file_names("校")
+    white_list = infer_file_names("出")
 
     for dataset in datasets:
         directory = f'data/dataset/{dataset}/npy-trimmed'

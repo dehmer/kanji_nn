@@ -13,4 +13,5 @@ def show_strokes_plot(xy_fun=xy_fun, alpha=0.1):
             strokes_plot.show(xy, alpha=alpha)
             strokes = []
         return stroke
+
     return inner

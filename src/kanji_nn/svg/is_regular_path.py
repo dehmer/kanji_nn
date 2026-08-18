@@ -28,10 +28,10 @@ def is_regular_path(path: Path, tol: float = 1e-5) -> bool:
         # 1. Check Knot Stagnation (Velocity at boundaries t=0 and t=1)
         # Velocity at t=0 is 3*(P1 - P0). If P1 == P0, velocity is zero.
         if np.linalg.norm(p1 - p0) < tol:
-            return False
+            return False, "P0 == P1"
         # Velocity at t=1 is 3*(P3 - P2). If P3 == P2, velocity is zero.
         if np.linalg.norm(p3 - p2) < tol:
-            return False
+            return False, "P2 == P3"
 
         # 2. Check Internal Cusps (Velocity is zero somewhere inside 0 < t < 1)
         # The derivative of a Cubic Bézier is a quadratic equation:
@@ -61,6 +61,6 @@ def is_regular_path(path: Path, tol: float = 1e-5) -> bool:
         for t in valid_roots_x:
             y_prime = 3 * (cy * (t**2) + by * t + ay)
             if abs(y_prime) < tol:
-                return False  # Both X and Y velocities are 0. It's a cusp!
+                return False, f"cusp @ {t=}"  # Both X and Y velocities are 0. It's a cusp!
 
-    return True
+    return True, None

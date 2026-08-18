@@ -1,3 +1,4 @@
+from .density import density
 from .detect_clusters import detect_clusters
 from .detect_curvature_spikes import detect_curvature_spikes
 from .detect_orthogonal_persistence import detect_orthogonal_persistence
