@@ -18,9 +18,15 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
     cuts = stroke.props.get('cuts', None)
 
     # Precompute spatial tangents (dx, dy) across the entire curve trajectory
-    dx = np.gradient(stroke.x)
-    dy = np.gradient(stroke.y)
+    xy = stroke.features["xy"]
+    x = xy[:, 0]
+    y = xy[:, 1]
+    dx = np.gradient(x)
+    dy = np.gradient(y)
     magnitudes = np.hypot(dx, dy)
+
+    t = stroke.features["t"]
+    t -= t[0]
 
 
     # Avoid zero-division errors on stagnant points by masking
@@ -34,13 +40,13 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
 
     # 2. Left Side: Stroke Subplot
     ax_stroke = fig.add_subplot(gs[0, 0])
-    ax_stroke.plot(stroke.x, stroke.y, color='#2c3e50', linewidth=1.5, label='Stroke Path')
+    ax_stroke.plot(x, y, color='#2c3e50', linewidth=1.5, label='Stroke Path')
 
-    if cuts and cuts[0] < stroke.n_points:
-        ax_stroke.scatter(stroke.x[cuts[0]],  stroke.y[cuts[0]], marker='o', color='green', zorder=3)
+    if cuts and cuts[0] < len(xy):
+        ax_stroke.scatter(x[cuts[0]],  y[cuts[0]], marker='o', color='green', zorder=3)
 
-    if cuts and cuts[1] <= stroke.n_points:
-        ax_stroke.scatter(stroke.x[cuts[1] - 1], stroke.y[cuts[1] - 1], marker='o', color='blue', zorder=3)
+    if cuts and cuts[1] <= len(xy):
+        ax_stroke.scatter(x[cuts[1] - 1], y[cuts[1] - 1], marker='o', color='blue', zorder=3)
 
     if "scatter" in stroke.props:
         scatter_xy, scatter_options = stroke.props["scatter"]
@@ -80,10 +86,6 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
 
     colors = plt.cm.tab10.colors
 
-    t = stroke.t
-    t -= t[0]
-
-
     for i in range(num_channels):
         sharex = ax_channels[0] if i > 0 else None
         ax = fig.add_subplot(gs_channels[i, 0], sharex=sharex)
@@ -95,10 +97,10 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
         ax.grid(False)
         ax.grid(True, linestyle='--', alpha=0.5)
 
-        if cuts and cuts[0] < stroke.n_points:
+        if cuts and cuts[0] < len(xy):
             ax.axvline(t[cuts[0]], color='green', linestyle='--', linewidth=1, alpha=0.6)
 
-        if cuts and cuts[1] <= stroke.n_points:
+        if cuts and cuts[1] <= len(xy):
             ax.axvline(t[cuts[1] - 1], color='blue', linestyle='--', linewidth=1, alpha=0.6)
 
         if "vlines" in stroke.props:
@@ -142,14 +144,14 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
 
         # Determine target point based on active axis
         if event.inaxes == ax_stroke:
-            distances = np.sum((stroke.xy - np.array([[event.xdata, event.ydata]])) ** 2, axis=1)
+            distances = np.sum((xy - np.array([[event.xdata, event.ydata]])) ** 2, axis=1)
             target_idx = np.argmin(distances)
         elif event.inaxes in ax_channels:
             target_idx = np.argmin(np.abs(t - event.xdata))
 
         if target_idx is not None:
             # Extract point location and its corresponding precomputed directional vector
-            px, py = stroke.xy[target_idx, 0], stroke.xy[target_idx, 1]
+            px, py = xy[target_idx, 0], xy[target_idx, 1]
             tx, ty = unit_dx[target_idx], unit_dy[target_idx]
 
             # Calculate the front and back extensions of the longer tangent line
@@ -162,7 +164,7 @@ def multi_channel_plot(stroke, channels, figsize=(14, 8), tangent_length=0.30):
             # tangent_line.set_data(t_x_coords, t_y_coords)
 
             # Update the vertical timelines on the Channel canvas
-            current_time = stroke.t[target_idx]
+            current_time = t[target_idx]
             for vline in vlines:
                 vline.set_xdata([current_time])
 

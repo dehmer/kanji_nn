@@ -44,7 +44,7 @@ def dtw_rle(stroke):
         * one-to-many "stagnation" points
     """
 
-    query = stroke.xy
+    query = stroke.features["xy"]
     path_xys = stroke.props["path:xys"]
     reference = path_xys[:, :-1]
 

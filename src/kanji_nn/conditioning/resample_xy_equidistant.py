@@ -15,7 +15,7 @@ def resample_xy_equidistant(stroke, ds=0.006):
 
     Returns: (m, 2) array of resampled points.
     """
-    xy = stroke.xy
+    xy = stroke.features["xy"]
     deltas = np.diff(xy, axis=0)
     step_lengths = np.sqrt(np.sum(deltas**2, axis=1))
     cum_dist = np.concatenate(([0.0], np.cumsum(step_lengths)))
@@ -31,16 +31,11 @@ def resample_xy_equidistant(stroke, ds=0.006):
 
     x = np.interp(target_dist, cum_dist, xy[:, 0])
     y = np.interp(target_dist, cum_dist, xy[:, 1])
-
-    raw = np.column_stack([
-        np.arange(0, len(x)), # fake
-        np.column_stack([x, y]),
-        np.zeros(len(x)) # zero
-    ])
+    xy = np.column_stack([x, y])
 
     return Stroke(
         dataset=stroke.dataset,
         key=stroke.key,
-        raw=raw,
-        sticky=stroke.sticky
+        sticky=stroke.sticky,
+        features={"xy": xy}
     )

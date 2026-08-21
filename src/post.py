@@ -70,6 +70,7 @@ def compose_pipeline(cuts_target):
 
         pipeline.prune,
         partial(plot.save_strokes_plot(filename_fn=png_raw, title="raw", alpha=alpha)),
+        pipeline.split_raw,
         tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
 

@@ -163,11 +163,7 @@ def normalize(v):
 
 
 def schneider(stroke, maxError=1e-5):
-    # seg_pts :: complex[][]
-    # seg_pts = stroke.props["segments"]
-    # seg_pts = [[[float(pt.real), float(pt.imag)] for pt in pts] for pts in seg_pts]
-
-    xy = stroke.xy
+    xy = stroke.features["xy"]
     beziers = fitCurve(xy, maxError=maxError)
 
     segments = [Move(xy[0, 0] + 1j * xy[0, 1])]

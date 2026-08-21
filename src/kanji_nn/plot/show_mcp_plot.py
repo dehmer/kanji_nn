@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from kanji_nn.plot import multi_channel_plot
 
-def plot_mcp(stroke, channels=["P:norm", "dP/dt", "dP", "raw:ds", "raw:speed:central", "at"], show=False, save=True):
+def show_mcp_plot(stroke, channels=["P:norm", "dP/dt", "dP", "raw:ds", "raw:speed:central", "at"], show=False, save=True):
     figure = multi_channel_plot(stroke, channels, figsize=(16, 8))
 
     if save:

@@ -5,8 +5,10 @@ def backward_speed(stroke):
     Calculates backward-difference speed over segments.
     Pads with a 0.0 at the beginning to return an N-element array.
     """
-    dt = np.diff(stroke.t)
-    dxy = np.diff(stroke.xy, axis=0)
+    t = stroke.features["t"]
+    xy = stroke.features["xy"]
+    dt = np.diff(t)
+    dxy = np.diff(xy, axis=0)
 
     with np.errstate(divide='ignore', invalid='ignore'):
         # Calculate raw interval speeds (N-1 elements)

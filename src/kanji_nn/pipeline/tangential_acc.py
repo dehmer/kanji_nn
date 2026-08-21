@@ -7,4 +7,5 @@ def tangential_acc(stroke, speed_key):
     speed = stroke.features[speed_key]
 
     # Differentiate speed with respect to time
-    return stroke.clone(features={"at": np.gradient(speed, stroke.t)})
+    t = stroke.features["t"]
+    return stroke.clone(features={"at": np.gradient(speed, t)})

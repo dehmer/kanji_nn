@@ -8,7 +8,6 @@ class Stroke:
 
     # literal/stroke_index/stroke_count
     key: str
-    raw: np.ndarray # [t, x, y, pressure]
     features: dict[str, np.ndarray] = field(default_factory=dict)
     props: dict[str, Any] = field(default_factory=dict)
     sticky: dict[str, Any] = field(default_factory=dict)
@@ -37,35 +36,6 @@ class Stroke:
     def code_point(self) -> str:
         return f"U+{ord(self.literal[0]):04X}"
 
-    @property
-    def n_points(self) -> int:
-        return self.raw.shape[0]
-
-    @property
-    def t(self): return self.raw[:, 0]
-
-    @property
-    def duration(self): return self.t[-1] - self.t[0]
-
-    @property
-    def start(self): return self.xy[0]
-
-    @property
-    def end(self): return self.xy[-1]
-
-    @property
-    def x(self): return self.raw[:, 1]
-
-    @property
-    def y(self): return self.raw[:, 2]
-
-    @property
-    def xy(self): return self.raw[:, (1, 2)]
-
-    @property
-    def pressure(self): return self.raw[:, 3]
-
-
     def clone(self, features=None, props=None, sticky=None, force=False):
         # Default to empty dictionaries if None is passed
         features = features or {}
@@ -83,18 +53,10 @@ class Stroke:
                 raise ValueError(f"[Stroke.clone()] duplicate property key(s): {duplicate_pkeys}")
 
         # Verify feature shape alignment
-        expected_rows = self.n_points
-        for key, arr in features.items():
-            # Ensure it is a numpy array
-            if not isinstance(arr, np.ndarray):
-                raise TypeError(f"[Stroke.clone()] Feature '{key}' must be a numpy ndarray.")
 
-            # Ensure row count (n) matches n_point
-            if arr.shape[0] != expected_rows:
-                raise ValueError(
-                    f"[Stroke.clone()] Feature '{key}' row mismatch. "
-                    f"Expected {expected_rows} rows, got {arr.shape[0]}."
-                )
+        lengths = set([len(arr) for arr in (self.features | features).values()])
+        if len(lengths) != 1:
+            raise TypeError(f"[Stroke.clone()] Feature row count mismatch.")
 
         # Merge and return the new object
         return replace(

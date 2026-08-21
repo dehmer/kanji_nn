@@ -18,15 +18,35 @@ import kanji_nn.analysis as analysis
 
 
 plot_channels=[
-    "angle:w=1:abs",
+    "pressure",
+    "dP/dt",
+    "raw:speed:backward",
     "raw:speed:central",
+    "gauss:dθ/ds:abs",
+    "raw:stness:loc",
+    "raw:speed:forward",
+    "raw:stness",
+    # "angle:w=1:abs",
+    # "raw:speed:central",
 ]
 
 def compose_pipeline():
     return compose(
-        analysis.density(),
+        tap(partial(plot.show_mcp_plot, show=True, save=False, channels=plot_channels)),
+        # analysis.density(),
+        # pipeline.arc_length_raw,
+        pipeline.local_straightness,
+        pipeline.straightness,
+        pipeline.curvature,
+        pipeline.tangent,
+        pipeline.arc_length_gauss,
         pipeline.arc_length_raw,
-        # tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
+        pipeline.central_speed,
+        pipeline.backward_speed,
+        pipeline.forward_speed,
+        pipeline.pressure_derivative,
+        pipeline.split_raw,
+        tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
 
 
@@ -57,7 +77,7 @@ if __name__ == "__main__":
     # white_list = infer_file_names("そ")
 
     for dataset in datasets:
-        directory = f"data/dataset/{dataset}/npy-trimmed"
+        directory = f"data/dataset/{dataset}/npy-raw"
         p = compose_pipeline()
 
         for (dirpath, dirnames, filenames) in os.walk(directory):

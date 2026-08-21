@@ -14,9 +14,12 @@ def straightness(stroke):
     => local stness score, bounded to (0, 1]
     """
 
+    xy = stroke.features["xy"]
+    x = xy[:, 0]
+    y = xy[:, 1]
     s = stroke.features["raw:s"]
-    dx = np.gradient(stroke.x, s)
-    dy = np.gradient(stroke.y, s)
+    dx = np.gradient(x, s)
+    dy = np.gradient(y, s)
     stness = np.hypot(dx, dy)
 
     return stroke.clone(features={"raw:stness": stness})

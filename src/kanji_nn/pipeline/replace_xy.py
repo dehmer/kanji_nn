@@ -1,6 +1,7 @@
 import numpy as np
 from kanji_nn.data import Stroke
 
+
 def replace_xy(stroke, key):
     """
     Create new stroke from selected xy property.
@@ -9,15 +10,12 @@ def replace_xy(stroke, key):
     """
 
     xy = stroke.features[key]
-    raw = np.column_stack([
-        stroke.t,
-        xy,
-        stroke.pressure
-    ])
+    t = np.arange(0, len(xy))
+    pressure = np.zeros(len(xy))
 
     return Stroke(
         dataset=stroke.dataset,
         key=stroke.key,
-        raw=raw,
-        sticky=stroke.sticky
+        sticky=stroke.sticky,
+        features={"t": t, "xy": xy, "pressure": pressure}
     )

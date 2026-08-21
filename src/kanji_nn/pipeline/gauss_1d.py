@@ -2,7 +2,8 @@ import numpy as np
 from scipy.ndimage import gaussian_filter1d
 
 def gauss_1d(stroke, sigma=1.0, mode="nearest", f=None):
-    gauss_xy = gaussian_filter1d(stroke.xy, axis=0, sigma=sigma, mode=mode)
+    xy = stroke.features["xy"]
+    gauss_xy = gaussian_filter1d(xy, axis=0, sigma=sigma, mode=mode)
 
     # Compensate for "shortening" of stroke.
     # Use f = 0.0 for no extrapolation.

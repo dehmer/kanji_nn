@@ -1,7 +1,7 @@
 import os
 from kanji_nn.plot import strokes_plot
 
-xy_fn = lambda s: s.xy
+xy_fn = lambda s: s.features["xy"]
 
 def save_strokes_plot(filename_fn, xy_fn=xy_fn, alpha=0.0, title=None):
     strokes = []

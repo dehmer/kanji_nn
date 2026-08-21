@@ -41,13 +41,6 @@ class Character:
 
         return cls(dataset, code_point, raw)
 
-    @classmethod
-    def of_strokes(cls, dataset, strokes):
-        code_point = strokes[0].code_point
-        strokes = [stroke.raw for stroke in strokes]
-        raw = join_strokes(strokes)
-        return cls(dataset, code_point, raw)
-
     def strokes(self):
         kvg = KanjiVG(self.code_point)
         strokes = split_strokes(self.raw)
@@ -56,11 +49,8 @@ class Character:
         return [Stroke(
             dataset=self.dataset,
             key=f"{self.literal}/{i}/{len(strokes)}",
-            raw=raw,
-            sticky={
-                "kvg_type": kvg.types[i],
-                "path": paths[i]
-            }
+            features={"raw": raw},
+            sticky={"kvg_type": kvg.types[i], "path": paths[i]}
         ) for i, raw in enumerate(strokes)]
 
     def stroke_types(self):

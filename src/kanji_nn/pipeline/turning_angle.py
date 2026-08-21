@@ -1,13 +1,13 @@
 import numpy as np
 
-def turning_angle(stroke, w=3, key=None):
+def turning_angle(stroke, w=3, key="xy"):
     """
     Returns (N,) array of turning angles in radians, signed,
     in (-pi, pi]. First/last w points are NaN (window doesn't
     fit on both sides).
     """
 
-    xy = stroke.xy if key == None else stroke.features[key]
+    xy = stroke.features[key]
     n = len(xy)
     angle = np.full(n, np.nan)
 

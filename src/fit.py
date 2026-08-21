@@ -11,33 +11,28 @@ import kanji_nn.pipeline as pipeline
 import kanji_nn.svg as svg
 import kanji_nn.io as io
 import kanji_nn.plot as plot
+import kanji_nn.conditioning as conditioning
 
-
-def path_xys_raw(stroke):
-    xys = stroke.props["path:xys"]
-    return np.column_stack([
-        np.arange(0, len(xys)), # fake
-        xys[:, :-1],
-        np.zeros(len(xys)) # zero
-    ])
 
 fitted_path = lambda s: s.props["fitted"]
+xys         = lambda s: s.props["path:xys"][:, :-1]
+png_fitted  = lambda s: f"data/dataset/{s.dataset}/png-fitted/{s.code_point}"
 
 def compose_pipeline():
+    alpha = 0.1
+    epsilon = 3e-4  # RDP
+    maxError = 5e-4 # Schneider's Algorithm
+
     return compose(
-        # plot.save_strokes_plot(dirname="png-fitted"),
-        plot.show_strokes_plot(alpha=0.1),
-        partial(pipeline.replace_raw, raw_fn=path_xys_raw),
-        partial(pipeline.resample_path_equidistant, path_fn=fitted_path, factor=1),
-        # plot.show_paths_plot(path_fn=fitted_path, show_obb=False, show_badges=False, show_quads=True),
-        partial(svg.parametric_continuity, path_fn=fitted_path),
-        pipeline.joint_refinement,
-        pipeline.fit_segments,
-        # pipeline.plot_overlays(),
-        pipeline.dtw_segmentation,
-        pipeline.resample_path_equidistant,
+        partial(plot.save_strokes_plot(filename_fn=png_fitted, xy_fn=xys, alpha=alpha)),
+        partial(pipeline.resample_path_equidistant, path_fn=fitted_path, factor=0.5),
         pipeline.arc_length_raw,
-        # tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
+        partial(svg.schneider, maxError=maxError),
+
+        partial(conditioning.simplify_rdp, epsilon=epsilon),
+        pipeline.arc_length_raw,
+        pipeline.split_raw,
+        tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
 
 
@@ -64,7 +59,7 @@ if __name__ == "__main__":
     ]
 
     white_list = []
-    white_list = infer_file_names("出")
+    # white_list = infer_file_names("出")
 
     for dataset in datasets:
         directory = f'data/dataset/{dataset}/npy-trimmed'

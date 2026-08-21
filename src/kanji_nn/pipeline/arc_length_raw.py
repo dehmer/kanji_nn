@@ -8,7 +8,8 @@ def arc_length_raw(stroke, epsilon = 1e-12):
     s_norm: normalized cumulative arc lengths [0, 1]
     """
 
-    ds = np.linalg.norm(np.diff(stroke.xy, axis=0), axis=1)
+    xy = stroke.features["xy"]
+    ds = np.linalg.norm(np.diff(xy, axis=0), axis=1)
     ds = np.concatenate(([0.0], ds))
     s = np.cumsum(ds)
 

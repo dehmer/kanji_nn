@@ -51,11 +51,11 @@ png_trimmed = lambda s: f"data/dataset/{s.dataset}/png-trimmed/{s.code_point}"
 def compose_pipeline(cuts_target):
     sigma = 1.0     # Gauss 1D Filter
     return compose(
-        # plot.show_strokes_plot(lambda s: s.xy),
+        plot.show_strokes_plot(lambda s: s.features["xy"]),
         plot.save_strokes_plot(filename_fn=png_trimmed),
         io.save_npy("npy-trimmed"),
         pipeline.trim_region,
-        # tap(partial(pipeline.plot_mcp, show=True, save=False, channels=plot_channels)),
+        tap(partial(plot.show_mcp_plot, show=True, save=False, channels=plot_channels)),
         # tap(dump),
         # tap(compare(cuts_target)),
         pipeline.dtw_rle,
@@ -65,6 +65,7 @@ def compose_pipeline(cuts_target):
         partial(pipeline.replace_xy, key="gauss:xy"),
         partial(pipeline.gauss_1d, sigma=sigma, f=None),
         pipeline.prune,
+        pipeline.split_raw,
         tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
 
