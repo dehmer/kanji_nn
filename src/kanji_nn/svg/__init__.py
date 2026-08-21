@@ -6,5 +6,5 @@ from .classify_bezier import classify_bezier
 from .parametric_continuity import parametric_continuity
 from .resample_equidistant import resample_equidistant
 from .ScaledPath import ScaledPath
-from .schneider import fitCurve
+from .schneider import fitCurve, schneider
 from .transform import transform

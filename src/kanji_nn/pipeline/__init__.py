@@ -13,7 +13,6 @@ from .gauss_1d import gauss_1d
 from .joint_refinement import joint_refinement
 from .local_straightness import local_straightness
 from .plot_mcp import plot_mcp
-from .plot_overlays import plot_overlays
 from .pressure_derivative import pressure_derivative
 from .pressure import pressure
 from .prune import prune
@@ -24,7 +23,6 @@ from .resample_path_parametric import resample_path_parametric
 from .resampling_uniform import resampling_uniform
 from .resolve_segments import resolve_segments
 from .savgol import savgol
-from .simplify_rdp import simplify_rdp
 from .straightness import straightness
 from .tangent import tangent
 from .tangential_acc import tangential_acc

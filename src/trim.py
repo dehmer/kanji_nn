@@ -49,6 +49,7 @@ png_trimmed = lambda s: f"data/dataset/{s.dataset}/png-trimmed/{s.code_point}"
 
 
 def compose_pipeline(cuts_target):
+    sigma = 1.0     # Gauss 1D Filter
     return compose(
         # plot.show_strokes_plot(lambda s: s.xy),
         plot.save_strokes_plot(filename_fn=png_trimmed),
@@ -62,7 +63,7 @@ def compose_pipeline(cuts_target):
         partial(pipeline.turning_angle, w=1),
         pipeline.arc_length_raw,
         partial(pipeline.replace_xy, key="gauss:xy"),
-        partial(pipeline.gauss_1d, sigma=1.4, f=None),
+        partial(pipeline.gauss_1d, sigma=sigma, f=None),
         pipeline.prune,
         tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )

@@ -2,9 +2,11 @@ import numpy as np
 from kanji_nn.data.stroke import Stroke
 
 
-def resample_xy_equidistant(stroke, ds = 0.006):
+def resample_xy_equidistant(stroke, ds=0.006):
     """
     Resample a polyline (n, 2) to uniform arc-length spacing `ds`.
+    Note: ds value of 0.006 is slightly below minimum of all strokes in
+    current corpus.
 
     Uses linear interpolation between original samples -- appropriate
     for raw pen data, not a curve reconstruction. The last output

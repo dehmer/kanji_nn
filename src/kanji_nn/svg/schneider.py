@@ -1,4 +1,5 @@
 from numpy import *
+from svg.path import Path, Move, CubicBezier
 import kanji_nn.svg.bezier as bezier
 
 
@@ -159,3 +160,25 @@ def computeMaxError(points, bez, parameters):
 
 def normalize(v):
     return v / linalg.norm(v)
+
+
+def schneider(stroke, maxError=1e-5):
+    # seg_pts :: complex[][]
+    # seg_pts = stroke.props["segments"]
+    # seg_pts = [[[float(pt.real), float(pt.imag)] for pt in pts] for pts in seg_pts]
+
+    xy = stroke.xy
+    beziers = fitCurve(xy, maxError=maxError)
+
+    segments = [Move(xy[0, 0] + 1j * xy[0, 1])]
+    for i, bezier in enumerate(beziers):
+        segment = CubicBezier(
+            bezier[0][0] + 1j * bezier[0][1],
+            bezier[1][0] + 1j * bezier[1][1],
+            bezier[2][0] + 1j * bezier[2][1],
+            bezier[3][0] + 1j * bezier[3][1],
+        )
+        segments.append(segment)
+
+    path = Path(*segments)
+    return stroke.clone(props={"fitted": path})

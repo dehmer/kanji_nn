@@ -13,67 +13,64 @@ import kanji_nn.pipeline as pipeline
 import kanji_nn.io as io
 import kanji_nn.plot as plot
 import kanji_nn.conditioning as conditioning
+import kanji_nn.svg as svg
 
 
 plot_channels=[
     "angle:w=1"
 ]
 
-sigma = 1.4
-png_raw = lambda s: f"data/dataset/{s.dataset}/png-post/{s.code_point}-raw"
-png_gauss = lambda s: f"data/dataset/{s.dataset}/png-post/{s.code_point}-gauss"
-png_trimmed = lambda s: f"data/dataset/{s.dataset}/png-post/{s.code_point}-trimmed"
+strokes_png    = lambda s, x: f"data/dataset/{s.dataset}/png-post/{s.code_point}-{x}"
+png_raw        = lambda s: strokes_png(s, "A")
+png_gauss      = lambda s: strokes_png(s, "B")
+png_trimmed    = lambda s: strokes_png(s, "C")
+png_simplified = lambda s: strokes_png(s, "D")
+png_fitted     = lambda s: strokes_png(s, "E")
 
 
 plot_channels=[
-    "angle:w=1",
-    "angle:w=5",
-    "raw:speed:central",
-    "tortuosity",
-    "backtrack_fraction",
+    "kappa",
 ]
 
 
 fitted_path = lambda s: s.props["fitted"]
+xys = lambda s: s.props["path:xys"][:, :-1]
 
 
 def compose_pipeline(cuts_target):
+    alpha = 0.3
+    sigma = 2.0     # Gauss 1D Filter
+    epsilon = 3e-4  # RDP
+    maxError = 5e-4 # Schneider's Algorithm
+
     return compose(
-        # plot.show_strokes_plot(lambda s: s.xy),
-        # plot.save_strokes_plot("png-trimmed"),
-        # io.save_npy("npy-trimmed"),
-        # partial(plot.save_strokes_plot(filename_fn=png_trimmed, title="trimmed")),
-        # plot.show_strokes_plot(),
-        plot.show_paths_plot(path_fn=fitted_path, show_badges=False),
-        pipeline.joint_refinement,
-        pipeline.fit_segments,
-        # pipeline.plot_overlays(),
-        pipeline.dtw_segmentation,
+        partial(plot.save_strokes_plot(filename_fn=png_fitted, xy_fn=xys, title=f"fitted @ {maxError=}", alpha=alpha)),
+        # plot.show_strokes_plot(xy_fn=xys, alpha=0.1),
+        partial(pipeline.resample_path_equidistant, path_fn=fitted_path, factor=0.5),
+        partial(svg.schneider, maxError=maxError),
+        pipeline.arc_length_raw,
+
+        partial(plot.save_strokes_plot(filename_fn=png_simplified, title=f"simplified @ {epsilon=}", alpha=alpha)),
+        partial(conditioning.simplify_rdp, epsilon=epsilon),
+        pipeline.arc_length_raw,
+
+        partial(plot.save_strokes_plot(filename_fn=png_trimmed, title="trimmed", alpha=alpha)),
+        pipeline.trim_region,
+        pipeline.dtw_rle,
+        partial(pipeline.turning_angle, w=1),
         pipeline.resample_path_equidistant,
         pipeline.arc_length_raw,
-        pipeline.trim_region,
-        pipeline.dtw_rle,
-        partial(pipeline.resample_path_equidistant, factor=1.0, error=1e-5),
-        # tap(partial(pipeline.plot_mcp, show=True, save=False, channels=plot_channels)),
-        pipeline.backtrack_fraction,
-        partial(pipeline.tortuosity, w=9),
-        pipeline.central_speed,
-        pipeline.arc_length_raw,
-        partial(pipeline.turning_angle, w=5),
-        partial(pipeline.turning_angle, w=1),
-        pipeline.trim_region,
-        pipeline.dtw_rle,
-        partial(pipeline.resample_path_equidistant, factor=1.0, error=1e-5),
-        partial(pipeline.turning_angle, w=1),
-        pipeline.central_speed,
-        pipeline.arc_length_raw,
-        partial(plot.save_strokes_plot(filename_fn=png_gauss, title=f"gauss @ {sigma=}")),
+
+        # Note: gauss_1d works best for uniformly sampled point w.r.t to arc-length spacing.
+        # Hence resample_xy_equidistant first with ds=0.006.
+        partial(plot.save_strokes_plot(filename_fn=png_gauss, title=f"gauss @ {sigma=}", alpha=alpha)),
         partial(pipeline.replace_xy, key="gauss:xy"),
-        partial(pipeline.gauss_1d, sigma=3.0, f=None),
+        partial(pipeline.gauss_1d, sigma=sigma, f=None),
         conditioning.resample_xy_equidistant,
+
         pipeline.prune,
-        partial(plot.save_strokes_plot(filename_fn=png_raw, title="raw")),
-        # tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
+        partial(plot.save_strokes_plot(filename_fn=png_raw, title="raw", alpha=alpha)),
+        tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
 
 
@@ -115,7 +112,7 @@ if __name__ == "__main__":
     cuts_target = load_cuts("data/cuts-baseline.csv")
 
     white_list = []
-    # white_list = infer_file_names("出")
+    # white_list = infer_file_names("子")
 
     for dataset in datasets:
         directory = f"data/dataset/{dataset}/npy-raw"

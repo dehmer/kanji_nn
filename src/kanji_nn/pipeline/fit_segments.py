@@ -2,7 +2,7 @@ import numpy as np
 from svg.path import Path, Move, CubicBezier
 from kanji_nn.svg.classify_bezier import classify_bezier
 
-def fit_bezier_segment(pts, p0, p3, t_hat0=None, t_hat3=None):
+def fit_bezier_segment(pts, p0, p3, w=3):
     """
     Least-squares fit of interior control points P1, P2 for a single
     cubic Bezier segment with FIXED endpoints p0, p3.
@@ -26,16 +26,13 @@ def fit_bezier_segment(pts, p0, p3, t_hat0=None, t_hat3=None):
 
     u = s / total
 
-    tangent_window = 3
-    if t_hat0 is None:
-        idx_min = min(tangent_window, len(pts) - 1)
-        v = pts[idx_min] - pts[0]
-        t_hat0 = v / abs(v) if abs(v) > 1e-9 else (p3 - p0) / abs(p3 - p0)
+    idx_min = min(w, len(pts) - 1)
+    v = pts[idx_min] - pts[0]
+    t_hat0 = v / abs(v) if abs(v) > 1e-9 else (p3 - p0) / abs(p3 - p0)
 
-    if t_hat3 is None:
-        idx_max = max(len(pts) - tangent_window - 1, 0)
-        v = pts[idx_max] - pts[-1]
-        t_hat3 = v / abs(v) if abs(v) > 1e-9 else (p0 - p3) / abs(p0 - p3)
+    idx_max = max(len(pts) - w - 1, 0)
+    v = pts[idx_max] - pts[-1]
+    t_hat3 = v / abs(v) if abs(v) > 1e-9 else (p0 - p3) / abs(p0 - p3)
 
     B0, B1 = (1 - u) ** 3, 3 * u * (1 - u) ** 2
     B2, B3 = 3 * u ** 2 * (1 - u), u ** 3
@@ -43,11 +40,11 @@ def fit_bezier_segment(pts, p0, p3, t_hat0=None, t_hat3=None):
     A0, A1 = t_hat0 * B1, t_hat3 * B2
     tmp = pts - (B0 * p0 + B3 * p3)
 
-    c00 = np.sum((A0 * np.conj(A0)).real)
-    c01 = np.sum((A0 * np.conj(A1)).real)
-    c11 = np.sum((A1 * np.conj(A1)).real)
-    x0 = np.sum((A0 * np.conj(tmp)).real)
-    x1 = np.sum((A1 * np.conj(tmp)).real)
+    c00 = np.sum((A0 * np.conjugate(A0)).real)
+    c01 = np.sum((A0 * np.conjugate(A1)).real)
+    c11 = np.sum((A1 * np.conjugate(A1)).real)
+    x0 = np.sum((A0 * np.conjugate(tmp)).real)
+    x1 = np.sum((A1 * np.conjugate(tmp)).real)
 
     det = c00 * c11 - c01 * c01
     chord_len = abs(p3 - p0)
@@ -73,7 +70,7 @@ def fit_bezier_segment(pts, p0, p3, t_hat0=None, t_hat3=None):
     return p1, p2
 
 
-def fit_segments(stroke):
+def fit_segments(stroke, w=3):
     seg_pts = stroke.props["segments"]
     path = stroke.sticky["path"]
     n = len(seg_pts)
@@ -84,7 +81,7 @@ def fit_segments(stroke):
         # p3: first of next segment if any or last of this segment
         p0 = pts[0]
         p3 = seg_pts[i + 1][0] if i < n - 1 else pts[-1]
-        p1, p2 = fit_bezier_segment(pts, p0, p3)
+        p1, p2 = fit_bezier_segment(pts, p0, p3, w)
         segments.append(CubicBezier(p0, p1, p2, p3))
 
     path = Path(*segments)
