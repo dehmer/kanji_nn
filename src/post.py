@@ -9,16 +9,12 @@ import math
 
 from kanji_nn.data import Character
 from kanji_nn.predef import compose, tap
-import kanji_nn.pipeline as pipeline
 import kanji_nn.io as io
 import kanji_nn.plot as plot
 import kanji_nn.conditioning as conditioning
-import kanji_nn.svg as svg
+import kanji_nn.bezier as bezier
+import kanji_nn.metrics as metrics
 
-
-plot_channels=[
-    "angle:w=1"
-]
 
 strokes_png    = lambda s, x: f"data/dataset/{s.dataset}/png-post/{s.code_point}-{x}"
 png_raw        = lambda s: strokes_png(s, "A")
@@ -26,11 +22,6 @@ png_gauss      = lambda s: strokes_png(s, "B")
 png_trimmed    = lambda s: strokes_png(s, "C")
 png_simplified = lambda s: strokes_png(s, "D")
 png_fitted     = lambda s: strokes_png(s, "E")
-
-
-plot_channels=[
-    "kappa",
-]
 
 
 fitted_path = lambda s: s.props["fitted"]
@@ -45,32 +36,31 @@ def compose_pipeline(cuts_target):
 
     return compose(
         partial(plot.save_strokes_plot(filename_fn=png_fitted, xy_fn=xys, title=f"fitted @ {maxError=}", alpha=alpha)),
-        # plot.show_strokes_plot(xy_fn=xys, alpha=0.1),
-        partial(pipeline.resample_path_equidistant, path_fn=fitted_path, factor=0.5),
-        partial(svg.schneider, maxError=maxError),
-        pipeline.arc_length_raw,
+        partial(conditioning.resample_path_equidistant, path_fn=fitted_path, factor=0.5),
+        partial(bezier.schneider, maxError=maxError),
+        metrics.arc_length_raw,
 
         partial(plot.save_strokes_plot(filename_fn=png_simplified, title=f"simplified @ {epsilon=}", alpha=alpha)),
         partial(conditioning.simplify_rdp, epsilon=epsilon),
-        pipeline.arc_length_raw,
+        metrics.arc_length_raw,
 
         partial(plot.save_strokes_plot(filename_fn=png_trimmed, title="trimmed", alpha=alpha)),
-        pipeline.trim_region,
-        pipeline.dtw_rle,
-        partial(pipeline.turning_angle, w=1),
-        pipeline.resample_path_equidistant,
-        pipeline.arc_length_raw,
+        conditioning.trim_region,
+        conditioning.dtw_rle,
+        partial(metrics.turning_angle, w=1),
+        conditioning.resample_path_equidistant,
+        metrics.arc_length_raw,
 
         # Note: gauss_1d works best for uniformly sampled point w.r.t to arc-length spacing.
         # Hence resample_xy_equidistant first with ds=0.006.
         partial(plot.save_strokes_plot(filename_fn=png_gauss, title=f"gauss @ {sigma=}", alpha=alpha)),
-        partial(pipeline.replace_xy, key="gauss:xy"),
-        partial(pipeline.gauss_1d, sigma=sigma, f=None),
+        partial(conditioning.replace_xy, key="gauss:xy"),
+        partial(conditioning.gauss_1d, sigma=sigma, f=None),
         conditioning.resample_xy_equidistant,
 
-        pipeline.prune,
+        conditioning.prune,
         partial(plot.save_strokes_plot(filename_fn=png_raw, title="raw", alpha=alpha)),
-        pipeline.split_raw,
+        conditioning.split_raw,
         tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
 

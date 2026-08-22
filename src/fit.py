@@ -7,11 +7,11 @@ from functools import partial
 
 from kanji_nn.data import Character, Stroke
 from kanji_nn.predef import compose, tap
-import kanji_nn.pipeline as pipeline
-import kanji_nn.svg as svg
+import kanji_nn.bezier as bezier
 import kanji_nn.io as io
 import kanji_nn.plot as plot
 import kanji_nn.conditioning as conditioning
+import kanji_nn.metrics as metrics
 
 
 fitted_path = lambda s: s.props["fitted"]
@@ -25,13 +25,13 @@ def compose_pipeline():
 
     return compose(
         partial(plot.save_strokes_plot(filename_fn=png_fitted, xy_fn=xys, alpha=alpha)),
-        partial(pipeline.resample_path_equidistant, path_fn=fitted_path, factor=0.5),
-        pipeline.arc_length_raw,
-        partial(svg.schneider, maxError=maxError),
+        partial(conditioning.resample_path_equidistant, path_fn=fitted_path, factor=0.5),
+        metrics.arc_length_raw,
+        partial(bezier.schneider, maxError=maxError),
 
         partial(conditioning.simplify_rdp, epsilon=epsilon),
-        pipeline.arc_length_raw,
-        pipeline.split_raw,
+        metrics.arc_length_raw,
+        conditioning.split_raw,
         tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
 

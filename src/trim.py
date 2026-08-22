@@ -9,9 +9,10 @@ import math
 
 from kanji_nn.data import Character
 from kanji_nn.predef import compose, tap
-import kanji_nn.pipeline as pipeline
 import kanji_nn.io as io
 import kanji_nn.plot as plot
+import kanji_nn.metrics as metrics
+import kanji_nn.conditioning as conditioning
 
 
 def dump(stroke):
@@ -49,23 +50,27 @@ png_trimmed = lambda s: f"data/dataset/{s.dataset}/png-trimmed/{s.code_point}"
 
 
 def compose_pipeline(cuts_target):
-    sigma = 1.0     # Gauss 1D Filter
+    sigma = 2.0     # Gauss 1D Filter
     return compose(
-        plot.show_strokes_plot(lambda s: s.features["xy"]),
+
+        # plot.show_strokes_plot(lambda s: s.features["xy"]),
         plot.save_strokes_plot(filename_fn=png_trimmed),
         io.save_npy("npy-trimmed"),
-        pipeline.trim_region,
-        tap(partial(plot.show_mcp_plot, show=True, save=False, channels=plot_channels)),
+        conditioning.trim_region,
+        # tap(partial(plot.show_mcp_plot, show=True, save=False, channels=plot_channels)),
         # tap(dump),
         # tap(compare(cuts_target)),
-        pipeline.dtw_rle,
-        partial(pipeline.resample_path_equidistant, factor=1.0, error=1e-5),
-        partial(pipeline.turning_angle, w=1),
-        pipeline.arc_length_raw,
-        partial(pipeline.replace_xy, key="gauss:xy"),
-        partial(pipeline.gauss_1d, sigma=sigma, f=None),
-        pipeline.prune,
-        pipeline.split_raw,
+        conditioning.dtw_rle,
+        partial(conditioning.resample_path_equidistant, factor=1.0, error=1e-5),
+        partial(metrics.turning_angle, w=1),
+        metrics.arc_length_raw,
+
+        partial(conditioning.replace_xy, key="gauss:xy"),
+        partial(conditioning.gauss_1d, sigma=sigma, f=None),
+        conditioning.resample_xy_equidistant,
+
+        conditioning.prune,
+        conditioning.split_raw,
         tap(lambda s: print(f"{s.dataset} - {s.literal}/{s.stroke_index}"))
     )
 

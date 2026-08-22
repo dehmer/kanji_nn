@@ -1,5 +1,5 @@
 import numpy as np
-import kanji_nn.svg as svg
+import kanji_nn.bezier as bezier
 
 path_fn = lambda s: s.sticky["path"]
 
@@ -12,5 +12,5 @@ def resample_path_equidistant(stroke, path_fn=path_fn, factor=1.0, error=1e-5):
     path_length = path.length(error=error)
     n_out = round(path_length / (ds * factor))
 
-    xys = svg.resample_equidistant(path, n_out, error=error)
+    xys = bezier.resample_equidistant(path, n_out, error=error)
     return stroke.clone(props={"path:xys": xys}, force=True)

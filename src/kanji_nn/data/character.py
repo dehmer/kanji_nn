@@ -4,7 +4,7 @@ import unicodedata
 import os
 
 from kanji_nn.io.KanjiVG import KanjiVG
-from kanji_nn.svg.transform import transform
+from kanji_nn.bezier.transform import transform
 from kanji_nn.conditioning import split_strokes, join_strokes
 from kanji_nn.data.stroke import Stroke
 

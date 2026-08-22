@@ -1,6 +1,6 @@
 from numpy import *
 from svg.path import Path, Move, CubicBezier
-import kanji_nn.svg.bezier as bezier
+import kanji_nn.bezier.bezier as bezier
 
 
 """ Python implementation of
