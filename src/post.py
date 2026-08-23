@@ -28,35 +28,33 @@ fitted_path = lambda s: s.props["fitted"]
 xys = lambda s: s.props["path:xys"][:, :-1]
 
 
-def compose_pipeline(cuts_target):
-    alpha = 0.3
+def compose_pipeline():
+    ds = 0.006      # slightly below minimum of all strokes
+    alpha = 0.1
     sigma = 2.0     # Gauss 1D Filter
     epsilon = 3e-4  # RDP
     maxError = 5e-4 # Schneider's Algorithm
 
     return compose(
         partial(plot.save_strokes_plot(filename_fn=png_fitted, xy_fn=xys, title=f"fitted @ {maxError=}", alpha=alpha)),
-        partial(conditioning.resample_path_equidistant, path_fn=fitted_path, factor=0.5),
+        partial(bezier.resample_fixed_distance, path_fn=fitted_path, ds=ds),
         partial(bezier.schneider, maxError=maxError),
-        metrics.arc_length_raw,
 
         partial(plot.save_strokes_plot(filename_fn=png_simplified, title=f"simplified @ {epsilon=}", alpha=alpha)),
         partial(conditioning.simplify_rdp, epsilon=epsilon),
-        metrics.arc_length_raw,
 
         partial(plot.save_strokes_plot(filename_fn=png_trimmed, title="trimmed", alpha=alpha)),
         conditioning.trim_region,
         conditioning.dtw_rle,
         partial(metrics.turning_angle, w=1),
-        conditioning.resample_path_equidistant,
-        metrics.arc_length_raw,
+        partial(bezier.resample_fixed_distance, ds=ds),
 
         # Note: gauss_1d works best for uniformly sampled point w.r.t to arc-length spacing.
         # Hence resample_xy_equidistant first with ds=0.006.
         partial(plot.save_strokes_plot(filename_fn=png_gauss, title=f"gauss @ {sigma=}", alpha=alpha)),
         partial(conditioning.replace_xy, key="gauss:xy"),
         partial(conditioning.gauss_1d, sigma=sigma, f=None),
-        conditioning.resample_xy_equidistant,
+        partial(conditioning.resample_xy_equidistant, ds=ds),
 
         conditioning.prune,
         partial(plot.save_strokes_plot(filename_fn=png_raw, title="raw", alpha=alpha)),
@@ -100,18 +98,16 @@ if __name__ == "__main__":
         "kanken-10_80",
     ]
 
-    cuts_target = load_cuts("data/cuts-baseline.csv")
-
     white_list = []
     # white_list = infer_file_names("子")
 
+    pipeline = compose_pipeline()
     for dataset in datasets:
         directory = f"data/dataset/{dataset}/npy-raw"
-        p = compose_pipeline(cuts_target)
 
         for (dirpath, dirnames, filenames) in os.walk(directory):
             filenames.sort()
             for filename in filenames:
                 if not filename.endswith("npy"): continue
                 if white_list and filename not in white_list: continue
-                process_file(dataset, p, f"{dirpath}/{filename}")
+                process_file(dataset, pipeline, f"{dirpath}/{filename}")

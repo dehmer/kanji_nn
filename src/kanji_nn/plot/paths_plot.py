@@ -7,6 +7,7 @@ from matplotlib.patches import Polygon
 from svg.path import CubicBezier, Line, Move, Close
 from kanji_nn.bezier.bezier_obb import bezier_obb
 
+
 def paths_plot(paths: list, xdim=1.0, ydim=1.0, show_obb=True, show_badges=True, show_quads=False):
     """
     Plots pre-parsed svg.path.Path objects, their OBB patches, and

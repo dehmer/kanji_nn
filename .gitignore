@@ -1,7 +1,7 @@
 .DS_Store
 models/
 images/
-data/
+data
 !src/kanji_nn/data
 strokes/
 __pycache__

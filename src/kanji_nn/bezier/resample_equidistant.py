@@ -9,11 +9,6 @@ def resample_equidistant(path: Path, n_out: int, error: float = 1e-2) -> np.ndar
     if n_out < 2:
         raise ValueError("n_out must be at least 2.")
 
-    # # 1. Generate a fine lookup table across all segments
-    # # error is used to dynamically scale the resolution of our lookup table
-    # steps_per_segment = max(int(1.0 / error), 100)
-    # steps_per_segment = n_out
-    # print(steps_per_segment)
 
     fine_coords = []
     fine_seg_indices = []
