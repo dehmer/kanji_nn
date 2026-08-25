@@ -5,7 +5,7 @@ from kanji_nn.conditioning import join_strokes
 path_fn = lambda s: s.sticky["path"]
 
 
-def save_splines(dirname, path_fn=path_fn):
+def save_splines(filename_fn, path_fn=path_fn):
     """
     Save CubicBezier segments as flat 2D ndarray:
     8 columns for control points x/y + pen-down/-up column
@@ -32,10 +32,8 @@ def save_splines(dirname, path_fn=path_fn):
         paths.append(np.vstack(segments))
 
         if len(paths) == stroke.stroke_count:
-            filename = f"data/dataset/{stroke.dataset}/{dirname}/{stroke.code_point}.npy"
-
+            filename = filename_fn(stroke)
             raw = np.vstack(paths)
-            print(raw.shape)
             np.save(filename, raw)
             paths = []
         return stroke

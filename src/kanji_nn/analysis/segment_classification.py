@@ -1,4 +1,4 @@
-from kanji_nn.svg import classify_bezier
+from kanji_nn.bezier import classify_bezier
 
 
 init_classes = {"empty": 0, "near-straight": 0, "s-bend": 0, "right-bend": 0, "left-bend": 0}

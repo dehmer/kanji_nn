@@ -35,9 +35,10 @@ if __name__ == "__main__":
     signal(SIGINT, lambda _, __: sys.exit())
 
     datasets = [
-        "katakana_47",
-        "hiragana_46",
-        "kanken-10_80",
+        # "katakana_47",
+        # "hiragana_46",
+        # "kanken-10_80",
+        "kanken-09_160",
     ]
 
     white_list = []
