@@ -1,31 +1,26 @@
 #!/usr/bin/env python3
 import os
 import sys
+import io
 from signal import signal, SIGINT
 import pathlib
 import zipfile
 import uuid
-import json
+import psycopg
+from PIL import Image
+
 
 from kanji_nn.predef import compose, tap
-from kanji_nn.etlcdb import decode_b9, decode_g9
-from kanji_nn.etlcdb import decode_b8, decode_g8
-from kanji_nn.etlcdb import decode_k, decode_m, decode_c
+import kanji_nn.etlcdb as etlcdb
 from kanji_nn.io import groups
-
-# Load pre-allocated UUIDs:
-ids = {}
-with open("data/glyphs_ids.json", 'r') as file:
-    ids = json.load(file)
 
 
 pipeline = compose(
-    # TODO: do something useful
-    tap(lambda x: print(x))
+    tap(etlcdb.to_tsv),
 )
 
 
-def parse_entry(archive, decoder, entry, filter):
+def parse_entry(archive, decoder, entry):
     byte_length, decode = decoder
     with archive.open(entry, "r") as f:
         offset = 0
@@ -37,18 +32,20 @@ def parse_entry(archive, decoder, entry, filter):
 
         while chunk := f.read(byte_length):
             key = f"{entry}:{offset}"
-            glyph = {"offset": offset, "entry": entry, "id": ids[key]} | decode(chunk)
+            glyph = decode(chunk)
 
-            if filter(glyph["literal"]):
+            if not "skip" in glyph:
+                glyph = {"offset": offset, "entry": entry, "id": str(uuid.uuid4())} | glyph
                 pipeline(glyph)
+
             offset += byte_length
 
 
-def parse_archive(filename, decoder, filter):
+def parse_archive(filename, decoder):
     archive = zipfile.ZipFile(filename)
     for entry in archive.namelist():
         if entry.endswith("INFO"): continue
-        parse_entry(archive, decoder, entry, filter)
+        parse_entry(archive, decoder, entry)
 
 
 if __name__ == "__main__":
@@ -57,13 +54,13 @@ if __name__ == "__main__":
     PATH = "data/etlcdb"
 
     decoders = {
-        "m":  (2052, decode_m),
-        "k":  (2745, decode_k),
-        "c":  (2952, decode_c),
-        "b8": ( 512, decode_b8),
-        "g8": (8199, decode_g8),
-        "b9": ( 576, decode_b9),
-        "g9": (8199, decode_g9),
+        "m":  (2052, etlcdb.decode_m),
+        "k":  (2745, etlcdb.decode_k),
+        "c":  (2952, etlcdb.decode_c),
+        "b8": ( 512, etlcdb.decode_b8),
+        "g8": (8199, etlcdb.decode_g8),
+        "b9": ( 576, etlcdb.decode_b9),
+        "g9": (8199, etlcdb.decode_g9),
     }
 
     datasets = {
@@ -80,16 +77,10 @@ if __name__ == "__main__":
         "ETL9G": decoders["g9"], # kanji only
     }
 
-    filter = lambda literal: True
-    # filter = lambda literal: groups(literal) == ["KATAKANA"]
-
     for (dirpath, dirnames, filenames) in os.walk(PATH):
         filenames.sort()
         for filename in filenames:
             if not filename.endswith("zip"): continue
             path = pathlib.Path(f"{dirpath}/{filename}")
             if not path.stem in datasets.keys(): continue
-            parse_archive(path, datasets[path.stem], filter)
-
-    # with open("glyphs_ids.json", "w") as file:
-    #     file.write(json.dumps(ids)) # use `json.loads` to do the reverse
+            parse_archive(path, datasets[path.stem])

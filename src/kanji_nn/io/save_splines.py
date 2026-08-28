@@ -1,5 +1,4 @@
 import numpy as np
-from kanji_nn.conditioning import join_strokes
 
 
 path_fn = lambda s: s.sticky["path"]

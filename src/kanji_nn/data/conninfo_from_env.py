@@ -1,33 +1,12 @@
 import os
-
 from psycopg.conninfo import make_conninfo
 
 
-def conninfo_from_env() -> str:
-    """
-    Create a psycopg conninfo string from PostgreSQL environment variables.
-
-    Environment variables:
-        PGHOST       (default: localhost)
-        PGPORT       (default: 5432)
-        PGDATABASE   (required)
-        PGUSER       (optional)
-        PGPASSWORD   (optional)
-
-    Returns:
-        A PostgreSQL conninfo string.
-
-    Raises:
-        RuntimeError: If PGDATABASE is not defined.
-    """
-    dbname = os.getenv("PGDATABASE")
-    if not dbname:
-        raise RuntimeError("PGDATABASE environment variable is required")
-
+def conninfo_from_env(dbname) -> str:
     kwargs = {
         "host": os.getenv("PGHOST", "localhost"),
         "port": os.getenv("PGPORT", "5432"),
-        "dbname": dbname,
+        "dbname": os.getenv("PGDATABASE", dbname)
     }
 
     if user := os.getenv("PGUSER"):

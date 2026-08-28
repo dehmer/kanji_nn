@@ -14,6 +14,10 @@ _fields = {
 
 def decode_m(chunk: AnyStr) -> dict[str, Any]:
     record = unpack(chunk, _fields)
+
+    if record["jis_x_0201"] == "00":
+        return {"skip": True}
+
     literal = bytes.fromhex(record["jis_x_0201"]).decode("shift_jis")
     literal = jaconv.h2z(literal, digit=False, ascii=False)
     literal = literal.replace("ィ", "ヰ").replace("ェ", "ヱ")
