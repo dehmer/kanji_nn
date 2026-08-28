@@ -45,17 +45,18 @@ sutegata = [
         '\u30F5\u30F6'                    # ヵ, ヶ
     ]
 
-# TODO: SYMBOL
 non_kanji = {
-    'HIRAGANA':   lambda c: bool(re.match(r'^[\u3040-\u309F]+$', c)),
-    'KATAKANA':   lambda c: bool(re.match(r'^[\u30A0-\u30FF]+$', c)),
-    'DAKUTEN':    lambda c: '\u3099' in unicodedata.normalize('NFD', c),         # kana with 濁点 (dakuten - ゛)
-    'HANDAKUTEN': lambda c: '\u309a' in unicodedata.normalize('NFD', c),         # kana with 半濁点 (handakuten - ゜)
-    'SUTEGATA':   lambda c: bool(re.match(rf'^[{''.join(sutegata)}]+$', c)),
-    'OBSOLETE':   lambda c: bool(re.match(r'^[\u3090\u3091\u30F0\u30F1]+$', c)), # ゐ, ゑ, ヰ and ヱ
-    'KANJI':      lambda c: bool(re.match(r'^[\u4E00-\u9FFF]+$', c)),
-    'DIGIT':      lambda c: bool(re.match(r'^[0-9\uFF10-\uFF19]+$', c)),
-    'ROMAJI':     lambda c: bool(re.match(r'^[a-zA-Z\uFF21-\uFF3A]+$', c)),
+    'HIRAGANA':    lambda c: bool(re.match(r'^[\u3040-\u309F]+$', c)),
+    'KATAKANA':    lambda c: bool(re.match(r'^[\u30A0-\u30FF]+$', c)),
+    'DAKUTEN':     lambda c: '\u3099' in unicodedata.normalize('NFD', c),         # kana with 濁点 (dakuten - ゛)
+    'HANDAKUTEN':  lambda c: '\u309a' in unicodedata.normalize('NFD', c),         # kana with 半濁点 (handakuten - ゜)
+    'SUTEGATA':    lambda c: bool(re.match(rf'^[{''.join(sutegata)}]+$', c)),
+    'OBSOLETE':    lambda c: bool(re.match(r'^[\u3090\u3091\u30F0\u30F1]+$', c)), # ゐ, ゑ, ヰ and ヱ
+    'KANJI':       lambda c: bool(re.match(r'^[\u4E00-\u9FFF]+$', c)),
+    'DIGIT':       lambda c: bool(re.match(r'^[0-9\uFF10-\uFF19]+$', c)),
+    'ROMAJI':      lambda c: bool(re.match(r'^[a-zA-Z\uFF21-\uFF3A]+$', c)),
+    'SYMBOL':      lambda c: bool(re.match(r'^[\u0020-\u002f\u003a-\u0040\u005b-\u0060\u007b-\u007e]+$', c)),
+    'PUNCTUATION': lambda c: bool(re.match(r'^[\u3000-\u303f\u2200-\u22ff\u25a0-\u25ff\uff00-\uffef\u2016\u00D7]+$', c)),
 
     # hiragana: ゛ (dakuten), ゜ (handakuten), ゝ (kurikaeshi)
     # katakana: ・ (nakaguro), ヽ (katakana gaeshi)
