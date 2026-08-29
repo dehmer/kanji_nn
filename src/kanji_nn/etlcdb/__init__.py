@@ -6,6 +6,7 @@ from .decode_g8 import decode_g8
 from .decode_g9 import decode_g9
 from .decode_k import decode_k
 from .decode_m import decode_m
+from .flag_border_touch import flag_border_touch
 from .glyph_iterator import glyph_iterator
 from .otsu import otsu
 from .overlay_skeleton import overlay_skeleton

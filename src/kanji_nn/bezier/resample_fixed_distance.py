@@ -2,12 +2,7 @@ import numpy as np
 from svg.path import CubicBezier
 
 
-path_fn = lambda s: s.sticky["path"]
-
-
-def resample_fixed_distance(stroke, path_fn=path_fn, ds=0.006, error=1e-5):
-    path = path_fn(stroke)
-
+def sample_path(path, ds=0.006):
     steps = 50 # steps per segment
 
     points = []
@@ -46,5 +41,13 @@ def resample_fixed_distance(stroke, path_fn=path_fn, ds=0.006, error=1e-5):
     s = np.interp(target_distances, cum_distances, indices)
     s = np.round(s) # Ensure clean rounding to closest segment ID
 
-    xys = np.column_stack((x, y, s))
+    return np.column_stack((x, y, s))
+
+
+path_fn = lambda s: s.sticky["path"]
+
+
+def resample_fixed_distance(stroke, path_fn=path_fn, ds=0.006):
+    path = path_fn(stroke)
+    xys = sample_path(path, ds)
     return stroke.clone(props={"path:xys": xys}, force=True)

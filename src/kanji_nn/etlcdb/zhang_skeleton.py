@@ -10,4 +10,7 @@ def zhang_skeleton(glyph):
     skeleton_uint8 = np.where(skeleton_mask, 255, 0).astype(np.uint8)
     skeleton_image = Image.fromarray(skeleton_uint8)
 
-    return glyph | {"image:skeleton": skeleton_image}
+    # [left, upper, right, lower]
+    skeleton_bbox = list(skeleton_image.getbbox())
+
+    return glyph | {"image:skeleton": skeleton_image, "skeleton:bbox": skeleton_bbox}

@@ -19,7 +19,7 @@ def _process(row):
     image = Image.open(io.BytesIO(row["data"]))
     image.load()
     glyph = {k: v for k, v in row.items() if k != "data"}
-    return glyph | {"image": image}
+    return glyph | {"image": image, "skip": False}
 
 
 def glyph_iterator(query):
