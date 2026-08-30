@@ -9,8 +9,6 @@ from .decode_m import decode_m
 from .flag_border_touch import flag_border_touch
 from .glyph_iterator import glyph_iterator
 from .otsu import otsu
-from .overlay_skeleton import overlay_skeleton
-from .overlay_splines import overlay_splines
 from .splines_image import splines_image
 from .to_tsv import to_tsv
 from .transform_splines import transform_splines

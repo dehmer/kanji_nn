@@ -16,27 +16,47 @@ def await_input(glyph):
     return glyph
 
 
-def show(glyph, key="image"):
-    image = glyph[key]
+def terminate(_):
+    exit()
+
+
+def splines_overlay(glyph):
+    base = glyph["image:binary"].convert("RGB")
+    mask = glyph["image:splines"].convert("L")
+    green = Image.new("RGB", base.size, (0, 255, 0))
+    return Image.composite(green, base, mask)
+
+
+def skeleton_overlay(glyph):
+    base = glyph["image:binary"].convert("RGB")
+    mask = glyph["image:skeleton"] # mode "L", 0/255
+    red = Image.new("RGB", base.size, (255, 0, 0))
+    return Image.composite(red, base, mask)
+
+
+def show(glyph, image_fn):
+    image = image_fn(glyph)
     image.show()
+    return glyph
 
 
-def save(glyph, key="image"):
+def save(glyph, image_fn):
     id = glyph["id"]
-    literal = glyph["literal"]
-    image = glyph[key]
+    image = image_fn(glyph)
     image.save(f"data/images/{id}.png")
+    return glyph
 
 
 pipeline = compose(
-    # await_input,
-    tap(partial(save, key="overlay:splines")),
-    etlcdb.overlay_splines,
+    await_input,
+    terminate,
+    partial(show, image_fn=splines_overlay),
+    partial(show, image_fn=skeleton_overlay),
+    partial(show, image_fn=lambda glyph: glyph["image:splines"]),
     etlcdb.splines_image,
     etlcdb.transform_splines,
     bezier.kvg_bbox,
     bezier.kvg_inject,
-    etlcdb.overlay_skeleton,
     etlcdb.zhang_skeleton,
     # tap(lambda x: print(x))
 )
