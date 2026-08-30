@@ -18,8 +18,9 @@ def _dict_cursor(name):
 def _process(row):
     image = Image.open(io.BytesIO(row["data"]))
     image.load()
+    size = image.size
     glyph = {k: v for k, v in row.items() if k != "data"}
-    return glyph | {"image": image, "skip": False}
+    return glyph | {"image": image, "size": size, "skip": False}
 
 
 def glyph_iterator(query):

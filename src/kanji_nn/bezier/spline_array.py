@@ -1,7 +1,16 @@
 import numpy as np
+from svg.path import Path
 
 
-def paths_to_array(paths):
+def paths_to_array(paths: list[Path]) -> np.ndarray:
+    """
+    Convert path list with respective initial Move and
+    consecutive CubicBezier segments into compact ndarray
+    of shape (N, 8 + 1) with x/y for p0, p1, p2, p3 and
+    additional pen-down (1)/pen-up (0) column.
+    N is the total number of CubicBezier segments over all
+    paths.
+    """
     segments = []
     for path in paths:
         # skip Move segment
@@ -17,5 +26,4 @@ def paths_to_array(paths):
                 pen
             ]))
 
-    segments = np.vstack(segments)
-    return segments
+    return np.vstack(segments)

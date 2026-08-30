@@ -1,0 +1,1 @@
+type Splines = np.ndarray

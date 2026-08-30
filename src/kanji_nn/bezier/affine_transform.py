@@ -1,4 +1,5 @@
 import numpy as np
+from .typing import Splines
 
 def m_translate(tx, ty):
     """Returns a 3x3 homogeneous translation matrix."""
@@ -26,22 +27,22 @@ def m_rotate(deg):
         [  0.0,    0.0, 1.0]
     ])
 
-def apply_affine_transform(spline, m):
+def m_shear(shx, shy):
+    """Returns a 3x3 homogeneous shear matrix."""
+    return np.array([
+        [1.0, shx, 0.0],
+        [shy, 1.0, 0.0],
+        [0.0, 0.0, 1.0]
+    ])
+
+
+def transform_splines(splines: Splines, m: np.ndarray) -> Splines:
     """
-    Applies a pre-composed 3x3 affine matrix to an (N, 8) array of Bezier curves.
+    Apply a 3x3 homogeneous matrix m to all p0..p3 points in a Splines array.
+    Pen column untouched.
     """
-    N = spline.shape[0]
-
-    # Reshape from (N, 8) to (N * 4, 2) to get a list of flat (X, Y) coordinate rows
-    points_2d = spline.reshape(-1, 2)
-
-    # Convert to homogeneous coordinates by appending a column of 1s -> (N * 4, 3)
-    homogeneous_points = np.hstack([points_2d, np.ones((points_2d.shape[0], 1))])
-
-    # Apply the 3x3 matrix via dot product
-    # Since our coordinates are arranged as row vectors [X, Y, 1],
-    # we evaluate: points . M^T
-    transformed_homogeneous = homogeneous_points @ m.T
-
-    # 4. Strip the homogeneous 1s and reshape back to original (N, 8) format
-    return transformed_homogeneous[:, :2].reshape(N, 8)
+    coords = splines[:, :8].reshape(-1, 2)                            # (N*4, 2)
+    homogeneous = np.hstack([coords, np.ones((coords.shape[0], 1))])  # (N*4, 3)
+    transformed = homogeneous @ m.T                                   # (N*4, 3)
+    new_coords = transformed[:, :2].reshape(-1, 8)                    # (N, 8)
+    return np.hstack([new_coords, splines[:, 8:9]])
