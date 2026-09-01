@@ -1,14 +1,34 @@
 #!/usr/bin/env python3
 import sys
 from signal import signal, SIGINT
-from functools import partial
+from functools import partial, reduce
 import numpy as np
 from PIL import Image
+from scipy.ndimage import label
 
-from kanji_nn.predef import compose, tap
+from kanji_nn.predef import tap
 from kanji_nn.etlcdb import glyph_iterator
 import kanji_nn.etlcdb as etlcdb
 import kanji_nn.bezier as bezier
+
+def fn_name(fn):
+    if isinstance(fn, partial):
+        return fn_name(fn.func)  # Recursively unwrap in case of nested partials
+    return getattr(fn, "__name__", str(fn))
+
+
+def skippable(fn):
+    def inner(glyph):
+        if glyph["skip"]:
+            return glyph
+        else:
+            return fn(glyph)
+    return inner
+
+
+def compose(*fns):
+    skippable_fns = list(map(skippable, fns))
+    return lambda x: reduce(lambda acc, f: f(acc), reversed(skippable_fns), x)
 
 
 def await_input(glyph):
@@ -18,20 +38,6 @@ def await_input(glyph):
 
 def terminate(_):
     exit()
-
-
-def splines_overlay(glyph):
-    base = glyph["image:binary"].convert("RGB")
-    mask = glyph["image:splines"].convert("L")
-    green = Image.new("RGB", base.size, (0, 255, 0))
-    return Image.composite(green, base, mask)
-
-
-def skeleton_overlay(glyph):
-    base = glyph["image:binary"].convert("RGB")
-    mask = glyph["image:skeleton"] # mode "L", 0/255
-    red = Image.new("RGB", base.size, (255, 0, 0))
-    return Image.composite(red, base, mask)
 
 
 def show(glyph, image_fn):
@@ -48,37 +54,39 @@ def save(glyph, image_fn):
 
 
 pipeline = compose(
-    await_input,
-    terminate,
-    partial(show, image_fn=splines_overlay),
-    partial(show, image_fn=skeleton_overlay),
-    partial(show, image_fn=lambda glyph: glyph["image:splines"]),
+    # terminate,
+    # await_input,
+    partial(save, image_fn=lambda glyph: glyph["image:binary"]),
+    # partial(show, image_fn=etlcdb.splines_overlay),
+    # partial(show, image_fn=etlcdb.skeleton_overlay),
+    # partial(show, image_fn=lambda glyph: glyph["image:splines"]),
     etlcdb.splines_image,
     etlcdb.transform_splines,
     bezier.kvg_bbox,
     bezier.kvg_inject,
     etlcdb.zhang_skeleton,
-    # tap(lambda x: print(x))
-)
-
-filters = compose(
-    etlcdb.flag_border_touch,
+    # partial(show, image_fn=etlcdb.features_overlay),
+    partial(etlcdb.remove_border_noise),
+    etlcdb.extract_features,
+    partial(etlcdb.remove_noise, min_size=5),
+    etlcdb.extract_features,
     etlcdb.otsu,
+    # tap(lambda x: print(x["literal"], x["id"])),
+    tap(lambda x: print(x)),
 )
 
 
 if __name__ == "__main__":
     signal(SIGINT, lambda _, __: sys.exit())
 
-
-    query = """
-        SELECT id, entry, literal, unicode, groups, data
-        FROM   glyph
-        WHERE  entry LIKE 'ETL1/%'
-        AND    groups = 'KATAKANA'
-        AND    literal = 'ア'
-        ORDER  BY literal
-    """
+    # query = """
+    #     SELECT id, entry, literal, unicode, groups, data
+    #     FROM   glyph
+    #     WHERE  entry LIKE 'ETL1/%'
+    #     AND    groups = 'KATAKANA'
+    #     AND    literal = 'イ'
+    #     ORDER  BY literal
+    # """
 
     # query = """
     #     SELECT id, entry, literal, unicode, groups, data
@@ -88,8 +96,23 @@ if __name__ == "__main__":
     #     ORDER  BY literal
     # """
 
+
+    query = """
+        SELECT id, entry, literal, unicode, groups, data
+        FROM   glyph
+        WHERE  id in (
+            'fe08678e-cd62-4fcd-9d73-367309d6884b'
+        )
+    """
+
+    # query = """
+    #     SELECT id, entry, literal, unicode, groups, data
+    #     FROM   glyph
+    #     WHERE  literal = 'ア'
+    #     ORDER  BY literal
+    # """
+
     for glyph in glyph_iterator(query):
-        glyph = filters(glyph)
+        glyph = pipeline(glyph)
         if glyph["skip"]:
-            continue
-        pipeline(glyph)
+            print(f'skipped: [{glyph["literal"]} - ${glyph["id"]}] - {glyph["reason"]}')

@@ -11,6 +11,9 @@ def zhang_skeleton(glyph):
     skeleton_image = Image.fromarray(skeleton_uint8)
 
     # [left, upper, right, lower]
-    skeleton_bbox = list(skeleton_image.getbbox())
+    bbox = skeleton_image.getbbox()
+    if not bbox:
+        return glyph | {"skip": True, "reason": "skeletonization failed"}
 
+    skeleton_bbox = list(bbox)
     return glyph | {"image:skeleton": skeleton_image, "skeleton:bbox": skeleton_bbox}
