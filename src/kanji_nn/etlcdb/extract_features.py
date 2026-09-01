@@ -3,11 +3,10 @@ from PIL import Image
 import scipy.ndimage as ndimage
 
 
-def extract_features(glyph):
+def extract_features(binary_image):
     """
     Extract labels and features from binary image.
     """
-    binary_image = glyph["image:binary"]
     data = np.array(binary_image) > 0
     labels, _ = ndimage.label(data)
 
@@ -33,5 +32,4 @@ def extract_features(glyph):
     if len(features) == 0:
         return glyph | {"skip": True, "reason": "no features detected"}
 
-    features = np.vstack(features)
-    return glyph | {"labels": labels, "features": features}
+    return labels, np.vstack(features)

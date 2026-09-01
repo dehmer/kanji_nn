@@ -1,12 +1,12 @@
 import numpy as np
 from PIL import Image
-
+from .extract_features import extract_features
 
 def remove_noise(glyph, min_size=5):
     """
     Finds and deletes white pixel clusters smaller than min_size.
     """
-    labels, features = glyph["labels"], glyph["features"]
+    labels, features = extract_features(glyph["image:binary"])
     data = labels > 0
     num_pixels = features[:, -1]
 

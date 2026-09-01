@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image, ImageDraw
+from .extract_features import extract_features
 
 
 def split_features(feature_matrix: np.ndarray) -> list[np.ndarray]:
@@ -94,7 +95,7 @@ def is_near_border(size, feature, margin):
 
 
 def remove_border_noise(glyph, margin=2):
-    labels, features = glyph["labels"], glyph["features"]
+    labels, features = extract_features(glyph["image:binary"])
     size = glyph["size"]
 
     data = np.array(glyph["image:binary"])
