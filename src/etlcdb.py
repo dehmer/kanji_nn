@@ -53,6 +53,8 @@ def save(glyph, image_fn):
     return glyph
 
 
+
+
 pipeline = compose(
     # terminate,
     # await_input,
@@ -62,17 +64,19 @@ pipeline = compose(
     # partial(show, image_fn=lambda glyph: glyph["image:splines"]),
     etlcdb.splines_image,
     etlcdb.transform_splines,
-    bezier.kvg_bbox,
-    bezier.kvg_inject,
     etlcdb.zhang_skeleton,
     # partial(show, image_fn=etlcdb.features_overlay),
+    etlcdb.flag_component_count,
+    etlcdb.extract_features,
+    bezier.kvg_bbox,
+    bezier.kvg_inject,
     partial(etlcdb.remove_border_noise),
     etlcdb.extract_features,
     partial(etlcdb.remove_noise, min_size=5),
     etlcdb.extract_features,
     etlcdb.otsu,
-    # tap(lambda x: print(x["literal"], x["id"])),
-    tap(lambda x: print(x)),
+    tap(lambda x: print(x["literal"], x["id"])),
+    # tap(lambda x: print(x)),
 )
 
 
@@ -97,20 +101,20 @@ if __name__ == "__main__":
     # """
 
 
-    query = """
-        SELECT id, entry, literal, unicode, groups, data
-        FROM   glyph
-        WHERE  id in (
-            'fe08678e-cd62-4fcd-9d73-367309d6884b'
-        )
-    """
-
     # query = """
     #     SELECT id, entry, literal, unicode, groups, data
     #     FROM   glyph
-    #     WHERE  literal = 'ア'
-    #     ORDER  BY literal
+    #     WHERE  id in (
+    #         '177b9a1a-2878-4628-b433-c6982251024e',
+    #     )
     # """
+
+    query = """
+        SELECT id, entry, literal, unicode, groups, data
+        FROM   glyph
+        WHERE  literal = '虫'
+        ORDER  BY literal
+    """
 
     for glyph in glyph_iterator(query):
         glyph = pipeline(glyph)

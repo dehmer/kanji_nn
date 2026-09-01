@@ -29,5 +29,9 @@ def extract_features(glyph):
         feature = np.asarray([x_min, y_min, x_max, y_max, area, num_pixels[i + 1]])
         features.append(feature)
 
+
+    if len(features) == 0:
+        return glyph | {"skip": True, "reason": "no features detected"}
+
     features = np.vstack(features)
     return glyph | {"labels": labels, "features": features}

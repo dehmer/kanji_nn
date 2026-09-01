@@ -8,6 +8,7 @@ from .decode_k import decode_k
 from .decode_m import decode_m
 from .extract_features import extract_features
 from .features_overlay import features_overlay
+from .flag_component_count import flag_component_count
 from .glyph_iterator import glyph_iterator
 from .otsu import otsu
 from .remove_border_noise import remove_border_noise
