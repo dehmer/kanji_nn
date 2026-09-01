@@ -41,7 +41,7 @@ def convert_literal(t56_code, literal):
     return literal
 
 
-def decode_c(chunk: AnyStr) -> dict[str, Any]:
+def decode_c(dataset, chunk: AnyStr) -> dict[str, Any]:
     record = unpack(chunk, _fields)
     t56_code = ''.join([t56(b.uint) for b in record["t56_4cc"].cut(6)])
 

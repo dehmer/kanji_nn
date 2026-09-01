@@ -12,7 +12,7 @@ _fields = {
 }
 
 
-def decode_k(chunk: AnyStr) -> dict[str, Any]:
+def decode_k(dataset, chunk: AnyStr) -> dict[str, Any]:
     record = unpack(chunk, _fields)
     code = tuple([b.uint for b in record["co_59_code"].cut(6)])
     literal = co59_to_unicode(code)

@@ -11,7 +11,7 @@ _fields = {
 }
 
 
-def decode_b8(chunk: AnyStr) -> dict[str, Any]:
+def decode_b8(dataset, chunk: AnyStr) -> dict[str, Any]:
     record = unpack(chunk, _fields)
     code = "1b2442" + record["jis_x_0208"] + "1b2842"
     literal = bytes.fromhex(code).decode("iso2022_jp")

@@ -26,13 +26,14 @@ def parse_entry(archive, decoder, entry):
         offset = 0
 
         # skip first
-        if entry.split("/")[0] in ["ETL8B", "ETL9B"]:
+        dataset = entry.split("/")[0]
+        if dataset in ["ETL8B", "ETL9B"]:
             f.read(byte_length)
             offset = byte_length
 
         while chunk := f.read(byte_length):
             key = f"{entry}:{offset}"
-            glyph = decode(chunk)
+            glyph = decode(dataset, chunk)
 
             if not "skip" in glyph:
                 glyph = {"offset": offset, "entry": entry, "id": str(uuid.uuid4())} | glyph
@@ -64,17 +65,17 @@ if __name__ == "__main__":
     }
 
     datasets = {
-        "ETL1":  decoders["m"],  # katakana
-        "ETL2":  decoders["k"],  # font-rendered
-        "ETL3":  decoders["c"],  # numerals, uppercase alphabets, symbols
-        "ETL4":  decoders["c"],  # hiragana
-        "ETL5":  decoders["c"],  # katakanas
-        "ETL6":  decoders["m"],  # katakanas, numerals, uppercase alphabets, symbols
+        # "ETL1":  decoders["m"],  # katakana
+        # "ETL2":  decoders["k"],  # font-rendered
+        # "ETL3":  decoders["c"],  # numerals, uppercase alphabets, symbols
+        # "ETL4":  decoders["c"],  # hiragana
+        # "ETL5":  decoders["c"],  # katakanas
+        # "ETL6":  decoders["m"],  # katakanas, numerals, uppercase alphabets, symbols
         "ETL7":  decoders["m"],  # hiragana, dakuten, handakuten
-        "ETL8B": decoders["b8"], # hiragana, kanji
-        "ETL8G": decoders["g8"], # hiragana, kanji
-        "ETL9B": decoders["b9"], # hiragana, kanji
-        "ETL9G": decoders["g9"], # kanji only
+        # "ETL8B": decoders["b8"], # hiragana, kanji
+        # "ETL8G": decoders["g8"], # hiragana, kanji
+        # "ETL9B": decoders["b9"], # hiragana, kanji
+        # "ETL9G": decoders["g9"], # kanji only
     }
 
     for (dirpath, dirnames, filenames) in os.walk(PATH):
