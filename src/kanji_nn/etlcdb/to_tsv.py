@@ -12,7 +12,7 @@ def to_tsv(glyph):
 
     fields = [
         glyph["id"],
-        glyph["entry"],
+        glyph["dataset"],
         literal if literal != "\\" else "\\\\",
         glyph["unicode"],
         ",".join(groups(literal)),

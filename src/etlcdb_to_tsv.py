@@ -9,15 +9,9 @@ import uuid
 import psycopg
 from PIL import Image
 
-
 from kanji_nn.predef import compose, tap
 import kanji_nn.etlcdb as etlcdb
 from kanji_nn.io import groups
-
-
-pipeline = compose(
-    tap(etlcdb.to_tsv),
-)
 
 
 def parse_entry(archive, decoder, entry):
@@ -32,12 +26,10 @@ def parse_entry(archive, decoder, entry):
             offset = byte_length
 
         while chunk := f.read(byte_length):
-            key = f"{entry}:{offset}"
-            glyph = decode(dataset, chunk)
+            glyph = {"dataset": dataset, "id": str(uuid.uuid4())} | decode(dataset, chunk)
 
             if not "skip" in glyph:
-                glyph = {"offset": offset, "entry": entry, "id": str(uuid.uuid4())} | glyph
-                pipeline(glyph)
+                etlcdb.to_tsv(glyph)
 
             offset += byte_length
 
@@ -65,17 +57,17 @@ if __name__ == "__main__":
     }
 
     datasets = {
-        # "ETL1":  decoders["m"],  # katakana
-        # "ETL2":  decoders["k"],  # font-rendered
-        # "ETL3":  decoders["c"],  # numerals, uppercase alphabets, symbols
-        # "ETL4":  decoders["c"],  # hiragana
-        # "ETL5":  decoders["c"],  # katakanas
-        # "ETL6":  decoders["m"],  # katakanas, numerals, uppercase alphabets, symbols
+        "ETL1":  decoders["m"],  # katakana
+        "ETL2":  decoders["k"],  # font-rendered
+        "ETL3":  decoders["c"],  # numerals, uppercase alphabets, symbols
+        "ETL4":  decoders["c"],  # hiragana
+        "ETL5":  decoders["c"],  # katakanas
+        "ETL6":  decoders["m"],  # katakanas, numerals, uppercase alphabets, symbols
         "ETL7":  decoders["m"],  # hiragana, dakuten, handakuten
-        # "ETL8B": decoders["b8"], # hiragana, kanji
-        # "ETL8G": decoders["g8"], # hiragana, kanji
-        # "ETL9B": decoders["b9"], # hiragana, kanji
-        # "ETL9G": decoders["g9"], # kanji only
+        "ETL8B": decoders["b8"], # hiragana, kanji
+        "ETL8G": decoders["g8"], # hiragana, kanji
+        "ETL9B": decoders["b9"], # hiragana, kanji
+        "ETL9G": decoders["g9"], # kanji only
     }
 
     for (dirpath, dirnames, filenames) in os.walk(PATH):
