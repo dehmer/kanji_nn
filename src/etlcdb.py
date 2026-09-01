@@ -58,7 +58,8 @@ def save(glyph, image_fn):
 pipeline = compose(
     # terminate,
     # await_input,
-    partial(save, image_fn=lambda glyph: glyph["image:binary"]),
+    # partial(save, image_fn=lambda glyph: glyph["image:binary"]),
+    partial(save, image_fn=etlcdb.skeleton_overlay),
     # partial(show, image_fn=etlcdb.splines_overlay),
     # partial(show, image_fn=etlcdb.skeleton_overlay),
     # partial(show, image_fn=lambda glyph: glyph["image:splines"]),
@@ -84,7 +85,7 @@ if __name__ == "__main__":
     signal(SIGINT, lambda _, __: sys.exit())
 
     # query = """
-    #     SELECT id, entry, literal, unicode, groups, data
+    #     SELECT id, dataset, literal, unicode, groups, data
     #     FROM   glyph
     #     WHERE  entry LIKE 'ETL1/%'
     #     AND    groups = 'KATAKANA'
@@ -93,7 +94,7 @@ if __name__ == "__main__":
     # """
 
     # query = """
-    #     SELECT id, entry, literal, unicode, groups, data
+    #     SELECT id, dataset, literal, unicode, groups, data
     #     FROM   glyph
     #     WHERE  entry LIKE 'ETL1/%'
     #     AND    groups = 'KATAKANA'
@@ -102,7 +103,7 @@ if __name__ == "__main__":
 
 
     # query = """
-    #     SELECT id, entry, literal, unicode, groups, data
+    #     SELECT id, dataset, literal, unicode, groups, data
     #     FROM   glyph
     #     WHERE  id in (
     #         '177b9a1a-2878-4628-b433-c6982251024e',
@@ -110,10 +111,11 @@ if __name__ == "__main__":
     # """
 
     query = """
-        SELECT id, entry, literal, unicode, groups, data
-        FROM   glyph
-        WHERE  literal = '虫'
-        ORDER  BY literal
+        SELECT   id, dataset, literal, unicode, groups, data
+        FROM     glyph
+        WHERE    literal = 'ア'
+        AND      dataset = 'ETL5'
+        ORDER BY literal
     """
 
     for glyph in glyph_iterator(query):
