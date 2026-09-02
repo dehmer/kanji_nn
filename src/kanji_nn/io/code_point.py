@@ -55,12 +55,13 @@ non_kanji = {
     'KANJI':       lambda c: bool(re.match(r'^[\u4E00-\u9FFF]+$', c)),
     'DIGIT':       lambda c: bool(re.match(r'^[0-9\uFF10-\uFF19]+$', c)),
     'ROMAJI':      lambda c: bool(re.match(r'^[a-zA-Z\uFF21-\uFF3A]+$', c)),
-    'SYMBOL':      lambda c: bool(re.match(r'^[\u0020-\u002f\u003a-\u0040\u005b-\u0060\u007b-\u007e]+$', c)),
-    'PUNCTUATION': lambda c: bool(re.match(r'^[\u3000-\u303f\u2200-\u22ff\u25a0-\u25ff\uff00-\uffef\u2016\u00D7]+$', c)),
+    'SYMBOL':      lambda c: bool(re.match(r'^[\u0020-\u002f\u003a-\u0040\u005b-\u0060\u007b-\u007e\uff05\uff5c]+$', c)),
+    'PUNCTUATION': lambda c: bool(re.match(r'^[\u3000-\u303f\u2200-\u22ff\u25a0-\u25ff\u2016\u00D7\uff01\uff1f]+$', c)),
 
-    # hiragana: ゛ (dakuten), ゜ (handakuten), ゝ (kurikaeshi)
-    # katakana: ・ (nakaguro), ヽ (katakana gaeshi)
-    'OTHER':      lambda c: bool(re.match(r'^[\u309B\u309C\u309D\u30FB\u30FD\u30FE]+$', c))
+    # ゛ (dakuten, incl. half-width), ゜ (handakuten, incl. half-width),
+    # ゝ (interation mark), 々 (kurikaeshi)
+    # ・ (nakaguro), ヽ (katakana gaeshi)
+    'OTHER':      lambda c: bool(re.match(r'^[\u309B\u309C\u309D\u3005\u30FB\u30FD\u30FE\uff9e\uff9f]+$', c))
 }
 
 def groups_from_ord(n):
