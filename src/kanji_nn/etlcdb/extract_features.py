@@ -29,7 +29,5 @@ def extract_features(binary_image):
         features.append(feature)
 
 
-    if len(features) == 0:
-        return glyph | {"skip": True, "reason": "no features detected"}
-
-    return labels, np.vstack(features)
+    features = np.vstack(features) if len(features) else None
+    return labels, features

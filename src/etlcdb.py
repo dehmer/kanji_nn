@@ -11,11 +11,6 @@ from kanji_nn.etlcdb import glyph_iterator
 import kanji_nn.etlcdb as etlcdb
 import kanji_nn.bezier as bezier
 
-def fn_name(fn):
-    if isinstance(fn, partial):
-        return fn_name(fn.func)  # Recursively unwrap in case of nested partials
-    return getattr(fn, "__name__", str(fn))
-
 
 def skippable(fn):
     def inner(glyph):
@@ -40,41 +35,20 @@ def terminate(_):
     exit()
 
 
-def show(glyph, image_fn):
-    image = image_fn(glyph)
-    image.show()
-    return glyph
-
-
-def save(glyph, image_fn):
-    id = glyph["id"]
-    image = image_fn(glyph)
-    image.save(f"data/images/{id}.png")
-    return glyph
-
-
-
-
 pipeline = compose(
-    # terminate,
-    # await_input,
-    # partial(save, image_fn=lambda glyph: glyph["image:binary"]),
-    partial(save, image_fn=etlcdb.skeleton_overlay),
-    # partial(show, image_fn=etlcdb.splines_overlay),
-    # partial(show, image_fn=etlcdb.skeleton_overlay),
-    # partial(show, image_fn=lambda glyph: glyph["image:splines"]),
+    partial(etlcdb.save_glyph_image, image_fn=etlcdb.skeleton_overlay),
     etlcdb.splines_image,
     etlcdb.transform_splines,
     etlcdb.zhang_skeleton,
-    # partial(show, image_fn=etlcdb.features_overlay),
-    etlcdb.flag_component_count,
+    # strict (padding=0): catch fragmentation as a quality signal
+    partial(etlcdb.flag_feature_count, padding=0),
     bezier.kvg_bbox,
     bezier.kvg_inject,
-    partial(etlcdb.remove_border_noise),
-    partial(etlcdb.remove_noise, min_size=5),
+    # generous (padding=3): cleanup should not fragment real strokes
+    partial(etlcdb.remove_noise, min_size=5, margin=2, padding=3),
     etlcdb.otsu,
+    etlcdb.flag_label_mismatch,
     tap(lambda x: print(x["literal"], x["id"])),
-    # tap(lambda x: print(x)),
 )
 
 
@@ -103,19 +77,38 @@ if __name__ == "__main__":
     #     SELECT id, dataset, literal, unicode, groups, data
     #     FROM   glyph
     #     WHERE  id in (
-    #         '177b9a1a-2878-4628-b433-c6982251024e',
+    #         'e641b5cd-f2d2-44e3-86b0-6e72fe2a65b8'
     #     )
     # """
 
     query = """
         SELECT   id, dataset, literal, unicode, groups, data
         FROM     glyph
-        WHERE    literal = 'ア'
-        AND      dataset = 'ETL5'
+        WHERE    literal = '来'
         ORDER BY literal
     """
 
+    # query = """
+    #     SELECT   id, dataset, literal, unicode, groups, data
+    #     FROM     glyph
+    #     WHERE    groups NOT IN ('DIGIT', 'ROMAJI', 'PUNCTUATION', 'SYMBOL', 'OTHER')
+    #     AND      dataset = 'ETL2'
+    #     AND      literal IS NOT NULL
+    # """
+
+    total = 0
+    rejected = 0
     for glyph in glyph_iterator(query):
+        total += 1
         glyph = pipeline(glyph)
         if glyph["skip"]:
-            print(f'skipped: [{glyph["literal"]} - ${glyph["id"]}] - {glyph["reason"]}')
+            rejected += 1
+            print(f'skipped: [{glyph["literal"]} - {glyph["id"]}] - {glyph["reason"]}')
+            # if "image:binary" in glyph:
+            #     etlcdb.save_glyph_image(glyph, image_fn=lambda glyph: glyph["image:binary"])
+            # else:
+            #     etlcdb.save_glyph_image(glyph, image_fn=lambda glyph: glyph["image"])
+
+    print("total", total)
+    print("rejected", rejected)
+    print("percent", (rejected / total) * 100)

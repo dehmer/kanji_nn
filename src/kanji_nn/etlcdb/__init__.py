@@ -6,12 +6,13 @@ from .decode_g8 import decode_g8
 from .decode_g9 import decode_g9
 from .decode_k import decode_k
 from .decode_m import decode_m
-from .features_overlay import features_overlay
-from .flag_component_count import flag_component_count
+from .flag_feature_count import flag_feature_count
+from .flag_label_mismatch import flag_label_mismatch
 from .glyph_iterator import glyph_iterator
 from .otsu import otsu
-from .remove_border_noise import remove_border_noise
-from .remove_noise import remove_noise
+from .remove_noise import *
+from .save_glyph_image import save_glyph_image
+from .show_glyph_image import show_glyph_image
 from .skeleton_overlay import skeleton_overlay
 from .splines_image import splines_image
 from .splines_overlay import splines_overlay

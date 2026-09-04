@@ -1,6 +1,5 @@
 import numpy as np
 from PIL import Image, ImageDraw
-from .extract_features import extract_features
 
 
 def split_features(feature_matrix: np.ndarray) -> list[np.ndarray]:
@@ -55,7 +54,7 @@ def draw_feature_bboxes(features, size) -> Image.Image:
     return image
 
 
-def fold_connected(
+def fold(
     features: list[np.ndarray],
     padding: int = 0,
 ) -> list[np.ndarray]:
@@ -84,33 +83,6 @@ def fold_connected(
     return features
 
 
-def is_near_border(size, feature, margin):
-    x_min, y_min, x_max, y_max = feature[:4]
-    return (
-        x_min < margin
-        or y_min < margin
-        or x_max > size[0] - margin
-        or y_max > size[1] - margin
-    )
-
-
-def remove_border_noise(glyph, margin=2):
-    labels, features = extract_features(glyph["image:binary"])
-    size = glyph["size"]
-
-    data = np.array(glyph["image:binary"])
-
+def connected_features(features, padding=0):
     features = split_features(features)
-    features = fold_connected(features, padding=0)
-    features_image = draw_feature_bboxes(features, glyph["size"])
-
-    for feature in features:
-        x_min, y_min, x_max, y_max, area, num_pixels = feature
-        density = num_pixels / area
-        # density threshold is empirical:
-        if density >= 0.4 and is_near_border(size, feature, margin):
-            data[y_min : y_max, x_min : x_max] = False
-
-    binary_image = Image.fromarray(data)
-
-    return glyph | {"image:features": features_image, "image:binary": binary_image}
+    return fold(features, padding=padding)
