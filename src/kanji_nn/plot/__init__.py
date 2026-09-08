@@ -1,5 +1,6 @@
 from .multi_channel_plot import multi_channel_plot
 from .paths_plot import paths_plot
+from .plot_skeleton import plot_skeleton
 from .show_strokes_plot import show_strokes_plot
 from .show_mcp_plot import show_mcp_plot
 from .show_overlays_plot import show_overlays_plot

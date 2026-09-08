@@ -4,6 +4,7 @@ from skimage.morphology import skeletonize
 
 
 def zhang_skeleton(glyph):
+    """Skeletonize binary image with Zhang/Suen algorithm."""
     image = glyph["image:binary"]
     stroke_mask = np.array(image.convert("L")) > 0
     skeleton_mask = skeletonize(stroke_mask, method="zhang")

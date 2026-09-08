@@ -9,12 +9,14 @@ from .decode_m import decode_m
 from .flag_feature_count import flag_feature_count
 from .flag_label_mismatch import flag_label_mismatch
 from .glyph_iterator import glyph_iterator
+from .knn import knn, plot_stroke_assignment, plot_margin_histogram
 from .otsu import otsu
 from .remove_noise import *
+from .resample_splines import resample_splines
 from .save_glyph_image import save_glyph_image
 from .show_glyph_image import show_glyph_image
+from .skeleton_graph import skeleton_graph
 from .skeleton_overlay import skeleton_overlay
-from .splines_image import splines_image
 from .splines_overlay import splines_overlay
 from .to_tsv import to_tsv
 from .transform_splines import transform_splines

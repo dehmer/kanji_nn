@@ -4,7 +4,7 @@ import scipy.ndimage as ndimage
 from .connected_features import connected_features
 
 
-def features_from_slices(slices, num_pixels):
+def features_from_slices(slices):
     features = []
     for i, slice_ in enumerate(slices):
         if slice_ is None:
@@ -15,7 +15,7 @@ def features_from_slices(slices, num_pixels):
         x_min, x_max = col.start, col.stop
         width, height = x_max - x_min, y_max - y_min
         area = width * height
-        feature = np.asarray([x_min, y_min, x_max, y_max, area, num_pixels[i + 1]])
+        feature = np.asarray([x_min, y_min, x_max, y_max])
         features.append(feature)
 
     return np.vstack(features)
@@ -57,12 +57,12 @@ def remove_noise(glyph, min_size=5, margin=2, padding=2):
 
     # x/y slice per feature, excl. background:
     slices = ndimage.find_objects(labels)
-    features = features_from_slices(slices, num_pixels)
+    features = features_from_slices(slices)
     features = np.delete(features, indices - 1, axis=0)
     connected = np.vstack(connected_features(features, padding=padding))
 
     for feature in connected:
-        x_min, y_min, x_max, y_max, _, _ = feature
+        x_min, y_min, x_max, y_max = feature
         touches = border_touches(size, feature, margin)
         ratios = [touch / size[i % 2] for i, touch in enumerate(touches)]
         ratio = max(ratios)

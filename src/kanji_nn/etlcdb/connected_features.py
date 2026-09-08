@@ -13,11 +13,7 @@ def union(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     max_x = max(a[2], b[2])
     max_y = max(a[3], b[3])
 
-    return np.array([
-        min_x, min_y, max_x, max_y,
-        (max_x - min_x) * (max_y - min_y),
-        a[5] + b[5]
-    ])
+    return np.array([min_x, min_y, max_x, max_y])
 
 
 def intersects(
@@ -34,24 +30,6 @@ def intersects(
         and a_min_y - padding <= b_max_y + padding
         and a_max_y + padding >= b_min_y - padding
     )
-
-
-def draw_feature_bboxes(features, size) -> Image.Image:
-    image = Image.new("RGB", size, "black")
-
-    draw = ImageDraw.Draw(image)
-    for feature in features:
-        min_x, min_y, max_x, max_y = feature[:4]
-        points = [
-            [min_x, min_y],
-            [max_x, min_y],
-            [max_x, max_y],
-            [min_x, max_y],
-            [min_x, min_y],
-        ]
-        draw.line(points, fill="white", width=1)
-
-    return image
 
 
 def fold(
@@ -81,6 +59,24 @@ def fold(
                 break
 
     return features
+
+
+def draw_feature_bboxes(features, size) -> Image.Image:
+    image = Image.new("RGB", size, "black")
+
+    draw = ImageDraw.Draw(image)
+    for feature in features:
+        min_x, min_y, max_x, max_y = feature[:4]
+        points = [
+            [min_x, min_y],
+            [max_x, min_y],
+            [max_x, max_y],
+            [min_x, max_y],
+            [min_x, min_y],
+        ]
+        draw.line(points, fill="white", width=1)
+
+    return image
 
 
 def connected_features(features, padding=0):
