@@ -40,12 +40,13 @@ pipeline = compose(
     # terminate,
     # await_input,
     # partial(etlcdb.save_glyph_image, image_fn=etlcdb.skeleton_overlay),
-    # partial(etlcdb.show_glyph_image, image_fn=etlcdb.splines_overlay),
 
     # etlcdb.plot_stroke_assignment,
     # etlcdb.plot_margin_histogram,
     # etlcdb.knn,
-    plot.plot_skeleton,
+    partial(plot.show_pixel_graph, image_fn=lambda g: g["image:binary"]),
+    partial(etlcdb.show_glyph_image, image_fn=lambda g: g["image:binary"]),
+    etlcdb.consolidate_graph,
     etlcdb.skeleton_graph,
 
     # Scale/translate splines to skeleton bounding box.
@@ -72,9 +73,9 @@ if __name__ == "__main__":
     # query = """
     #     SELECT id, dataset, literal, unicode, groups, data
     #     FROM   glyph
-    #     WHERE  entry LIKE 'ETL1/%'
+    #     WHERE  dataset = 'ETL1'
     #     AND    groups = 'KATAKANA'
-    #     AND    literal = 'イ'
+    #     AND    literal = 'ア'
     #     ORDER  BY literal
     # """
 
@@ -86,25 +87,25 @@ if __name__ == "__main__":
     #     ORDER  BY literal
     # """
 
-
-    # query = """
-    #     SELECT id, dataset, literal, unicode, groups, data
-    #     FROM   glyph
-    #     WHERE  id in (
-    #         '9be3c2ae-f2a5-45a4-9f9d-07ed89dc573b'
-    #     )
-    # """
 
     query = """
-        SELECT   id, dataset, literal, unicode, groups, data
-        FROM     glyph
-        WHERE    literal = '点'
-        ORDER BY literal
+        SELECT id, dataset, literal, unicode, groups, data
+        FROM   glyph
+        WHERE  id in (
+            'cac3a47c-d567-4bad-9c94-64c1eb60b2cd'
+        )
     """
 
     # query = """
     #     SELECT   id, dataset, literal, unicode, groups, data
     #     FROM     glyph
+    #     WHERE    literal = '点'
+    #     ORDER BY literal
+    # """
+
+    # query = """
+    #     SELECT id, dataset, literal, unicode, groups, data
+    #     FROM   glyph
     #     WHERE  dataset = 'ETL9G'
     #     AND    groups LIKE '%KANJI%'
     # """

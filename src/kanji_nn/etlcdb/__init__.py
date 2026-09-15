@@ -1,4 +1,5 @@
 from .co59 import co59_to_unicode
+from .consolidate_graph import consolidate_graph
 from .decode_b8 import decode_b8
 from .decode_b9 import decode_b9
 from .decode_c import decode_c

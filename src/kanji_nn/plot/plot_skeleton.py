@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
+# TODO: deprecated
 def plot_skeleton(glyph):
     """
     Plots the raw, fragmented paths extracted by Skan.
