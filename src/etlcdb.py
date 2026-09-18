@@ -45,7 +45,7 @@ pipeline = compose(
     # etlcdb.plot_margin_histogram,
     # etlcdb.knn,
     partial(plot.show_pixel_graph, image_fn=lambda g: g["image:binary"]),
-    partial(etlcdb.show_glyph_image, image_fn=lambda g: g["image:binary"]),
+    # partial(etlcdb.show_glyph_image, image_fn=lambda g: g["image:binary"]),
     etlcdb.consolidate_graph,
     etlcdb.skeleton_graph,
 
@@ -92,7 +92,8 @@ if __name__ == "__main__":
         SELECT id, dataset, literal, unicode, groups, data
         FROM   glyph
         WHERE  id in (
-            'cac3a47c-d567-4bad-9c94-64c1eb60b2cd'
+            '96479640-3101-4f30-a448-9388263ab408',
+            'a46aa4db-8996-4227-9974-443959b5b40e'
         )
     """
 

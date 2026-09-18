@@ -1,7 +1,6 @@
 import numpy as np
 from skan.csr import Skeleton
-from collections import defaultdict, deque
-
+from scipy.spatial.distance import cdist
 
 class PixelGraph:
     def __init__(self, s: Skeleton, edt):
@@ -47,48 +46,17 @@ class PixelGraph:
 
         return [[k, v] for k, v in indices.items() if len(v) > 1]
 
-    def junction_clusters(self, radius=None):
-        junctions = set(map(int, self.junctions()))
+    def junction_clusters(self):
+        junctions = self.junctions()
+        radius = 2 * np.median(self.edt)
 
-        # Deriving radius purely on the fly from skeletal path pixels
-        # (Using degrees == 2 correctly samples path interiors)
-        if radius is None:
-            radius = 2 * np.median(self.edt[self.degrees == 2])
+        edges = [
+            endpoints
+            for endpoints, length in zip(self.undirected_endpoints(), self.lengths)
+            if endpoints[0] in junctions
+            and endpoints[1] in junctions
+            and endpoints[0] != endpoints[1]
+            and length <= radius
+        ]
 
-        adjacency = defaultdict(set)
-
-        endpoints = zip(self.undirected_endpoints(), self.lengths)
-        for (a, b), length in endpoints:
-            a, b = int(a), int(b)  # Clean conversion to standard Python
-            if (
-                a != b
-                and a in junctions
-                and b in junctions
-                and length <= radius
-            ):
-                adjacency[a].add(b)
-                adjacency[b].add(a)
-
-        visited = set()
-        clusters = []
-
-        for current in junctions:
-            if current in visited:
-                continue
-
-            cluster = []
-            queue = deque([current])
-            visited.add(current)
-
-            while queue:
-                node = queue.popleft()
-                cluster.append(node)
-
-                for neighbour in adjacency[node]:
-                    if neighbour not in visited:
-                        visited.add(neighbour)
-                        queue.append(neighbour)
-
-            clusters.append(sorted(cluster))
-
-        return clusters
+        print("edges", edges)

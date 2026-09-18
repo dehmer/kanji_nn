@@ -42,5 +42,6 @@ def show_pixel_graph(glyph, image_fn=None, figsize=(9, 9)):
     ax.set_aspect('equal')
     ax.grid(True, linestyle='--', alpha=0.5)
 
+    plt.title(f"Pixel Graph: {glyph["literal"]}\n{glyph["id"]}", fontsize=16)
     plt.show()
     return glyph
