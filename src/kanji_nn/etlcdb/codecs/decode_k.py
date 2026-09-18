@@ -1,7 +1,7 @@
 from PIL import Image
 from kanji_nn.etlcdb.unpack import unpack
 from kanji_nn.cli import literal_to_hex
-from kanji_nn.etlcdb.co59 import co59_to_unicode
+from .co59 import co59_to_unicode
 
 
 _fields = {

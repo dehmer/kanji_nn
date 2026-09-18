@@ -11,6 +11,7 @@ from PIL import Image
 
 from kanji_nn.predef import compose, tap
 import kanji_nn.etlcdb as etlcdb
+import kanji_nn.etlcdb.codecs as codecs
 from kanji_nn.io import groups
 
 
@@ -29,7 +30,7 @@ def parse_entry(archive, decoder, entry):
             glyph = {"dataset": dataset, "id": str(uuid.uuid4())} | decode(dataset, chunk)
 
             if not "skip" in glyph:
-                etlcdb.to_tsv(glyph)
+                codecs.to_tsv(glyph)
 
             offset += byte_length
 
@@ -47,13 +48,13 @@ if __name__ == "__main__":
     PATH = "data/etlcdb"
 
     decoders = {
-        "m":  (2052, etlcdb.decode_m),
-        "k":  (2745, etlcdb.decode_k),
-        "c":  (2952, etlcdb.decode_c),
-        "b8": ( 512, etlcdb.decode_b8),
-        "g8": (8199, etlcdb.decode_g8),
-        "b9": ( 576, etlcdb.decode_b9),
-        "g9": (8199, etlcdb.decode_g9),
+        "m":  (2052, codecs.decode_m),
+        "k":  (2745, codecs.decode_k),
+        "c":  (2952, codecs.decode_c),
+        "b8": ( 512, codecs.decode_b8),
+        "g8": (8199, codecs.decode_g8),
+        "b9": ( 576, codecs.decode_b9),
+        "g9": (8199, codecs.decode_g9),
     }
 
     datasets = {
