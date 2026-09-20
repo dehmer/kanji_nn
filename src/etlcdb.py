@@ -44,13 +44,16 @@ pipeline = compose(
     # etlcdb.plot_stroke_assignment,
     # etlcdb.plot_margin_histogram,
     # etlcdb.knn,
-    partial(plot.show_pixel_graph, image_fn=lambda g: g["image:binary"]),
+    # partial(plot.show_pixel_graph, image_fn=lambda g: g["image:binary"]),
+    # partial(plot.show_pixel_graph, image_fn=etlcdb.splines_overlay),
     # partial(etlcdb.show_glyph_image, image_fn=lambda g: g["image:binary"]),
-    etlcdb.consolidate_graph,
-    etlcdb.skeleton_graph,
+    # etlcdb.consolidate_graph,
+    # etlcdb.skeleton_graph,
+    etlcdb.resample_splines,
 
     # Scale/translate splines to skeleton bounding box.
-    etlcdb.resample_splines,
+    etlcdb.plot_stick_man,
+    etlcdb.raster_knn,
     etlcdb.transform_splines,
     etlcdb.zhang_skeleton,
     # Strict (padding=0): catch fragmentation as a quality signal
@@ -63,7 +66,7 @@ pipeline = compose(
     partial(etlcdb.remove_noise, min_size=5, margin=2, padding=3),
     etlcdb.otsu,
     etlcdb.flag_label_mismatch,
-    # tap(lambda x: print(x["literal"], x["id"])),
+    tap(lambda x: print(x["literal"], x["id"])),
 )
 
 
@@ -88,14 +91,19 @@ if __name__ == "__main__":
     # """
 
 
-    query = """
-        SELECT id, dataset, literal, unicode, groups, data
-        FROM   glyph
-        WHERE  id in (
-            '96479640-3101-4f30-a448-9388263ab408',
-            'a46aa4db-8996-4227-9974-443959b5b40e'
-        )
-    """
+    # query = """
+    #     SELECT id, dataset, literal, unicode, groups, data
+    #     FROM   glyph
+    #     WHERE  id in (
+    #         '071ddec3-ae20-4e76-9fed-ee1171c7c2ed',
+    #         'f3958891-c855-4b21-b14c-2534ace328fa',
+    #         '9fd9e73f-db1b-41a4-bfc3-960e9f56dd44',
+    #         'ce4fa1ea-37f3-4f54-b2f5-f6503654083c',
+    #         'c08ebe46-f76a-4a96-862a-bdcaebdf8393',
+    #         'f0510e32-dfa4-4665-91b1-0d43bcd600f6',
+    #         '0c6be8a3-3e3f-4969-bc5d-cad1869ab47d'
+    #     )
+    # """
 
     # query = """
     #     SELECT   id, dataset, literal, unicode, groups, data
@@ -104,12 +112,12 @@ if __name__ == "__main__":
     #     ORDER BY literal
     # """
 
-    # query = """
-    #     SELECT id, dataset, literal, unicode, groups, data
-    #     FROM   glyph
-    #     WHERE  dataset = 'ETL9G'
-    #     AND    groups LIKE '%KANJI%'
-    # """
+    query = """
+        SELECT id, dataset, literal, unicode, groups, data
+        FROM   glyph
+        WHERE  dataset = 'ETL9G'
+        AND    literal = '愛'
+    """
 
     total = 0
     rejected = 0

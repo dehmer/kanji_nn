@@ -2,8 +2,10 @@ from .consolidate_graph import consolidate_graph
 from .flag_feature_count import flag_feature_count
 from .flag_label_mismatch import flag_label_mismatch
 from .glyph_iterator import glyph_iterator
-from .knn import knn, plot_stroke_assignment, plot_margin_histogram
+from .skeleton_knn import skeleton_knn, plot_stroke_assignment, plot_margin_histogram
 from .otsu import otsu
+from .plot_stick_man import plot_stick_man
+from .raster_knn import raster_knn
 from .remove_noise import *
 from .resample_splines import resample_splines
 from .save_glyph_image import save_glyph_image

@@ -55,7 +55,7 @@ def plot_margin_histogram(glyph, bins=50):
     return glyph
 
 
-def knn(glyph):
+def skeleton_knn(glyph):
     xysp = glyph["splines:xysp"]
     skeleton = glyph["skeleton"]
     coordinates = skeleton.coordinates
