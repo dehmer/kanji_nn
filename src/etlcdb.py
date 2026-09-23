@@ -39,7 +39,7 @@ def compose(*fns):
 pipeline = compose(
     # terminate,
     # await_input,
-    # partial(etlcdb.save_glyph_image, image_fn=etlcdb.skeleton_overlay),
+    partial(etlcdb.save_glyph_image, image_fn=etlcdb.skeleton_overlay),
 
     # etlcdb.plot_stroke_assignment,
     # etlcdb.plot_margin_histogram,
@@ -48,12 +48,13 @@ pipeline = compose(
     # partial(plot.show_pixel_graph, image_fn=etlcdb.splines_overlay),
     # partial(etlcdb.show_glyph_image, image_fn=lambda g: g["image:binary"]),
     # etlcdb.consolidate_graph,
-    # etlcdb.skeleton_graph,
+    etlcdb.skeleton_correspondence,
+    etlcdb.skeleton_graph,
     etlcdb.resample_splines,
 
     # Scale/translate splines to skeleton bounding box.
-    etlcdb.plot_stick_man,
-    etlcdb.raster_knn,
+    # etlcdb.plot_stick_man,
+    # etlcdb.raster_knn,
     etlcdb.transform_splines,
     etlcdb.zhang_skeleton,
     # Strict (padding=0): catch fragmentation as a quality signal
@@ -91,33 +92,28 @@ if __name__ == "__main__":
     # """
 
 
-    # query = """
-    #     SELECT id, dataset, literal, unicode, groups, data
-    #     FROM   glyph
-    #     WHERE  id in (
-    #         '071ddec3-ae20-4e76-9fed-ee1171c7c2ed',
-    #         'f3958891-c855-4b21-b14c-2534ace328fa',
-    #         '9fd9e73f-db1b-41a4-bfc3-960e9f56dd44',
-    #         'ce4fa1ea-37f3-4f54-b2f5-f6503654083c',
-    #         'c08ebe46-f76a-4a96-862a-bdcaebdf8393',
-    #         'f0510e32-dfa4-4665-91b1-0d43bcd600f6',
-    #         '0c6be8a3-3e3f-4969-bc5d-cad1869ab47d'
-    #     )
-    # """
+    query = """
+        SELECT id, dataset, literal, unicode, groups, data
+        FROM   glyph
+        WHERE  id in (
+            '2e767b06-9809-45e7-85c3-9a3a4495257d'
+        )
+    """
 
     # query = """
     #     SELECT   id, dataset, literal, unicode, groups, data
     #     FROM     glyph
-    #     WHERE    literal = '点'
+    #     WHERE    literal = '愛'
     #     ORDER BY literal
     # """
 
-    query = """
-        SELECT id, dataset, literal, unicode, groups, data
-        FROM   glyph
-        WHERE  dataset = 'ETL9G'
-        AND    literal = '愛'
-    """
+    # 別
+    # query = """
+    #     SELECT id, dataset, literal, unicode, groups, data
+    #     FROM   glyph
+    #     WHERE  dataset = 'ETL9G'
+    #     AND    literal = '例'
+    # """
 
     total = 0
     rejected = 0

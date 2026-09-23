@@ -6,6 +6,15 @@ from collections import defaultdict, deque
 class PixelGraph:
     def __init__(self, s: Skeleton, edt):
         self.branches = [s.path(i) for i in range(0, s.n_paths)]
+
+        # pixel index -> list of branch indices it belongs to.
+        # Interior path pixels map to exactly one branch; junction/endpoint
+        # pixels shared between branches map to as many branches as meet there.
+        self.pixel_branches = defaultdict(list)
+        for branch_idx, pixel_indices in enumerate(self.branches):
+            for pixel_idx in pixel_indices:
+                self.pixel_branches[int(pixel_idx)].append(branch_idx)
+
         # Flip row/column layout to x/y coordinate layout:
         x, y = s.coordinates[:, 1], s.coordinates[:, 0]
 

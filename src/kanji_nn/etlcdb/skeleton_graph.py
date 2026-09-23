@@ -22,4 +22,4 @@ def skeleton_graph(glyph):
     skeleton = Skeleton(skeleton_mask)
     pixel_graph = PixelGraph(skeleton, glyph["edt"])
 
-    return glyph | {"pixel_graph": pixel_graph}
+    return glyph | {"skeleton": skeleton, "pixel_graph": pixel_graph}

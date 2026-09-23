@@ -52,6 +52,24 @@ def relocate_handles(stroke, new_anchors):
 
 
 def raster_knn(glyph):
+    """
+    Naive nearest-neighbor matching: snap each spline anchor to its
+    nearest pixel in the binary image.
+
+    Two failure modes follow directly from the "nearest" in nearest-
+    neighbor. First, correspondence is per-anchor and unaware of stroke
+    identity, so anchors of a short or misplaced spline may snap to a
+    pixel stroke other than their intended one. Second, since anchors
+    only ever move to an existing pixel, a spline can't stretch beyond
+    its original length — an already well-aligned but too-short spline
+    stays short, with its outer anchors never reaching the stroke's
+    true extent.
+
+    Despite this, results are surprisingly good whenever bounding box,
+    orientation, and per-stroke spatial distribution and length are
+    already close to the target.
+    """
+
     splines = glyph["splines"]
     image = glyph["image:binary"]
     mask = np.array(image) > 0
