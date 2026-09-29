@@ -2,7 +2,7 @@ import numpy as np
 from skan.csr import Skeleton
 from scipy import ndimage as ndi
 from .connected_features import fold
-from .pixel_graph import PixelGraph
+from .skeleton_ops import *
 
 
 def skeleton_graph(glyph):
@@ -20,6 +20,4 @@ def skeleton_graph(glyph):
         return glyph | {"skip": True, "reason": "ambiguous skeletonization (2x2 clusters)"}
 
     skeleton = Skeleton(skeleton_mask)
-    pixel_graph = PixelGraph(skeleton, glyph["edt"])
-
-    return glyph | {"skeleton": skeleton, "pixel_graph": pixel_graph}
+    return glyph | {"skeleton": skeleton}

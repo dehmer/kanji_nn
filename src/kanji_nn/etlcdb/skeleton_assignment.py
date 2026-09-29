@@ -1,16 +1,20 @@
 import numpy as np
+from collections import defaultdict
 from scipy.spatial import KDTree
 from scipy.optimize import minimize_scalar
 import sys
 import matplotlib.pyplot as plt
+from .skeleton_ops import *
 
 
-def plot_stroke_assignments(glyph, assignments, num_strokes):
+def plot_stroke_assignments(glyph):
+    assignments = glyph["assignments"]
+    num_strokes = glyph["num_strokes"]
     skeleton_image = np.asarray(glyph["image:skeleton"])
     target_xy = glyph["skeleton"].coordinates[:, ::-1]  # x/y, matches assignment target index
+    print("len(target_xy)", len(target_xy))
 
-    assignments = np.array(assignments, dtype=object)
-    stroke_of = assignments[:, 1].astype(int)
+    stroke_of = assignments[:, 2].astype(int)
     distance_of = assignments[:, 4].astype(float)
 
     fig, axes = plt.subplots(2, (num_strokes + 1) // 2, figsize=(4 * ((num_strokes + 1) // 2), 8))
@@ -33,45 +37,19 @@ def plot_stroke_assignments(glyph, assignments, num_strokes):
 
     fig.colorbar(sc, ax=axes.tolist(), label="fit distance", shrink=0.6)
     plt.show()
-    return fig
+    plt.close(fig)
+    return glyph
 
 
-def bezier_point(ctrl, t):
-    p0, p1, p2, p3 = ctrl
-    mt = 1.0 - t
-    return (mt**3) * p0 + 3 * (mt**2) * t * p1 + 3 * mt * (t**2) * p2 + (t**3) * p3
-
-
-def closest_point_on_segment(point, ctrl, n_samples=20):
-    """
-    Coarse sample + local refine — a cheap stand-in for Schneider's
-    subdivide/bisect scheme, adequate given the fit step doesn't need t
-    to be exact, just close enough to seed the optimizer.
-
-    Returns
-    -------
-    [t, distance]
-    """
-    ts = np.linspace(0.0, 1.0, n_samples)
-    pts = np.array([bezier_point(ctrl, t) for t in ts])
-    i0 = np.argmin(np.linalg.norm(pts - point, axis=1))
-    lo, hi = ts[max(i0 - 1, 0)], ts[min(i0 + 1, n_samples - 1)]
-
-    def dist_sq(t):
-        return np.sum((bezier_point(ctrl, np.clip(t, 0.0, 1.0)) - point) ** 2)
-
-    res = minimize_scalar(dist_sq, bounds=(lo, hi), method="bounded")
-    return float(res.x), float(np.sqrt(res.fun))
-
-
-def skeleton_correspondence(glyph):
+def skeleton_assignment(glyph):
     splines = glyph["splines"]
-    xysp = glyph["splines:xysp"] # resampled (ds=0.5) with segment index and pen-down/-up
+
+    # resampled (ds=0.5) with segment index and pen-down/-up
+    xysp = glyph["splines:xysp"]
     skeleton = glyph["skeleton"]
     skeleton_image = np.asarray(glyph["image:skeleton"])
     paths = glyph["kvg:paths"]
     num_strokes = glyph["num_strokes"]
-    pixel_graph = glyph["pixel_graph"]
 
     """
     Sample under observation: 例 - 2e767b06-9809-45e7-85c3-9a3a4495257d
@@ -100,36 +78,35 @@ def skeleton_correspondence(glyph):
     ssi = np.column_stack((ssp[:, :-1], segment_idx))
 
 
-    # TODO: Step 1 — closest point on a curve, for one target point.
-
     reference_xy = xysp[:, :-2]
     target_xy = skeleton.coordinates[:, ::-1] # flip row/column -> x/y
     kvg_tree = KDTree(reference_xy)
-    distance, neighbor = kvg_tree.query(target_xy)
+    knn_distance, neighbor = kvg_tree.query(target_xy)
     nearest_segment = ssi[neighbor]
 
-    # assignment :: (target, stroke, segment, t, distance, branch | np.nan)
+    pixel_paths = pixel_path_lookup(skeleton)
+
+    # assignment :: [target, branch, stroke, segment, knn-distance]
     # assignments :: [assignment]
     #
     assignments = []
-    for i in range(0, len(target_xy)):
-        point = target_xy[i]
-        stroke, segment, key = nearest_segment[i]
+    for target_index in range(0, len(target_xy)):
+        point = target_xy[target_index]
+        stroke, segment, key = nearest_segment[target_index]
         ctrl = splines[int(key), :8].reshape(-1, 2)
-        t, distance = closest_point_on_segment(point, ctrl)
-        branches = pixel_graph.pixel_branches[i]
-        branch_id = branches[0] if len(branches) == 1 else np.nan
-        assignment = (i, int(stroke), int(segment), t, distance, branch_id)
-        assignments.append(assignment)
+        paths = pixel_paths[target_index]
 
-    # assignments = np.array(assignments)
-    # print(assignments)
-    plot_stroke_assignments(glyph, assignments, num_strokes)
+        # Ignore target junction pixels (degree > 2):
+        path = pixel_paths[target_index][0] if skeleton.degrees[target_index] <= 2 else np.nan
 
-    # TODO: It would probably be interesting to compare KNN distance with assignment distance
+        assignments.append([
+            target_index,
+            path,
+            stroke,
+            segment,
+            knn_distance[target_index]
+        ])
 
-    # TODO: Step 2 — aggregate correspondences per segment.
-    # TODO: Step 3 — the redistribution fix (Figure 4).
-    # TODO: Step 4 — the actual fit, per segment, via optimization.
 
-    return glyph
+    assignments = np.array(assignments)
+    return glyph | {"assignments": assignments}

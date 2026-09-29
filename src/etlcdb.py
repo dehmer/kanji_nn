@@ -13,15 +13,6 @@ import kanji_nn.bezier as bezier
 import kanji_nn.plot as plot
 
 
-def await_input(glyph):
-    input("...")
-    return glyph
-
-
-def terminate(_):
-    exit()
-
-
 def skippable(fn):
     def inner(glyph):
         if glyph["skip"]:
@@ -36,34 +27,38 @@ def compose(*fns):
     return lambda x: reduce(lambda acc, f: f(acc), reversed(skippable_fns), x)
 
 
-pipeline = compose(
-    # terminate,
-    # await_input,
-    partial(etlcdb.save_glyph_image, image_fn=etlcdb.skeleton_overlay),
+image = lambda glyph: glyph["image"]
+binary_image = lambda glyph: glyph["image:binary"]
+skeleton_image = lambda glyph: glyph["image:skeleton"]
+image_filename = lambda glyph: f"data/images/{glyph['id']}.png"
+binary_image_filename = lambda glyph: f"data/images/{glyph['id']}-binary.png"
+skeleton_image_filename = lambda glyph: f"data/images/{glyph['id']}-skeleton.png"
 
-    # etlcdb.plot_stroke_assignment,
-    # etlcdb.plot_margin_histogram,
-    # etlcdb.knn,
-    # partial(plot.show_pixel_graph, image_fn=lambda g: g["image:binary"]),
-    # partial(plot.show_pixel_graph, image_fn=etlcdb.splines_overlay),
-    # partial(etlcdb.show_glyph_image, image_fn=lambda g: g["image:binary"]),
-    # etlcdb.consolidate_graph,
-    etlcdb.skeleton_correspondence,
-    etlcdb.skeleton_graph,
+
+pipeline = compose(
+    # partial(etlcdb.save_glyph_image, image_fn=skeleton_image, filename_fn=skeleton_image_filename),
+    # partial(etlcdb.save_glyph_image, image_fn=binary_image, filename_fn=binary_image_filename),
+    # partial(etlcdb.save_glyph_image, image_fn=image, filename_fn=image_filename),
+    # partial(etlcdb.plot_glyph_image, image_fn=image),
+
+    etlcdb.plot_stroke_assignments,
+    etlcdb.skeleton_assignment,
+
+    # Parametric curves -> euclidean space:
     etlcdb.resample_splines,
 
     # Scale/translate splines to skeleton bounding box.
-    # etlcdb.plot_stick_man,
-    # etlcdb.raster_knn,
     etlcdb.transform_splines,
+    etlcdb.skeleton_graph,
     etlcdb.zhang_skeleton,
+
     # Strict (padding=0): catch fragmentation as a quality signal
     partial(etlcdb.flag_feature_count, padding=0),
 
     # Bring KanjiVG to the party:
     bezier.kvg_bbox,
     bezier.kvg_inject,
-    # Generous (padding=3): cleanup should not fragment real strokes
+    # Generous (padding=3): cleanup should not fragmentize real strokes.
     partial(etlcdb.remove_noise, min_size=5, margin=2, padding=3),
     etlcdb.otsu,
     etlcdb.flag_label_mismatch,
@@ -104,6 +99,7 @@ if __name__ == "__main__":
     #     SELECT   id, dataset, literal, unicode, groups, data
     #     FROM     glyph
     #     WHERE    literal = '愛'
+    #     AND      mode = 'L'
     #     ORDER BY literal
     # """
 
