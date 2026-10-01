@@ -22,10 +22,6 @@ def edt(glyph):
     return edt[x, y]
 
 
-def edt_radius(glyph, degree=2):
-     return 2 * np.median(edt(glyph)[degrees(glyph) == degree])
-
-
 def pixel_paths(glyph):
     """Return reverse lookup: {pixel index: [path index]}."""
     paths_ = glyph["skeleton:paths"]
@@ -65,8 +61,8 @@ def parallel_paths(glyph):
     """
     """
     indices = {}
-    for path_index, endpoints_ in enumerate(undirected_endpoints(glyph)):
-        xs = indices.setdefault(endpoints_, [])
+    for path_index, endpoints in enumerate(undirected_endpoints(glyph)):
+        xs = indices.setdefault(endpoints, [])
         xs.append(path_index)
 
     return [
@@ -86,7 +82,8 @@ def junction_graph(glyph, radius=None):
     # Deriving radius purely on the fly from skeleton path pixels
     # (Using degrees == 2 correctly samples path interiors)
     if radius is None:
-        radius = edt_radius(glyph, degree=2)
+        inner_edt = np.median(edt(glyph)[degrees(glyph) == 2])
+        radius = inner_edt + 2 * np.sqrt(inner_edt) + 1e-5
 
     # Map one pixel to its neighboring junctions (as set).
     # adjacency :: {int: {int}}
