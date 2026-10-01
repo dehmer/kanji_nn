@@ -4,15 +4,14 @@ from scipy.spatial import KDTree
 from scipy.optimize import minimize_scalar
 import sys
 import matplotlib.pyplot as plt
-from .skeleton_ops import *
+import kanji_nn.etlcdb.skeleton_ops as sops
 
 
 def plot_stroke_assignments(glyph):
     assignments = glyph["assignments"]
     num_strokes = glyph["num_strokes"]
     skeleton_image = np.asarray(glyph["image:skeleton"])
-    target_xy = glyph["skeleton"].coordinates[:, ::-1]  # x/y, matches assignment target index
-    print("len(target_xy)", len(target_xy))
+    target_xy = glyph["skeleton:xy"]
 
     stroke_of = assignments[:, 2].astype(int)
     distance_of = assignments[:, 4].astype(float)
@@ -46,20 +45,11 @@ def skeleton_assignment(glyph):
 
     # resampled (ds=0.5) with segment index and pen-down/-up
     xysp = glyph["splines:xysp"]
-    skeleton = glyph["skeleton"]
+    degrees = glyph["skeleton:degrees"]
+    target_xy = glyph["skeleton:xy"]
     skeleton_image = np.asarray(glyph["image:skeleton"])
     paths = glyph["kvg:paths"]
     num_strokes = glyph["num_strokes"]
-
-    """
-    Sample under observation: 例 - 2e767b06-9809-45e7-85c3-9a3a4495257d
-
-    - num_strokes/paths (reference): 8 <- num_strokes, len(paths)
-    - total segment count: 21 <- len(splines)
-    - distinct skeleton branches: 13 <- skeleton.n_paths
-    - distinct junctions: 5 <- len(np.where(skeleton.degrees > 2)[0])
-    - skeleton pixels (target points): 235 <- len(skeleton.coordinates)
-    """
 
     # Insert stroke and running segment index.
     # Also mitigate segment index/count mismatch:
@@ -79,12 +69,11 @@ def skeleton_assignment(glyph):
 
 
     reference_xy = xysp[:, :-2]
-    target_xy = skeleton.coordinates[:, ::-1] # flip row/column -> x/y
     kvg_tree = KDTree(reference_xy)
     knn_distance, neighbor = kvg_tree.query(target_xy)
     nearest_segment = ssi[neighbor]
 
-    pixel_paths = pixel_path_lookup(skeleton)
+    pixel_paths = sops.pixel_paths(glyph)
 
     # assignment :: [target, branch, stroke, segment, knn-distance]
     # assignments :: [assignment]
@@ -97,7 +86,7 @@ def skeleton_assignment(glyph):
         paths = pixel_paths[target_index]
 
         # Ignore target junction pixels (degree > 2):
-        path = pixel_paths[target_index][0] if skeleton.degrees[target_index] <= 2 else np.nan
+        path = pixel_paths[target_index][0] if degrees[target_index] <= 2 else np.nan
 
         assignments.append([
             target_index,

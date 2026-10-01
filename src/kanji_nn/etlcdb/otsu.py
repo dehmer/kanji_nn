@@ -25,7 +25,8 @@ def otsu(glyph, fill_threshold=0.5):
     # Calculate euclidean distance transform (EDT):
     # Straight-line distance from every foreground pixel to
     # the nearest background pixel.
+    # Note: We transpose `edt` to conform with x/y layout.
     #
-    edt = ndi.distance_transform_edt(binary_mask)
+    edt = ndi.distance_transform_edt(binary_mask).T
 
     return glyph | {"image:binary": binary, "edt": edt}

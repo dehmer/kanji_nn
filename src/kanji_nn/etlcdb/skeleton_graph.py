@@ -1,8 +1,8 @@
 import numpy as np
 from skan.csr import Skeleton
 from scipy import ndimage as ndi
+import kanji_nn.etlcdb.skeleton_ops as sops
 from .connected_features import fold
-from .skeleton_ops import *
 
 
 def skeleton_graph(glyph):
@@ -20,4 +20,13 @@ def skeleton_graph(glyph):
         return glyph | {"skip": True, "reason": "ambiguous skeletonization (2x2 clusters)"}
 
     skeleton = Skeleton(skeleton_mask)
-    return glyph | {"skeleton": skeleton}
+    paths = [skeleton.path(i) for i in range(0, skeleton.n_paths)]
+
+    return glyph | {
+        "skeleton:paths": paths,
+
+        # flip row/column layout to x/y layout:
+        "skeleton:xy": skeleton.coordinates[:, ::-1],
+        "skeleton:degrees": skeleton.degrees,
+        "skeleton:lengths": skeleton.path_lengths()
+    }
