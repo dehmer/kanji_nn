@@ -1,49 +1,50 @@
 import numpy as np
 from collections import defaultdict, deque
 
-
-def degrees(glyph):
-    return glyph["skeleton:degrees"]
-
-
-def paths(glyph):
-    return glyph["skeleton:paths"]
-
-
-def lengths(glyph):
-    return glyph["skeleton:lengths"]
+DEGREES = "skeleton:degrees"
+PATHS = "skeleton:paths"
+LENGTHS = "skeleton:lengths"
+XY = "skeleton:xy"
+EDT = "edt"
 
 
 def edt(glyph):
     """Per-pixel EDT."""
-    edt = glyph["edt"] # matrix in x/y layout
-    xy = glyph["skeleton:xy"]
+    edt = glyph[EDT] # matrix in x/y layout
+    xy = glyph[XY]
     x, y = xy[:, 0], xy[:, 1]
     return edt[x, y]
 
 
 def pixel_paths(glyph):
     """Return reverse lookup: {pixel index: [path index]}."""
-    paths_ = glyph["skeleton:paths"]
+    paths = glyph[PATHS]
     pixel_branches = defaultdict(list)
-    for branch_idx, pixel_indices in enumerate(paths_):
+    for branch_idx, pixel_indices in enumerate(paths):
         for pixel_idx in pixel_indices:
             pixel_branches[int(pixel_idx)].append(branch_idx)
 
     return pixel_branches
 
 
+def path_length(xy, path):
+    return float(np.hypot(*np.diff(xy[path], axis=0).T).sum())
+
+
 def junction_nodes(glyph):
-    return set(np.where(degrees(glyph) > 2)[0])
+    degrees = glyph[DEGREES]
+    return set(np.where(degrees > 2)[0])
 
 
 def endpoint_nodes(glyph):
-    return set(np.where(degrees(glyph) == 1)[0])
+    degrees = glyph[DEGREES]
+    return set(np.where(degrees == 1)[0])
 
 
 def directed_endpoints(glyph):
+    paths = glyph[PATHS]
     endpoints = lambda path: (int(path[0]), int(path[-1]))
-    return [endpoints(path) for path in paths(glyph)]
+    return [endpoints(path) for path in paths]
 
 
 def undirected_endpoints(glyph):
@@ -52,7 +53,7 @@ def undirected_endpoints(glyph):
 
 def distance(glyph, a, b):
     "Return Euclidean distance between two nodes."
-    xy = glyph["skeleton:xy"][(a, b), :]
+    xy = glyph[XY][(a, b), :]
     distances = np.linalg.norm(np.diff(xy, axis=0), axis=1)
     return float(distances[0])
 
@@ -87,8 +88,9 @@ def junction_graph(glyph, radius=None):
 
     # Map one pixel to its neighboring junctions (as set).
     # adjacency :: {int: {int}}
+    lengths = glyph[LENGTHS]
     adjacency = defaultdict(set)
-    endpoints = zip(undirected_endpoints(glyph), lengths(glyph))
+    endpoints = zip(undirected_endpoints(glyph), lengths)
 
     for (a, b), length in endpoints:
         if (
@@ -227,3 +229,44 @@ def cluster_paths(glyph, clusters):
         })
 
     return results
+
+
+def merge_through(glyph, cluster):
+    """
+    Happy path: cluster of two junctions with one incoming (P) and one
+    outgoing (Q) path. Replaces both junctions by a rounded midpoint m and
+    chains P -> m -> Q. xy/degrees are append-only; retired pixels get degree 0.
+    """
+    xy = glyph[XY]
+    degrees = glyph[DEGREES]
+    paths = list(glyph[PATHS])
+
+    a, b = cluster["junctions"]
+    p, q = cluster["incoming"][0], cluster["outgoing"][0]
+    junctions = {a, b}
+
+    # Paths with both ends in the cluster (inner paths):
+    inner_paths = [
+        i for i, (s, e) in enumerate(directed_endpoints(glyph))
+        if s in junctions and e in junctions
+    ]
+    retired = np.unique(np.concatenate([paths[i] for i in inner_paths]))  # incl. a, b
+
+    # Append new degree and x/y:
+    m = len(xy) # new pixel index
+    m_xy = np.rint((xy[a] + xy[b]) / 2).astype(xy.dtype)
+    xy = np.vstack([xy, m_xy])
+    degrees = np.append(degrees, 2)
+    degrees[retired] = 0
+
+    merged = np.concatenate([paths[p][:-1], [m], paths[q][1:]])
+    paths[p] = merged
+    drop = set(inner_paths) | {q}
+    paths = [path for i, path in enumerate(paths) if i not in drop]
+
+    return glyph | {
+        XY: xy,
+        DEGREES: degrees,
+        PATHS: paths,
+        LENGTHS: np.array([path_length(xy, path) for path in paths]),
+    }

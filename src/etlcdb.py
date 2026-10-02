@@ -64,7 +64,7 @@ pipeline = compose(
     partial(etlcdb.remove_noise, min_size=5, margin=2, padding=3),
     etlcdb.otsu,
     etlcdb.flag_label_mismatch,
-    # tap(lambda x: print(x["literal"], x["id"])),
+    tap(lambda x: print(x["literal"], x["id"])),
 )
 
 
