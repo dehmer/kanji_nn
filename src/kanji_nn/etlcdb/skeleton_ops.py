@@ -5,15 +5,7 @@ DEGREES = "skeleton:degrees"
 PATHS = "skeleton:paths"
 LENGTHS = "skeleton:lengths"
 XY = "skeleton:xy"
-EDT = "edt"
-
-
-def edt(glyph):
-    """Per-pixel EDT."""
-    edt = glyph[EDT] # matrix in x/y layout
-    xy = glyph[XY]
-    x, y = xy[:, 0], xy[:, 1]
-    return edt[x, y]
+EDT_INNER = "skeleton:edt:inner"
 
 
 def pixel_paths(glyph):
@@ -83,7 +75,7 @@ def junction_graph(glyph, radius=None):
     # Deriving radius purely on the fly from skeleton path pixels
     # (Using degrees == 2 correctly samples path interiors)
     if radius is None:
-        inner_edt = np.median(edt(glyph)[degrees(glyph) == 2])
+        inner_edt = glyph[EDT_INNER]
         radius = inner_edt + 2 * np.sqrt(inner_edt) + 1e-5
 
     # Map one pixel to its neighboring junctions (as set).

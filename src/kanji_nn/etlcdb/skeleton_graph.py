@@ -22,11 +22,19 @@ def skeleton_graph(glyph):
     skeleton = Skeleton(skeleton_mask)
     paths = [skeleton.path(i) for i in range(0, skeleton.n_paths)]
 
+    edt = glyph["edt"] # complete EDT field
+    degrees = skeleton.degrees
+    xy = skeleton.coordinates[:, ::-1] # flip row/column layout to x/y layout
+    edt = edt[xy[:, 0], xy[:, 1]] # per-pixel EDT
+
+    # Highly unlikely, but check anyway if skeleton has no inner pixels:
+    if len(edt[degrees == 2]) == 0:
+        return glyph | {"skip": True, "reason": "degenerated glyph; no inner skeleton pixels found"}
+
     return glyph | {
         "skeleton:paths": paths,
-
-        # flip row/column layout to x/y layout:
-        "skeleton:xy": skeleton.coordinates[:, ::-1],
-        "skeleton:degrees": skeleton.degrees,
-        "skeleton:lengths": skeleton.path_lengths()
+        "skeleton:xy": xy,
+        "skeleton:degrees": degrees,
+        "skeleton:lengths": skeleton.path_lengths(),
+        "skeleton:edt:inner": np.median(edt[degrees == 2])
     }

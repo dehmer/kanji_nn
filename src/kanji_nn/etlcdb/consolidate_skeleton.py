@@ -5,8 +5,8 @@ import kanji_nn.etlcdb.skeleton_ops as sops
 def consolidate_skeleton(glyph):
     degrees = glyph["skeleton:degrees"]
     xy = glyph["skeleton:xy"]
-    inner_edt = np.median(sops.edt(glyph)[degrees == 2])
-    radius = inner_edt + 2 * np.sqrt(inner_edt) + 1e-5  # fixed once, no drift
+    edt_inner = glyph["skeleton:edt:inner"]
+    radius = edt_inner + 2 * np.sqrt(edt_inner) + 1e-5  # fixed once, no drift
 
     while True:
         clusters = sops.junction_clusters(glyph, radius)
