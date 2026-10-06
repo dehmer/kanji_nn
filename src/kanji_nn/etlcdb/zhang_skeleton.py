@@ -17,4 +17,8 @@ def zhang_skeleton(glyph):
         return glyph | {"skip": True, "reason": "skeletonization failed"}
 
     skeleton_bbox = list(bbox)
-    return glyph | {"image:skeleton": skeleton_image, "skeleton:bbox": skeleton_bbox}
+    return glyph | {
+        "image:skeleton": skeleton_image,
+        "skeleton:bbox": skeleton_bbox,
+        "skeleton:mask": skeleton_mask
+    }

@@ -3,32 +3,8 @@ import kanji_nn.etlcdb.skeleton_ops as sops
 
 
 def consolidate_skeleton(glyph):
-    degrees = glyph["skeleton:degrees"]
-    xy = glyph["skeleton:xy"]
-    edt_inner = glyph["skeleton:edt:inner"]
-    radius = edt_inner + 2 * np.sqrt(edt_inner) + 1e-5  # fixed once, no drift
 
-    while True:
-        clusters = sops.junction_clusters(glyph, radius)
-        clusters = sops.cluster_paths(glyph, clusters)
-        match = next((
-            c for c in clusters
-            if len(c["junctions"]) == 2
-            and len(c["incoming"]) == 1
-            and len(c["outgoing"]) == 1
-        ), None)
-
-        if match is None:
-            break
-
-        glyph = sops.merge_through(glyph, match)
-
-
-    # 7 clusters remaining
-    clusters = sops.junction_clusters(glyph, radius)
-    clusters = sops.cluster_paths(glyph, clusters)
-    for cluster in clusters:
-        print(cluster)
-        print(xy[cluster["junctions"], :])
+    glyph = sops.prune_parallel_paths(glyph)
+    glyph = sops.dissolve_t_junctions(glyph)
 
     return glyph

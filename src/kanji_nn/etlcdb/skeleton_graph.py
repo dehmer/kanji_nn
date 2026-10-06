@@ -6,20 +6,19 @@ from .connected_features import fold
 
 
 def skeleton_graph(glyph):
-    skeleton_image = np.asarray(glyph["image:skeleton"])
-    skeleton_mask = skeleton_image > 0
+    mask = glyph["skeleton:mask"]
 
     # Find and merge 2x2 pixel clusters:
     ambiguities = fold([
         [c, r, c + 2, r + 2]
-        for r, c in zip(*np.where(skeleton_mask[:-1, :-1]))
-        if skeleton_mask[r:r+2, c:c+2].all()
+        for r, c in zip(*np.where(mask[:-1, :-1]))
+        if mask[r:r+2, c:c+2].all()
     ])
 
     if len(ambiguities):
         return glyph | {"skip": True, "reason": "ambiguous skeletonization (2x2 clusters)"}
 
-    skeleton = Skeleton(skeleton_mask)
+    skeleton = Skeleton(mask)
     paths = [skeleton.path(i) for i in range(0, skeleton.n_paths)]
 
     edt = glyph["edt"] # complete EDT field
