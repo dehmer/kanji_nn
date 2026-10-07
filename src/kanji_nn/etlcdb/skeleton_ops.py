@@ -2,8 +2,9 @@ import numpy as np
 from collections import defaultdict, deque
 from skan.csr import Skeleton
 
+
 MASK = "skeleton:mask"
-EDT = "skeleton:edt:inner"
+EDT = "skeleton:edt"
 
 
 def _paths(skeleton, predicate=lambda index: True):
@@ -19,13 +20,26 @@ def _undirected_endpoints(paths):
     return [(index, endpoints(path)) for index, path in paths]
 
 
+def _path_length(coords):
+    return float(np.hypot(*np.diff(coords, axis=0).T).sum())
+
+
+def _arc_length(coords):
+    ds = np.linalg.norm(np.diff(coords, axis=0), axis=1)
+    ds = np.concatenate(([0.0], ds))
+    return np.cumsum(ds)
+
 def prune_parallel_paths(glyph):
-    mask = glyph[MASK]
+    mask = glyph[MASK].copy()
     skeleton = Skeleton(mask)
+    coords = skeleton.coordinates
+    degrees = skeleton.degrees
 
     # Length of candidate path must not exceed this threshold:
-    edt_inner = glyph[EDT]
-    radius = edt_inner + 2 * np.sqrt(edt_inner) + 1e-5
+    edt = glyph[EDT]
+    pixel_edt = edt[tuple(coords.T)]
+    inner_edt = np.median(pixel_edt[degrees == 2])
+    radius = inner_edt + 2 * np.sqrt(inner_edt) + 1e-5
 
     path_lengths = skeleton.path_lengths()
     paths = _paths(skeleton, lambda index: path_lengths[index] <= radius)
@@ -57,9 +71,27 @@ def prune_parallel_paths(glyph):
 
 
 def dissolve_t_junctions(glyph):
-    mask = glyph[MASK]
+    mask = glyph[MASK].copy()
     skeleton = Skeleton(mask)
-    junctions = np.where(skeleton.degrees == 3)[0]
-    print(junctions)
+    coords = skeleton.coordinates
+    junctions = set(np.where(skeleton.degrees == 3)[0])
+    edt = glyph[EDT]
 
-    return glyph
+    # Collect paths per junction; ensure outgoing pixel order.
+    triplets = defaultdict(list)
+    for _, path in _paths(skeleton):
+        if path[0] in junctions:
+            triplets[path[0]].append(path)
+        if path[-1] in junctions:
+            triplets[path[-1]].append(path[::-1])
+
+    # junction :: int (pixel index)
+    for junction, paths in triplets.items():
+        print("junction", junction, coords[junction])
+        # for i, path in enumerate(paths):
+        #     path_coords = coords[path]
+        #     tangent = _tangent(edt, path_coords)
+        #     print(i, tangent)
+
+
+    return glyph | {MASK: mask}

@@ -6,6 +6,8 @@ from .connected_features import fold
 
 
 def skeleton_graph(glyph):
+    """
+    """
     mask = glyph["skeleton:mask"]
 
     # Find and merge 2x2 pixel clusters:
@@ -18,22 +20,4 @@ def skeleton_graph(glyph):
     if len(ambiguities):
         return glyph | {"skip": True, "reason": "ambiguous skeletonization (2x2 clusters)"}
 
-    skeleton = Skeleton(mask)
-    paths = [skeleton.path(i) for i in range(0, skeleton.n_paths)]
-
-    edt = glyph["edt"] # complete EDT field
-    degrees = skeleton.degrees
-    xy = skeleton.coordinates[:, ::-1] # flip row/column layout to x/y layout
-    edt = edt[xy[:, 0], xy[:, 1]] # per-pixel EDT
-
-    # Highly unlikely, but check anyway if skeleton has no inner pixels:
-    if len(edt[degrees == 2]) == 0:
-        return glyph | {"skip": True, "reason": "degenerated glyph; no inner skeleton pixels found"}
-
-    return glyph | {
-        "skeleton:paths": paths,
-        "skeleton:xy": xy,
-        "skeleton:degrees": degrees,
-        "skeleton:lengths": skeleton.path_lengths(),
-        "skeleton:edt:inner": np.median(edt[degrees == 2])
-    }
+    return glyph

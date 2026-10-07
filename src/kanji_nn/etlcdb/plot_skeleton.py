@@ -12,7 +12,7 @@ def plot_skeleton(glyph, image_fn=lambda _: None):
     skeleton = Skeleton(mask)
     coords = skeleton.coordinates
 
-    fig, ax = plt.subplots(figsize=(10, 10))
+    fig, ax = plt.subplots(figsize=(8, 8))
     ax.set_xlim(0, size[0])
     ax.set_ylim(size[1], 0)
 

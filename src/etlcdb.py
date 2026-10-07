@@ -34,13 +34,13 @@ image_filename = lambda glyph: f"data/images/{glyph['id']}.png"
 binary_image_filename = lambda glyph: f"data/images/{glyph['id']}-binary.png"
 skeleton_image_filename = lambda glyph: f"data/images/{glyph['id']}-skeleton.png"
 
-# def xxx(glyph):
+# def skeleton_image_from_mask(glyph):
 #     skeleton_mask = glyph["skeleton:mask"]
 #     skeleton_uint8 = np.where(skeleton_mask, 255, 0).astype(np.uint8)
 #     skeleton_image = Image.fromarray(skeleton_uint8)
 #     return skeleton_image
 
-def xxx(glyph):
+def skeleton_image_from_mask(glyph):
     return None
 
 pipeline = compose(
@@ -51,9 +51,9 @@ pipeline = compose(
 
     # etlcdb.plot_stroke_assignments,
     # etlcdb.skeleton_assignment,
-    partial(etlcdb.plot_skeleton, image_fn=xxx),
+    partial(etlcdb.plot_skeleton, image_fn=skeleton_image_from_mask),
     etlcdb.consolidate_skeleton,
-    partial(etlcdb.plot_skeleton, image_fn=xxx),
+    # partial(etlcdb.plot_skeleton, image_fn=skeleton_image_from_mask),
 
     # Parametric curves -> euclidean space:
     etlcdb.resample_splines,
