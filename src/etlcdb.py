@@ -51,7 +51,7 @@ pipeline = compose(
 
     # etlcdb.plot_stroke_assignments,
     # etlcdb.skeleton_assignment,
-    partial(etlcdb.plot_skeleton, image_fn=skeleton_image_from_mask),
+    partial(etlcdb.plot_skeleton, image_fn=image),
     etlcdb.consolidate_skeleton,
     # partial(etlcdb.plot_skeleton, image_fn=skeleton_image_from_mask),
 
