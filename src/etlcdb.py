@@ -42,6 +42,7 @@ pipeline = compose(
 
     # etlcdb.plot_stroke_assignments,
     # etlcdb.skeleton_assignment,
+
     partial(etlcdb.plot_t_junctions),
     partial(etlcdb.plot_skeleton, image_fn=image),
     etlcdb.consolidate_skeleton,

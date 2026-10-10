@@ -1,6 +1,29 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from skan.csr import Skeleton
+
+def _edt_box(junction, edt, fac=2.0):
+    radius = edt[tuple(junction.T)]
+    extent = fac * radius
+
+    # Matplotlib Anchors: Rectangle takes the bottom-left corner (X, Y).
+    # In image coordinates: X = col, Y = row.
+    # We shift by 'radius' to center the square over the pixel (c, r).
+    bottom_left_x = junction[1] - extent / 2
+    bottom_left_y = junction[0] - extent / 2
+
+    # Create the Rectangle patch
+    # edgecolor: box border color, facecolor: 'none' leaves it transparent
+    return patches.Rectangle(
+        (bottom_left_x, bottom_left_y),
+        extent,
+        extent,
+        linewidth=1,
+        edgecolor='red',
+        facecolor='none'
+    )
+
 
 def plot_skeleton(glyph, image_fn=lambda _: None):
     """
@@ -9,6 +32,7 @@ def plot_skeleton(glyph, image_fn=lambda _: None):
     """
     size = glyph["size"]
     mask = glyph["skeleton:mask"]
+    edt = glyph["skeleton:edt"]
     skeleton = Skeleton(mask)
     coords = skeleton.coordinates
 
@@ -36,13 +60,9 @@ def plot_skeleton(glyph, image_fn=lambda _: None):
     # Highlight the junctions/endpoints using degrees
     degrees = skeleton.degrees
     junctions = coords[degrees > 2]
-    endpoints = coords[degrees == 1]
 
-    if len(junctions) > 0:
-        ax.scatter(junctions[:, 1], junctions[:, 0], color='red', facecolors='none', s=120, zorder=1)
-
-    if len(endpoints) > 0:
-        ax.scatter(endpoints[:, 1], endpoints[:, 0], color='red', alpha=0.4, marker='o', s=60, zorder=1)
+    for junction in junctions:
+        ax.add_patch(_edt_box(junction, edt, 2.5))
 
     ax.set_aspect('equal')
     ax.grid(True, linestyle='--', alpha=0.5)
