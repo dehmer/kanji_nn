@@ -1,6 +1,7 @@
 from PIL import Image
 import numpy as np
 from skimage.filters import threshold_otsu
+from skimage.morphology import remove_small_holes
 from scipy import ndimage as ndi
 
 
@@ -15,6 +16,9 @@ def otsu(glyph, fill_threshold=0.5):
         binary = image.point(lambda p: 255 if p > threshold else 0)
 
     binary_mask = np.asarray(binary) > 0
+    binary_mask = remove_small_holes(binary_mask, max_size=4, connectivity=1)
+    binary = Image.fromarray(binary_mask)
+
     foreground = binary_mask.sum()
     background = binary_mask.size - foreground
     fill_ratio = foreground / background if background else np.inf
