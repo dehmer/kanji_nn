@@ -13,8 +13,6 @@ def features_from_slices(slices):
         row, col = slice_
         y_min, y_max = row.start, row.stop
         x_min, x_max = col.start, col.stop
-        width, height = x_max - x_min, y_max - y_min
-        area = width * height
         feature = np.asarray([x_min, y_min, x_max, y_max])
         features.append(feature)
 
@@ -39,21 +37,20 @@ def border_touches(size, feature, margin=0):
     ]
 
 
-def remove_noise(glyph, min_size=5, margin=2, padding=2):
-    image = glyph["image:binary"]
+def detect_noise(glyph, min_size=5, margin=2, padding=2):
+    binary_image = glyph["image:binary"]
 
     # boolean mask: height rows x width columns
     # True: pixel, False: background
     size = glyph["size"]
-    data = np.array(image) > 0
+    mask = np.array(binary_image) > 0
 
-    labels, num_features = ndimage.label(data)
+    labels, num_features = ndimage.label(mask)
 
     # pixel count per label, incl. background (label 0):
     num_pixels = np.bincount(labels.ravel()) # 0: background pixels
     indices = np.where(num_pixels < min_size)[0]
-    noise = np.isin(labels, indices)
-    data[noise] = False
+    noise_field = np.isin(labels, indices)
 
     # x/y slice per feature, excl. background:
     slices = ndimage.find_objects(labels)
@@ -61,6 +58,7 @@ def remove_noise(glyph, min_size=5, margin=2, padding=2):
     features = np.delete(features, indices - 1, axis=0)
     connected = np.vstack(connected_features(features, padding=padding))
 
+    noise_boxes = []
     for feature in connected:
         x_min, y_min, x_max, y_max = feature
         touches = border_touches(size, feature, margin)
@@ -69,8 +67,37 @@ def remove_noise(glyph, min_size=5, margin=2, padding=2):
 
         if ratio > 0.5: continue
         elif ratio == 0.0: continue
-        else: data[y_min : y_max, x_min : x_max] = False
+        else: noise_boxes.append([y_min, y_max, x_min, x_max])
+
+    return glyph | {
+        "noise:field": noise_field,
+        "noise:boxes": noise_boxes
+    }
 
 
-    image = Image.fromarray((data * 255).astype(np.uint8)).convert("1")
-    return glyph | {"image:binary": image}
+def remove_noise(glyph):
+    binary_image = glyph["image:binary"]
+    image = glyph["image"] # grayscale image
+    noise_field = glyph["noise:field"]
+    noise_boxes = glyph["noise:boxes"]
+
+    # boolean mask: height rows x width columns
+    # True: pixel, False: background
+    binary_mask = np.array(binary_image) > 0
+    image_data = np.array(image)
+
+    binary_mask[noise_field] = False
+    image_data[noise_field] = 0 # background = 0
+
+    for box in noise_boxes:
+        y_min, y_max, x_min, x_max = box
+        binary_mask[y_min : y_max, x_min : x_max] = False
+        image_data[y_min : y_max, x_min : x_max] = 0
+
+    binary_image = Image.fromarray(binary_mask)
+    image = Image.fromarray(image_data)
+
+    return glyph | {
+        "image": image,
+        "image:binary": binary_image
+    }
