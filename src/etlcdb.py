@@ -34,15 +34,6 @@ image_filename = lambda glyph: f"data/images/{glyph['id']}.png"
 binary_image_filename = lambda glyph: f"data/images/{glyph['id']}-binary.png"
 skeleton_image_filename = lambda glyph: f"data/images/{glyph['id']}-skeleton.png"
 
-# def skeleton_image_from_mask(glyph):
-#     skeleton_mask = glyph["skeleton:mask"]
-#     skeleton_uint8 = np.where(skeleton_mask, 255, 0).astype(np.uint8)
-#     skeleton_image = Image.fromarray(skeleton_uint8)
-#     return skeleton_image
-
-def skeleton_image_from_mask(glyph):
-    return None
-
 pipeline = compose(
     # partial(etlcdb.save_glyph_image, image_fn=skeleton_image, filename_fn=skeleton_image_filename),
     # partial(etlcdb.save_glyph_image, image_fn=binary_image, filename_fn=binary_image_filename),
@@ -51,7 +42,8 @@ pipeline = compose(
 
     # etlcdb.plot_stroke_assignments,
     # etlcdb.skeleton_assignment,
-    partial(etlcdb.plot_skeleton, image_fn=skeleton_image_from_mask),
+    partial(etlcdb.plot_t_junctions),
+    partial(etlcdb.plot_skeleton, image_fn=image),
     etlcdb.consolidate_skeleton,
     # partial(etlcdb.plot_skeleton, image_fn=skeleton_image_from_mask),
 

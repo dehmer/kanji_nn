@@ -29,6 +29,7 @@ def _arc_length(coords):
     ds = np.concatenate(([0.0], ds))
     return np.cumsum(ds)
 
+
 def prune_parallel_paths(glyph):
     mask = glyph[MASK].copy()
     skeleton = Skeleton(mask)
@@ -70,14 +71,74 @@ def prune_parallel_paths(glyph):
     return prune_parallel_paths(glyph | {MASK: mask})
 
 
-def dissolve_t_junctions(glyph):
+def _straight_segment_bounds(edt, coords, tol=1.0):
+    # --- Step 1: Skip the EDT radius at the junction ---
+    # The path starts at the junction, so coords[0] is our junction pixel
+    junction_edt = edt[tuple(coords[0].T)]
+
+    # Calculate cumulative distance from the start of the path
+    arc_lengths = _arc_length(coords)
+
+    # path completely lies with radius?
+    if arc_lengths[-1] < junction_edt:
+        return (0, len(coords))
+
+    # Find the first index that moves past the junction's EDT radius
+    # (arc_lengths is sorted so np.argmax is the way to go)
+    start_idx = int(np.argmax(arc_lengths >= junction_edt))
+
+    # --- Step 2: Find the end_idx before a significant bend ---
+    # Ensure we have enough points left to define a direction vector
+    if start_idx >= len(coords) - 1:
+        return (0, len(coords))
+
+    # Define the base point and a look-ahead direction vector
+    # Look ahead 2-3 pixels if possible to smooth out single-pixel discretization noise
+    look_ahead = min(start_idx + 3, len(coords) - 1)
+    p0 = coords[start_idx]
+    p1 = coords[look_ahead]
+
+    v = p1 - p0
+    v_norm = np.linalg.norm(v)
+
+    # If the look-ahead vector has 0 length, default to the rest of the path
+    if v_norm < 1e-5:
+        return (start_idx, len(coords))
+
+    v_unit = v / v_norm
+
+    # Check all points from start_idx onwards
+    remaining_coords = coords[start_idx:]
+
+    # Vectors from p0 to each subsequent point
+    vectors = remaining_coords - p0
+
+    # Perpendicular distance: ||v x w|| / ||v||
+    # In 2D, cross product of v_unit=(vx, vy) and w=(wx, wy) is |vx*wy - vy*wx|
+    cross_products = vectors[:, 0] * v_unit[1] - vectors[:, 1] * v_unit[0]
+    perp_distances = np.abs(cross_products)
+
+    # Find the first index where the perpendicular distance exceeds our tolerance
+    bends = perp_distances > tol
+    if np.any(bends):
+        # np.argmax returns the first True index relative to remaining_coords
+        end_idx = start_idx + int(np.argmax(bends))
+    else:
+        end_idx = len(coords)
+
+    # Ensure we return a valid slice (end_idx must be strictly greater than start_idx)
+    end_idx = max(end_idx, start_idx + 1)
+
+    return (start_idx, end_idx)
+
+
+def t_junctions(glyph):
     mask = glyph[MASK].copy()
     skeleton = Skeleton(mask)
-    coords = skeleton.coordinates
     junctions = set(np.where(skeleton.degrees == 3)[0])
-    edt = glyph[EDT]
 
     # Collect paths per junction; ensure outgoing pixel order.
+    # triplets :: {int: [[int]]}
     triplets = defaultdict(list)
     for _, path in _paths(skeleton):
         if path[0] in junctions:
@@ -85,13 +146,36 @@ def dissolve_t_junctions(glyph):
         if path[-1] in junctions:
             triplets[path[-1]].append(path[::-1])
 
-    # junction :: int (pixel index)
-    for junction, paths in triplets.items():
-        print("junction", junction, coords[junction])
-        # for i, path in enumerate(paths):
-        #     path_coords = coords[path]
-        #     tangent = _tangent(edt, path_coords)
-        #     print(i, tangent)
+    return triplets
 
+
+def dissolve_t_junctions(glyph):
+    mask = glyph[MASK].copy()
+    skeleton = Skeleton(mask)
+    coords = skeleton.coordinates
+    edt = glyph[EDT]
+
+    triplets = t_junctions(glyph)
+
+    def segment(path):
+        path_coords = coords[path]
+        start_idx, end_idx = _straight_segment_bounds(edt, path_coords)
+        return path_coords[start_idx:end_idx]
+
+    # junction :: int - pixel index
+    # paths :: [[int]] - 3 x pixel indices
+    for junction, paths in triplets.items():
+
+        # straight-ish segment of path:
+        # 1. skip edt[junciton] arc length in outward direction
+        # 2. truncate before "significant" bend if any
+        for i, path in enumerate(paths):
+            path_coords = coords[path]
+            segment_bounds = _straight_segment_bounds(edt, path_coords)
+            print(junction, i, len(path), segment_bounds)
+            pass
+
+        segments = [segment(path) for path in paths]
+        print(segments)
 
     return glyph | {MASK: mask}
