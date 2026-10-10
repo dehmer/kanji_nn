@@ -66,8 +66,11 @@ pipeline = compose(
     bezier.kvg_bbox,
     bezier.kvg_inject,
 
+    # Remove detected noise in original and binary image.
+    etlcdb.remove_noise,
+
     # Generous (padding=3): cleanup should not fragmentize real strokes.
-    partial(etlcdb.remove_noise, min_size=5, margin=2, padding=3),
+    partial(etlcdb.detect_noise, min_size=5, margin=2, padding=3),
     etlcdb.otsu,
     etlcdb.flag_label_mismatch,
     tap(lambda x: print(x["literal"], x["id"])),
