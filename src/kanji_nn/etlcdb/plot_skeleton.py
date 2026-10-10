@@ -25,7 +25,7 @@ def _edt_box(junction, edt, fac=2.0):
     )
 
 
-def plot_skeleton(glyph, image_fn=lambda _: None):
+def plot_skeleton(glyph, image_fn=lambda _: None, edt_boxes=False):
     """
     Plots the raw, fragmented paths extracted by Skan.
     Each distinct topological branch is colored differently.
@@ -57,12 +57,13 @@ def plot_skeleton(glyph, image_fn=lambda _: None):
         y = coords[path, 0]
         ax.plot(x, y, linewidth=3, zorder=0)
 
-    # Highlight the junctions/endpoints using degrees
-    degrees = skeleton.degrees
-    junctions = coords[degrees > 2]
+    if edt_boxes:
+        # Highlight the junctions/endpoints using degrees
+        degrees = skeleton.degrees
+        junctions = coords[degrees > 2]
 
-    for junction in junctions:
-        ax.add_patch(_edt_box(junction, edt, 2.5))
+        for junction in junctions:
+            ax.add_patch(_edt_box(junction, edt, 2.5))
 
     ax.set_aspect('equal')
     ax.grid(True, linestyle='--', alpha=0.5)
