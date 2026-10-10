@@ -1,18 +1,20 @@
+import sys
 import numpy as np
 from collections import defaultdict
 from scipy.spatial import KDTree
 from scipy.optimize import minimize_scalar
-import sys
 import matplotlib.pyplot as plt
-import kanji_nn.etlcdb.skeleton_ops as sops
+from skan.csr import Skeleton
 
 
 def plot_stroke_assignments(glyph):
     assignments = glyph["assignments"]
     num_strokes = glyph["num_strokes"]
     skeleton_image = np.asarray(glyph["image:skeleton"])
-    target_xy = glyph["skeleton:xy"]
+    mask = glyph["skeleton:mask"]
+    skeleton = Skeleton(mask)
 
+    target_xy = skeleton.coordinates[:, ::-1]
     stroke_of = assignments[:, 2].astype(int)
     distance_of = assignments[:, 4].astype(float)
 
@@ -41,15 +43,15 @@ def plot_stroke_assignments(glyph):
 
 
 def skeleton_assignment(glyph):
-    splines = glyph["splines"]
-
     # resampled (ds=0.5) with segment index and pen-down/-up
     xysp = glyph["splines:xysp"]
-    degrees = glyph["skeleton:degrees"]
-    target_xy = glyph["skeleton:xy"]
-    skeleton_image = np.asarray(glyph["image:skeleton"])
+    splines = glyph["splines"]
     paths = glyph["kvg:paths"]
-    num_strokes = glyph["num_strokes"]
+    mask = glyph["skeleton:mask"]
+    skeleton = Skeleton(mask)
+
+    degrees = skeleton.degrees
+    target_xy = skeleton.coordinates[:, ::-1]
 
     # Insert stroke and running segment index.
     # Also mitigate segment index/count mismatch:
@@ -67,13 +69,17 @@ def skeleton_assignment(glyph):
     _, segment_idx = np.unique(ssp[:, 0:2], axis=0, return_inverse=True)
     ssi = np.column_stack((ssp[:, :-1], segment_idx))
 
-
     reference_xy = xysp[:, :-2]
     kvg_tree = KDTree(reference_xy)
     knn_distance, neighbor = kvg_tree.query(target_xy)
     nearest_segment = ssi[neighbor]
 
-    pixel_paths = sops.pixel_paths(glyph)
+    # Reverse lookup: {pixel index: [path index]}.
+    pixel_paths = defaultdict(list)
+    for path_idx in range(0, skeleton.n_paths):
+        pixel_indices = skeleton.path(path_idx)
+        for pixel_idx in pixel_indices:
+            pixel_paths[int(pixel_idx)].append(path_idx)
 
     # assignment :: [target, branch, stroke, segment, knn-distance]
     # assignments :: [assignment]

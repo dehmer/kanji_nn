@@ -26,13 +26,16 @@ def compose(*fns):
     skippable_fns = list(map(skippable, fns))
     return lambda x: reduce(lambda acc, f: f(acc), reversed(skippable_fns), x)
 
-
+# image accessor/creation function:
 image = lambda glyph: glyph["image"]
 binary_image = lambda glyph: glyph["image:binary"]
 skeleton_image = lambda glyph: glyph["image:skeleton"]
+
+# image filename functions:
 image_filename = lambda glyph: f"data/images/{glyph['id']}.png"
 binary_image_filename = lambda glyph: f"data/images/{glyph['id']}-binary.png"
 skeleton_image_filename = lambda glyph: f"data/images/{glyph['id']}-skeleton.png"
+
 
 pipeline = compose(
     # partial(etlcdb.save_glyph_image, image_fn=skeleton_image, filename_fn=skeleton_image_filename),
@@ -40,12 +43,12 @@ pipeline = compose(
     # partial(etlcdb.save_glyph_image, image_fn=image, filename_fn=image_filename),
     # partial(etlcdb.plot_glyph_image, image_fn=image),
 
-    # etlcdb.plot_stroke_assignments,
-    # etlcdb.skeleton_assignment,
+    etlcdb.plot_stroke_assignments,
+    etlcdb.skeleton_assignment,
 
-    partial(etlcdb.plot_t_junctions),
-    partial(etlcdb.plot_skeleton, image_fn=image),
-    etlcdb.consolidate_skeleton,
+    # partial(etlcdb.plot_t_junctions),
+    # partial(etlcdb.plot_skeleton, image_fn=image),
+    # etlcdb.consolidate_skeleton,
     # partial(etlcdb.plot_skeleton, image_fn=skeleton_image_from_mask),
 
     # Parametric curves -> euclidean space:
