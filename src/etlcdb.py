@@ -39,24 +39,10 @@ skeleton_image_filename = lambda glyph: f"data/images/{glyph['id']}-skeleton.png
 
 
 pipeline = compose(
-    # partial(etlcdb.save_glyph_image, image_fn=skeleton_image, filename_fn=skeleton_image_filename),
-    # partial(etlcdb.save_glyph_image, image_fn=binary_image, filename_fn=binary_image_filename),
-    # partial(etlcdb.save_glyph_image, image_fn=image, filename_fn=image_filename),
-    # partial(etlcdb.plot_glyph_image, image_fn=image),
+    partial(etlcdb.plot_glyph_image, image_fn=binary_image),
+    partial(etlcdb.plot_glyph_image, image_fn=image),
 
-    etlcdb.plot_stroke_assignments,
-    etlcdb.skeleton_assignment,
-
-    # partial(etlcdb.plot_t_junctions),
-    # partial(etlcdb.plot_skeleton, image_fn=image),
-    # etlcdb.consolidate_skeleton,
-
-    # Parametric curves -> euclidean space:
-    etlcdb.resample_splines,
-
-    # Scale/translate splines to skeleton bounding box.
-    etlcdb.transform_splines,
-    etlcdb.skeleton_graph,
+    partial(etlcdb.plot_skeleton, image_fn=binary_image),
     etlcdb.zhang_skeleton,
 
     # Strict (padding=0): catch fragmentation as a quality signal
